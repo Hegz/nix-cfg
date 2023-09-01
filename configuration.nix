@@ -114,7 +114,6 @@
     #  (pkgs.libsForQt5.callPackage ./chitubox.nix {}) 
       kate
       xclip
-      distrobox
     #  thunderbird
     ];
   };
@@ -125,15 +124,19 @@
   # Enable docker
   virtualisation.docker.enable = true;
 
+  # Export X11 host to docker
+  environment.shellInit = ''
+    [ -n "$DISPLAY" ] && xhost +si:localhost:$USER || true
+  '';
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     outils
     nvtop
-   #  nvidia-x11
-   #  nvidia-settings
-   #  nvidia-persistenced
+    distrobox
+    xorg.xhost
   #  wget
   ];
 
