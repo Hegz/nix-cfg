@@ -3,8 +3,8 @@
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
-  home.username = "adam";
-  home.homeDirectory = "/home/adam";
+  home.username = "afairbrother";
+  home.homeDirectory = "/home/afairbrother";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -65,7 +65,9 @@
   home.sessionVariables = {
     # EDITOR = "vim";
   };
-
+    imports = [ 
+      ./ssh-hosts.nix 
+    ];
   programs = {
     git = {
       enable = true;
@@ -92,7 +94,7 @@
       '';
 
     };
-    ssh ={
+   ssh ={
       enable = true;
       extraConfig = ''
         AddKeysToAgent yes
@@ -103,7 +105,7 @@
           identityFile = "~/.ssh/github";
           user = "git";
         };
-      };
+      };  
     };
     vim = {
       enable = true;
