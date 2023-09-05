@@ -102,7 +102,6 @@
       x2goclient
       logseq
       steam
-      cura
       freecad
       libreoffice-fresh
       gimp-with-plugins
@@ -111,6 +110,8 @@
       playonlinux
       openscad
       git
+      transmission-qt
+      (pkgs.callPackage ./cura5_4-Appimage.nix {} )
     #  (pkgs.libsForQt5.callPackage ./chitubox.nix {}) 
       kate
       xclip
@@ -126,7 +127,7 @@
 
   # Export X11 host to docker
   environment.shellInit = ''
-    [ -n "$DISPLAY" ] && xhost +si:localhost:$USER || true
+    [ -n "$DISPLAY" ] && xhost +si:localuser:$USER || true
   '';
 
   # List packages installed in system profile. To search, run:
@@ -185,6 +186,12 @@
 
   fileSystems."/home/steam" =
   { device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
+  };
+  
+  fileSystems."/home/Important" = {
+    device = "freenas.fair:/mnt/S1/Important";
+    fsType = "nfs";
+    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
   };
 
   # Nvidia graphics options below
