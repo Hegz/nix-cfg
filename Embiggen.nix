@@ -94,6 +94,13 @@
     fsType = "nfs";
     options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
   };
+  
+  fileSystems."/home/Torrents" = {
+    device = "freenas.fair:/mnt/S1/Torrents";
+    fsType = "nfs";
+    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+  };
+
 
   # Nvidia graphics options below
   # ==============================
