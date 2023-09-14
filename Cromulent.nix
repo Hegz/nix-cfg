@@ -8,7 +8,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./common.nix
-      ./suspend2Hibernate.nix
+      #./suspend2Hibernate.nix
     ];
 
   networking.hostName = "Cromulent"; # Define your hostname.
