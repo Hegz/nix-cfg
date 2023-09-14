@@ -24,6 +24,7 @@
       firefox
       chromium
       teams
+      tigervnc
       libsForQt5.bluedevil
       libsForQt5.kalk
       libsForQt5.yakuake
