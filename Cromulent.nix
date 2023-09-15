@@ -44,6 +44,7 @@
       git
       kate
       xclip
+      google-chrome
     ];
   };
 }
