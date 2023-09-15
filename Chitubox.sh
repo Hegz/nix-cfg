@@ -3,4 +3,4 @@
 unset QT_PLUGIN_PATH
 unset QML2_IMPORT_PATH
 cd /opt/Chitubox
-CHITUBOX
+/opt/Chitubox/CHITUBOX
