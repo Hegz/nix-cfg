@@ -9,7 +9,10 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./common.nix
+      ./unstable-distrobox.nix
     ];
+
+  networking.hostName = "Embiggen"; # Define your hostname.
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.adam = {
@@ -20,7 +23,6 @@
     packages = with pkgs; [
       firefox
       chromium
-      # teams
       libsForQt5.bluedevil
       libsForQt5.kalk
       libsForQt5.yakuake
@@ -40,10 +42,9 @@
       git
       transmission-qt
       (pkgs.callPackage ./cura5_4-Appimage.nix {} )
-    #  (pkgs.libsForQt5.callPackage ./chitubox.nix {}) 
       kate
       xclip
-    #  thunderbird
+      wine
     ];
   };
 
