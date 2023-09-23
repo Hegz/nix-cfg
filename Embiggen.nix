@@ -14,6 +14,9 @@
 
   networking.hostName = "Embiggen"; # Define your hostname.
 
+  # Enable CUPS to print documents.
+  services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.adam = {
     shell = pkgs.zsh;
