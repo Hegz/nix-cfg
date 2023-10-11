@@ -43,6 +43,11 @@
   services.avahi.nssmdns = true;
 
 
+  # keybase Encrypted file sync
+  services.keybase.enable = true;
+  services.kbfs.enable = true;
+
+
   # Enable sound with pipewire.
   sound.enable = true;
   hardware.pulseaudio.enable = false;
@@ -96,6 +101,8 @@
     outils
     nvtop
     xorg.xhost
+    keybase-gui
+    keybase
   ];
 
   #zsh settings
