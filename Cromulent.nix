@@ -46,6 +46,8 @@
       tigervnc
       x2goclient
       xclip
+
+      usbimager
     ];
   };
 }
