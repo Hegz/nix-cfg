@@ -12,6 +12,11 @@
       ./unstable-distrobox.nix
     ];
 
+  services.dokuwiki.sites."localhost" = {
+    enable = true;
+    settings.title = "My Wiki";
+  };
+
   networking.hostName = "Cromulent"; # Define your hostname.
 
   hardware.bluetooth.enable = true;
@@ -46,7 +51,6 @@
       tigervnc
       x2goclient
       xclip
-
       usbimager
     ];
   };
