@@ -10,6 +10,7 @@
       ./common.nix
       #./suspend2Hibernate.nix
       ./unstable-distrobox.nix
+      ./dokuwiki.nix
     ];
 
   networking.hostName = "Cromulent"; # Define your hostname.

@@ -16,6 +16,8 @@ let
       url = "https://github.com/splitbrain/dokuwiki-plugin-dw2pdf/archive/refs/tags/2023-09-15.zip";
       sha256 = "sha256-vRX0YuDr2eHjz6+HpFylEaOGee2a/zfenCj/48enyH0=";
     };
+    patches = [ ./patches/dw2pdf_clean.patch ];
+    phases = [ "unpackPhase" "patchPhase" "installPhase" ];
     sourceRoot = ".";
     installPhase = "mkdir -p $out; cp -r source/* $out/";
   };
@@ -58,6 +60,8 @@ in {
       useacl = true;
       superuser = "@admin";
       plugin.dw2pdf.pagesize = "letter";
+      plugin.dw2pdf.doublesided = false;
+      plugin.dw2pdf.template = "clean";
       template = "mindthedark";
       tpl.mindthedark.autoDark = true;
     };
