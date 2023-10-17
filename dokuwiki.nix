@@ -7,7 +7,7 @@ let
       sha256 = "sha256-Mns8zgucpJrg1xdEopAhd4q1KH7j83Mz3wxuu4Thgsg=";
     };
     sourceRoot = ".";
-    installPhase = "mkdir -p $out; cp -r * $out/";
+    installPhase = "mkdir -p $out; cp -r source/* $out/";
   };
 
   dokuwiki-plugin-dw2pdf = pkgs.stdenv.mkDerivation {
@@ -17,17 +17,37 @@ let
       sha256 = "sha256-vRX0YuDr2eHjz6+HpFylEaOGee2a/zfenCj/48enyH0=";
     };
     sourceRoot = ".";
-    installPhase = "mkdir -p $out; cp -r * $out/";
+    installPhase = "mkdir -p $out; cp -r source/* $out/";
+  };
+
+  dokuwiki-plugin-diagrams = pkgs.stdenv.mkDerivation {
+    name = "diagrams";
+    src = pkgs.fetchzip {
+      url = "https://github.com/cosmocode/dokuwiki-plugin-diagrams/archive/refs/tags/2023-08-30.zip";
+      sha256 = "sha256-OQqh7NvhK33U0sv2OjRnLlITAV8bBxKGnc7jBGuXUFI=";
+    };
+    sourceRoot = ".";
+    installPhase = "mkdir -p $out; cp -r source/* $out/";
   };
 
   dokuwiki-plugin-drawio = pkgs.stdenv.mkDerivation {
-    name = "draw.io";
+    name = "drawio";
     src = pkgs.fetchzip {
       url = "https://github.com/lejmr/dokuwiki-plugin-drawio/archive/refs/tags/0.2.10.zip";
       sha256 = "sha256-hiAvV5ySZcnPNcWPofq7CFXDR51zA6vEeTuIfi++S8M=";
     };
     sourceRoot = ".";
-    installPhase = "mkdir -p $out; cp -r * $out/";
+    installPhase = "mkdir -p $out; cp -r source/* $out/";
+  };
+
+  dokuwiki-template-mindthedark = pkgs.stdenv.mkDerivation {
+    name = "mindthedark";
+    src = pkgs.fetchzip {
+      url = "https://github.com/MrReSc/MindTheDark/archive/refs/tags/2023-03-05.zip";
+      sha256 = "sha256-RF+Vao5nVOdeXju/ZQA47BG+q4vzoAtbw4wUwT9tnys=";
+    };
+    sourceRoot = ".";
+    installPhase = "mkdir -p $out; cp -r source/* $out/";
   };
 
 in {
@@ -37,10 +57,13 @@ in {
       title = "My Wiki";
       useacl = true;
       superuser = "@admin";
-      allowdebug = true;
-      dontlog = "";
+      plugin.dw2pdf.pagesize = "letter";
+      template = "mindthedark";
+      tpl.mindthedark.autoDark = true;
     };
     plugins = [ dokuwiki-plugin-drawio dokuwiki-plugin-dw2pdf dokuwiki-plugin-edittable ];
+    templates = [ dokuwiki-template-mindthedark ];
+
     acl = [
       {
         page = "*";
@@ -48,16 +71,10 @@ in {
         level = "none";
       }
       {
-        page = "start";
-        actor = "@external";
-        lelvel = "read";
-      }
-      {
         page = "*";
         actor = "@user";
         level = "delete";
       }
-        ];
-
+    ];
   };
-};
+}

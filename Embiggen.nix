@@ -10,6 +10,7 @@
       ./hardware-configuration.nix
       ./common.nix
       ./unstable-distrobox.nix
+      ./dokuwiki.nix
     ];
 
   networking.hostName = "Embiggen"; # Define your hostname.
