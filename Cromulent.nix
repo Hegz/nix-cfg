@@ -43,7 +43,6 @@
       libsForQt5.kalk
       libsForQt5.okular
       libsForQt5.yakuake
-      logseq
       playonlinux
       quickemu
       teams

@@ -34,7 +34,6 @@
       libsForQt5.ark
       libsForQt5.gwenview
       x2goclient
-      logseq
       steam
       freecad
       libreoffice-fresh
