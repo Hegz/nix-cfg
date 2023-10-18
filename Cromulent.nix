@@ -36,6 +36,7 @@
       google-chrome
       inkscape-with-extensions
       kate
+      libsForQt5.kdeconnect-kde
       libreoffice-fresh
       libsForQt5.ark
       libsForQt5.bluedevil

@@ -27,6 +27,7 @@
     packages = with pkgs; [
       firefox
       chromium
+      libsForQt5.kdeconnect-kde
       libsForQt5.bluedevil
       libsForQt5.kalk
       libsForQt5.yakuake
