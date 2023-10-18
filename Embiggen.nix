@@ -27,7 +27,6 @@
     packages = with pkgs; [
       firefox
       chromium
-      libsForQt5.kdeconnect-kde
       libsForQt5.bluedevil
       libsForQt5.kalk
       libsForQt5.yakuake
@@ -58,6 +57,7 @@
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
   };
+  programs.kdeconnect.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

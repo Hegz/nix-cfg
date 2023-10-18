@@ -21,6 +21,8 @@
     "teams-1.5.00.23861"
   ];
 
+  programs.kdeconnect.enable = true;
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.afairbrother = {
     shell = pkgs.zsh;
