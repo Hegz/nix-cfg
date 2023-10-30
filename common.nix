@@ -103,6 +103,7 @@
     xorg.xhost
     keybase-gui
     keybase
+    pkgs.cifs-utils
   ];
 
   #zsh settings

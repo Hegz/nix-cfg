@@ -18,6 +18,13 @@
   # Enable CUPS to print documents.
   services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
 
+  services.esphome = {
+    #enable the ESPhome service
+    enable = true;
+    openFirewall = true;
+    # enableUnixSocket = true;
+  };
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.adam = {
     shell = pkgs.zsh;
@@ -106,6 +113,14 @@
     options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
   };
 
+  fileSystems."/var/lib/esphome" = {
+    device = "//freenas.fair/esphome";
+    fsType = "cifs";
+    options = let
+      # this line prevents hanging on network split
+    automount_opts = "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s";
+      in ["${automount_opts},credentials=/etc/nixos/smb-secrets,uid=64911,gid=64911"];
+  };
 
   # Nvidia graphics options below
   # ==============================
