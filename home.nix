@@ -122,6 +122,7 @@
         endif
                     '';
       # plugins = [ pkgs.vimPlugins.syntastic ];
+      plugins = [ pkgs.vimPlugins.cmp-copilot ];
       settings = {
         background = "dark";
         copyindent = true;

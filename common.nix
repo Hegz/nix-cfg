@@ -103,6 +103,7 @@
     xorg.xhost
     keybase-gui
     keybase
+    rclone
   ];
 
   #zsh settings

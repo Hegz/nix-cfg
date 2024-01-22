@@ -3,9 +3,17 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:
+let
+  # Sops secret management
+  sops-nix = builtins.fetchTarball {
+    url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
+    sha256 = "sha256:0wjal7y3f0pr417mkg65rm72q585359nvpj5bpf81sq7awpj7gnv";
+  }; 
+in
 {
   imports =
     [ # Include the results of the hardware scan.
+      (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
       ./common.nix
       #./suspend2Hibernate.nix
@@ -16,10 +24,6 @@
   networking.hostName = "Cromulent"; # Define your hostname.
 
   hardware.bluetooth.enable = true;
-
-  nixpkgs.config.permittedInsecurePackages = [
-    "teams-1.5.00.23861"
-  ];
 
   programs.kdeconnect.enable = true;
 
@@ -48,7 +52,6 @@
       libsForQt5.yakuake
       playonlinux
       quickemu
-      teams
       tenacity
       tigervnc
       x2goclient
