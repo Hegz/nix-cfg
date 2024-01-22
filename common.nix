@@ -104,6 +104,7 @@
     keybase-gui
     keybase
     rclone
+    pkgs.cifs-utils
   ];
 
   #zsh settings
