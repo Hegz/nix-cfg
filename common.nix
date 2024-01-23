@@ -44,6 +44,7 @@
 
 
   # keybase Encrypted file sync
+  # Pulling from unstable for version 6.2.4
   services.keybase.enable = true;
   services.kbfs.enable = true;
 
