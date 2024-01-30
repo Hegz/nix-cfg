@@ -106,6 +106,7 @@
     keybase
     rclone
     pkgs.cifs-utils
+    zoom-us
   ];
 
   #zsh settings
