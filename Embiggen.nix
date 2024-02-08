@@ -9,7 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./common.nix
-      #./unstable.nix
+      ./unstable.nix
       ./dokuwiki.nix
       #./unstable-services.nix
     ];
@@ -33,31 +33,30 @@
     description = "Adam Fairbrother";
     extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
     packages = with pkgs; [
-      firefox
-      chromium
-      libsForQt5.bluedevil
-      libsForQt5.kalk
-      libsForQt5.yakuake
-      libsForQt5.okular
-      libsForQt5.ark
-      libsForQt5.gwenview
-      x2goclient
-      steam
-      freecad
-      libreoffice-fresh
-      gimp-with-plugins
-      inkscape-with-extensions
-      tenacity
-      playonlinux
-      openscad
-      git
-      transmission-qt
       (pkgs.callPackage ./cura5_4-Appimage.nix {} )
-      kate
-      xclip
-      wine
+      chromium
       esphome
-      distrobox
+      firefox
+      freecad
+      gimp-with-plugins
+      git
+      inkscape-with-extensions
+      kate
+      libreoffice-fresh
+      libsForQt5.ark
+      libsForQt5.bluedevil
+      libsForQt5.gwenview
+      libsForQt5.kalk
+      libsForQt5.okular
+      libsForQt5.yakuake
+      openscad
+      playonlinux
+      steam
+      tenacity
+      transmission-qt
+      wine
+      x2goclient
+      xclip
     ];
   };
 

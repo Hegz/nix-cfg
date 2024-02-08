@@ -17,7 +17,7 @@ in
       ./hardware-configuration.nix
       ./common.nix
       #./suspend2Hibernate.nix
-      ./unstable-distrobox.nix
+      ./unstable.nix
       #./unstable-keybase.nix
       ./dokuwiki.nix
     ];
