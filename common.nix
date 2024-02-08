@@ -87,8 +87,12 @@
    # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  # Enable tailscale
+  services.tailscale.enable = true;
+
   # Enable docker
   virtualisation.docker.enable = true;
+  virtualisation.docker.enableNvidia = true;
 
   # Export X11 host to docker
   environment.shellInit = ''
@@ -107,7 +111,7 @@
     rclone
     pkgs.cifs-utils
     zoom-us
-    distrobox
+    # distrobox - running unstable for v 1.6.0.1.
   ];
 
   #zsh settings
