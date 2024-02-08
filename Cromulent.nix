@@ -7,7 +7,7 @@ let
   # Sops secret management
   sops-nix = builtins.fetchTarball {
     url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-    sha256 = "sha256:0rqyfqrx9225ldhn96q3yzhridp96bpbifddj0w95vz51vvq2nqy";
+    sha256 = "sha256:1qvks09nkl2ykz6058wm9jnfkb3q23841sl68vqg4f4lkardf9w8";
   }; 
 in
 {
@@ -17,7 +17,7 @@ in
       ./hardware-configuration.nix
       ./common.nix
       #./suspend2Hibernate.nix
-      ./unstable-distrobox.nix
+      #./unstable-distrobox.nix
       #./unstable-keybase.nix
       ./dokuwiki.nix
     ];

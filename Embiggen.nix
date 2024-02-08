@@ -57,7 +57,6 @@
       xclip
       wine
       esphome
-      distrobox
     ];
   };
 

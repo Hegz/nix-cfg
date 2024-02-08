@@ -107,6 +107,7 @@
     rclone
     pkgs.cifs-utils
     zoom-us
+    distrobox
   ];
 
   #zsh settings
