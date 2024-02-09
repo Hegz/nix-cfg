@@ -92,7 +92,6 @@
 
   # Enable docker
   virtualisation.docker.enable = true;
-  virtualisation.docker.enableNvidia = true;
 
   # Export X11 host to docker
   environment.shellInit = ''
