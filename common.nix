@@ -110,6 +110,8 @@
     rclone
     pkgs.cifs-utils
     zoom-us
+    docker
+    runc
     # distrobox - running unstable for v 1.6.0.1.
   ];
 
