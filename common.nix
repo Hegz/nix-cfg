@@ -92,6 +92,7 @@
 
   # Enable docker
   virtualisation.docker.enable = true;
+  #systemd.enableUnifiedCgroupHierarchy = false;
 
   # Export X11 host to docker
   environment.shellInit = ''
@@ -110,6 +111,8 @@
     rclone
     pkgs.cifs-utils
     zoom-us
+    docker
+    runc
     # distrobox - running unstable for v 1.6.0.1.
   ];
 
