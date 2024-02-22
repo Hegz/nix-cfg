@@ -6,8 +6,10 @@
 let
   # Sops secret management
   sops-nix = builtins.fetchTarball {
-    url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-    sha256 = "sha256:1fi778i85w9zhl3m6fr362dip2xmb1blywvilgh2yg6w71qrg2m5";
+    # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
+    # Pinned to 22-02-2024
+    url = "https://github.com/Mic92/sops-nix/archive/f6b80ab6cd25e57f297fe466ad689d8a77057c11.tar.gz";
+    sha256 = "sha256:0v45picgvnzkqvcyp413qg9n2yh8rj3j825bf11wv6gfwx89ajs3";
   }; 
 in
 {
@@ -33,7 +35,7 @@ in
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Adam Fairbrother";
-    extraGroups = [ "networkmanager" "wheel" "distrobox" "docker"];
+    extraGroups = [ "networkmanager" "wheel" "distrobox" "docker" ];
     packages = with pkgs; [
       chromium
       firefox
