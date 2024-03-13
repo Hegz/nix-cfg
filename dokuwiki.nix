@@ -64,6 +64,7 @@ in {
       plugin.dw2pdf.template = "clean";
       template = "mindthedark";
       tpl.mindthedark.autoDark = true;
+      updatecheck = false;
     };
     plugins = [ dokuwiki-plugin-drawio dokuwiki-plugin-dw2pdf dokuwiki-plugin-edittable ];
     templates = [ dokuwiki-template-mindthedark ];
