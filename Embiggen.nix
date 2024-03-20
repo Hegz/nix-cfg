@@ -34,6 +34,7 @@
     extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
     packages = with pkgs; [
       (pkgs.callPackage ./cura5_4-Appimage.nix {} )
+      (pkgs.callPackage ./lychee5_4_3-Appimage.nix {} )
       chromium
       esphome
       firefox
