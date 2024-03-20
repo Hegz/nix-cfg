@@ -61,6 +61,7 @@
       wine
       x2goclient
       xclip
+      nvtop
     ];
   };
 
