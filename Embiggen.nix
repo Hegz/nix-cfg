@@ -19,6 +19,9 @@
   # Enable CUPS to print documents.
   services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
 
+  # Enable nVidia for docker/distrobox
+  virtualisation.docker.enableNvidia = true;
+
   #services.esphome = {
   #  #enable the ESPhome service
   #  enable = true;

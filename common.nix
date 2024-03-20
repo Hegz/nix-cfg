@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   # Bootloader.
@@ -44,10 +44,11 @@
 
 
   # keybase Encrypted file sync
-  # Pulling from unstable for version 6.2.4
+  #workaround for an incorrect default.
+  systemd.user.services.kbfs.serviceConfig.PrivateTmp = lib.mkForce false;
+  systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
   services.keybase.enable = true;
   services.kbfs.enable = true;
-
 
   # Enable sound with pipewire.
   sound.enable = true;
@@ -92,7 +93,6 @@
 
   # Enable docker
   virtualisation.docker.enable = true;
-  #systemd.enableUnifiedCgroupHierarchy = false;
 
   # Export X11 host to docker
   environment.shellInit = ''
@@ -104,7 +104,6 @@
   environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     outils
-    nvtop
     xorg.xhost
     keybase-gui
     keybase
