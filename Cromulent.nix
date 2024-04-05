@@ -9,7 +9,7 @@ let
     # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
     # Pinned to 22-02-2024
     url = "https://github.com/Mic92/sops-nix/archive/f6b80ab6cd25e57f297fe466ad689d8a77057c11.tar.gz";
-    sha256 = "sha256:0v45picgvnzkqvcyp413qg9n2yh8rj3j825bf11wv6gfwx89ajs3";
+    sha256 = "sha256:158n4gwrjpxkgjivmmnlzsy81sxlirmfxgdxhyck5d1pqrwliwls";
   }; 
 in
 {
@@ -29,6 +29,8 @@ in
   hardware.bluetooth.enable = true;
 
   programs.kdeconnect.enable = true;
+
+  services.opensnitch.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.afairbrother = {
@@ -60,6 +62,7 @@ in
       x2goclient
       xclip
       usbimager
+      teams-for-linux
     ];
   };
 }
