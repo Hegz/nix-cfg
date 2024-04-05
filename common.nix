@@ -113,6 +113,7 @@
     zoom-us
     docker
     runc
+    nmap
     # distrobox - running unstable for v 1.6.0.1.
   ];
 
