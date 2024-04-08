@@ -68,6 +68,8 @@
     imports = [ 
       ./ssh-hosts.nix 
     ];
+
+  services.opensnitch-ui.enable = true;
   programs = {
     git = {
       enable = true;

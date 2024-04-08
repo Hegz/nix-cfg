@@ -37,7 +37,7 @@ in
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Adam Fairbrother";
-    extraGroups = [ "networkmanager" "wheel" "distrobox" "docker" ];
+    extraGroups = [ "plugdev" "networkmanager" "wheel" "distrobox" "docker" ];
     packages = with pkgs; [
       chromium
       firefox
@@ -63,6 +63,7 @@ in
       xclip
       usbimager
       teams-for-linux
+      scrcpy
     ];
   };
 }
