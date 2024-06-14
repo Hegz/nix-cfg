@@ -19,7 +19,7 @@ in
       ./hardware-configuration/HePhaestus.nix
       ./common.nix
       ./suspend2Hibernate.nix
-      ./unstable.nix
+      #./unstable.nix
       #./unstable-keybase.nix
       ./dokuwiki.nix
     ];
