@@ -16,7 +16,7 @@ in
   imports =
     [ # Include the results of the hardware scan.
       (import "${sops-nix}/modules/sops")
-      ./hardware-configuration.nix
+      ./hardware-configuration/HePhaestus.nix
       ./common.nix
       ./suspend2Hibernate.nix
       ./unstable.nix
