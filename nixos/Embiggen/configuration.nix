@@ -2,25 +2,19 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      ./common.nix
-      ./unstable.nix
-      ./dokuwiki.nix
-      #./unstable-services.nix
+      ../common.nix
     ];
 
   networking.hostName = "Embiggen"; # Define your hostname.
 
   # Enable CUPS to print documents.
   services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
-
-  # Enable nVidia for docker/distrobox
-  virtualisation.docker.enableNvidia = true;
 
   #services.esphome = {
   #  #enable the ESPhome service
@@ -36,8 +30,8 @@
     description = "Adam Fairbrother";
     extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
     packages = with pkgs; [
-      (pkgs.callPackage ./cura5_4-Appimage.nix {} )
-      (pkgs.callPackage ./lychee5_4_3-Appimage.nix {} )
+      pkgs.cura
+      pkgs.lychee
       chromium
       esphome
       firefox
