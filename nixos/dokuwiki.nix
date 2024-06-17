@@ -1,4 +1,5 @@
-{ config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, ... }:
+
 let
   dokuwiki-plugin-edittable = pkgs.stdenv.mkDerivation {
     name = "edittable";
@@ -16,7 +17,7 @@ let
       url = "https://github.com/splitbrain/dokuwiki-plugin-dw2pdf/archive/refs/tags/2023-09-15.zip";
       sha256 = "sha256-vRX0YuDr2eHjz6+HpFylEaOGee2a/zfenCj/48enyH0=";
     };
-    patches = [ ./patches/dw2pdf_clean.patch ];
+    patches = [ ../patches/dw2pdf_clean.patch ];
     phases = [ "unpackPhase" "patchPhase" "installPhase" ];
     sourceRoot = ".";
     installPhase = "mkdir -p $out; cp -r source/* $out/";

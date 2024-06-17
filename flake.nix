@@ -65,7 +65,6 @@
         specialArgs = {inherit inputs outputs;};
         modules = [
           # > Our main nixos configuration file <
-          ./nixos/common.nix
           ./nixos/Cromulent/configuration.nix
         ];
       };
@@ -89,6 +88,22 @@
         modules = [
           # > Our main home-manager configuration file <
           ./home-manager/adam.nix
+        ];
+      };
+      "afairbrother@Cromulent" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/afairbrother.nix
+        ];
+      };
+      "afairbrother@HePhaestus" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/afairbrother.nix
         ];
       };
     };
