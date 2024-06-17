@@ -1,3 +1,2 @@
 # Keep hardware config local to the machine
-hardware-configuration.nix
 ssh-hosts.nix
