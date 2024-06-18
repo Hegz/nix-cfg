@@ -16,12 +16,10 @@ in
   imports =
     [ # Include the results of the hardware scan.
       (import "${sops-nix}/modules/sops")
-      ./hardware-configuration/HePhaestus.nix
-      ./common.nix
-      ./suspend2Hibernate.nix
-      #./unstable.nix
-      #./unstable-keybase.nix
-      ./dokuwiki.nix
+      ./hardware-configuration.nix
+      ../common.nix
+      ../suspend2Hibernate.nix
+      ../dokuwiki.nix
     ];
 
   networking.hostName = "HePhaestus"; # Define your hostname.

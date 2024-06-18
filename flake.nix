@@ -72,7 +72,6 @@
         specialArgs = {inherit inputs outputs;};
         modules = [
           # > Our main nixos configuration file <
-          ./nixos/common.nix
           ./nixos/HePhaestus/configuration.nix
         ];
       };
