@@ -1,2 +1,2 @@
 # Keep hardware config local to the machine
-ssh-hosts.nix
+secret-key
