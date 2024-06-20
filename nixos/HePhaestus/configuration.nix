@@ -28,41 +28,6 @@ in
 
   programs.kdeconnect.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.afairbrother = {
-    shell = pkgs.zsh;
-    isNormalUser = true;
-    description = "Adam Fairbrother";
-    extraGroups = [ "networkmanager" "wheel" "distrobox" "docker" ];
-    packages = with pkgs; [
-      chromium
-      firefox
-      freecad
-      gimp-with-plugins
-      git
-      google-chrome
-      inkscape-with-extensions
-      kate
-      libsForQt5.kdeconnect-kde
-      libreoffice-fresh
-      libsForQt5.ark
-      libsForQt5.bluedevil
-      libsForQt5.gwenview
-      libsForQt5.kalk
-      libsForQt5.okular
-      libsForQt5.yakuake
-      libsForQt5.plasma-browser-integration
-      playonlinux
-      quickemu
-      tenacity
-      tigervnc
-      x2goclient
-      xclip
-      usbimager
-      steam
-      nmap
-    ];
-  };
   # Steam settings.
   programs.steam = {
     enable = true;

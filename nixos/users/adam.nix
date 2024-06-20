@@ -16,9 +16,9 @@
       git
       inkscape-with-extensions
       kate
+      kdePackages.kdeconnect-kde
       libreoffice-fresh
       libsForQt5.ark
-      libsForQt5.bluedevil
       libsForQt5.gwenview
       libsForQt5.kalk
       libsForQt5.okular
