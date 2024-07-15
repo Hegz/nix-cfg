@@ -17,6 +17,7 @@ in
     [ # Include the results of the hardware scan.
       (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
+      ../users/afairbrother.nix
       ../common.nix
       ../suspend2Hibernate.nix
       ../dokuwiki.nix
