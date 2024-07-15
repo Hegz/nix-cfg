@@ -141,6 +141,7 @@
     keybase
     rclone
     pkgs.cifs-utils
+    pkgs.itd
     zoom-us
     docker
     runc
