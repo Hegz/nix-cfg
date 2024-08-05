@@ -104,7 +104,7 @@
   services.xserver.videoDrivers = ["nvidia"];
 
   # Enable nvidia Docker 
-  virtualisation.docker.enableNvidia = true;
+  hardware.nvidia-container-toolkit.enable = true;
 
   hardware.nvidia = {
 
