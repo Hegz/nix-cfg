@@ -18,11 +18,11 @@
       kate
       kdePackages.kdeconnect-kde
       libreoffice-fresh
-      libsForQt5.ark
-      libsForQt5.gwenview
-      libsForQt5.kalk
-      libsForQt5.okular
-      libsForQt5.yakuake
+      kdePackages.ark
+      kdePackages.gwenview
+      kdePackages.kalk
+      kdePackages.okular
+      kdePackages.yakuake
       openscad
       playonlinux
       steam
@@ -31,7 +31,7 @@
       wine
       x2goclient
       xclip
-      nvtop
+      nvtopPackages.full
     ];
   };
 }
