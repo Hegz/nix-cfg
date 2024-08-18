@@ -41,19 +41,19 @@
   # ...
   services.valheim = {
     enable = true;
-    serverName = "Some cozy server";
-    worldName = "Midgard";
+    serverName = "Worldland";
+    worldName = "Worldland";
     openFirewall = true;
     password = "12345";
     # If you want to use BepInEx mods.
-    bepinexMods = [
+    #bepinexMods = [
       # This does NOT fetch mod dependencies.  You need to add those manually,
       # if there are any (besides BepInEx).
       # ...
-    ];
-    bepinexConfigs = [
+    #];
+    #bepinexConfigs = [
       # ...
-    ];
+    #];
   };
 
   programs.kdeconnect.enable = true;
