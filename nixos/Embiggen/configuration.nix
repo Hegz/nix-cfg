@@ -32,6 +32,30 @@
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
   };
+
+  nixpkgs.config.allowUnfreePredicate = pkg:
+    builtins.elem (lib.getName pkg) [
+      "valheim-server"
+      "steamworks-sdk-redist"
+    ];
+  # ...
+  services.valheim = {
+    enable = true;
+    serverName = "Some cozy server";
+    worldName = "Midgard";
+    openFirewall = true;
+    password = "12345";
+    # If you want to use BepInEx mods.
+    bepinexMods = [
+      # This does NOT fetch mod dependencies.  You need to add those manually,
+      # if there are any (besides BepInEx).
+      # ...
+    ];
+    bepinexConfigs = [
+      # ...
+    ];
+  };
+
   programs.kdeconnect.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
