@@ -32,10 +32,10 @@ in {
 				"-batchmode"
 				# "-crossplay" # This is broken because it looks for "party" shared library in the wrong path.
 				"-savedir" "/var/lib/valheim/save"
-				"-name" "Fairbrother_Land"
+				"-name" "Worldland"
 				"-port" "2456"
-				"-world" "Dedicated"
-				"-password" "secret"
+				"-world" "Worldland"
+				"-password" "12345"
 				"-public" "0" # Valheim now supports favourite servers in-game which I am using instead of listing in the public registry.
 				"-backups" "5" # I take my own backups, if you don't you can remove this to use the built-in basic rotation system.
 			];
@@ -52,5 +52,4 @@ in {
 		};
 	};
 
-	};
-
+	}
