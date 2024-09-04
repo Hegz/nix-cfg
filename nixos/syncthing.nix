@@ -1,22 +1,22 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 {
-  users.users.dokuwiki = {
-    #extraGroups = [ "nginx" ];
-    home = "/var/lib/DokuSync";
-    createHome = true;
-  };
+#  users.users.dokuwiki = {
+#   #extraGroups = [ "nginx" ];
+#    home = "/var/lib/DokuSync";
+#    createHome = true;
+#  };
 
   services = {
     syncthing = {
       enable = true;
-      user = "dokuwiki";
-      dataDir = "/var/lib/DokuSync";
-      configDir = "/var/lib/DokuSync/.config";
+      user = "root";
+      dataDir = "/root/syncthing";
+      configDir = "/root/syncthing/.config";
 	  overrideDevices = true;
       overrideFolders = true;
       settings = {
 		devices = {
-	      "Embiggen" = { id = "ZBJLL4Y-KOLP7G6-GQL6JOK-TSVUY36-PGMBZAT-HA3MJ3N-7DJEWJ7-3FCNUQ5"; };
+	      "Embiggen" = { id = "IG544IL-LQMPEO4-VA7RBIO-TEPN4WF-CRUZ52F-BZHRTYE-BPJ3FVO-WQWS6Q2"; };
 		  # "Cromulent" = { id = "DEVICE-ID-GOES-HERE"; };
 	      "HePhaestus" = { id = "7UNKW34-EGRBN4G-4COYJ6O-7ZLQV6G-BPDQYMN-KNOOW5L-ITSWEFD-56VMKA5"; };
 		};
