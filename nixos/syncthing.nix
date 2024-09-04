@@ -16,7 +16,7 @@
       overrideFolders = true;
       settings = {
 		devices = {
-	      "Embiggen" = { id = "P3KMSWI-Z2XR4ID-Z6WY6OT-DAZRGNT-L55V3FG-KIOR5H4-L7UEORM-NNMOXQR"; };
+	      "Embiggen" = { id = "ZBJLL4Y-KOLP7G6-GQL6JOK-TSVUY36-PGMBZAT-HA3MJ3N-7DJEWJ7-3FCNUQ5"; };
 		  # "Cromulent" = { id = "DEVICE-ID-GOES-HERE"; };
 	      "HePhaestus" = { id = "D5KKSD7-P2CCRQ4-VCUL4GH-AXQN7VV-7TXGLRY-QKCCQHY-OEY5SOL-RQNEZA2"; };
 		};
