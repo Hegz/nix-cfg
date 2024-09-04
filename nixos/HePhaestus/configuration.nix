@@ -19,7 +19,7 @@ in
       ./hardware-configuration.nix
       ../users/afairbrother.nix
       ../common.nix
-      ../syncthing.nix
+      #../syncthing.nix
       ../suspend2Hibernate.nix
       ../dokuwiki.nix
     ];

@@ -10,7 +10,7 @@
       ./hardware-configuration.nix
       ../common.nix
       ../dokuwiki.nix
-      ../syncthing.nix
+      #../syncthing.nix
       ../users/adam.nix
     ];
 
