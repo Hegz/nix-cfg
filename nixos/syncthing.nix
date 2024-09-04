@@ -18,7 +18,7 @@
 		devices = {
 	      "Embiggen" = { id = "IG544IL-LQMPEO4-VA7RBIO-TEPN4WF-CRUZ52F-BZHRTYE-BPJ3FVO-WQWS6Q2"; };
 		  # "Cromulent" = { id = "DEVICE-ID-GOES-HERE"; };
-	      "HePhaestus" = { id = "7UNKW34-EGRBN4G-4COYJ6O-7ZLQV6G-BPDQYMN-KNOOW5L-ITSWEFD-56VMKA5"; };
+	      "HePhaestus" = { id = "6BHPAS4-3WDSCZY-O7NOFJJ-YCMUXJT-PTTDX4Y-7HKKAXO-SKQUDXM-IMUUSQV"; };
 		};
 		folders = {
 	      "dokuwiki" = {
