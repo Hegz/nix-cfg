@@ -24,7 +24,7 @@
 	      "dokuwiki" = {
 		    label = "DokuWiki";
 			path = "/var/lib/dokuwiki/";
-			# devices = [ "device1" "device2" ];
+			devices = [ "Embiggen" "HePhaestus" ];
 		    ignorePerms = false;  # By default, Syncthing doesn't sync file permissions. This line enables it for this folder.
 		  };
 		};
