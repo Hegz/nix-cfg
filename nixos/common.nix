@@ -126,11 +126,6 @@
   # Enable docker
   virtualisation = {
     containers.enable = true;
-#    docker = {
-#      enable = true;
-#      package = pkgs.docker_27;
-#      daemon.settings.features.cdi = true;
-#    };
     oci-containers.backend = "podman";
     podman = {
       enable = true;
