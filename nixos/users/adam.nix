@@ -5,7 +5,7 @@
     isNormalUser = true;
     description = "Adam Fairbrother";
     extraGroups = [ "plugdev" "video" "networkmanager" "wheel" "distrobox" "docker" ];
-    packag = with pkgs; [
+    package = with pkgs; [
       pkgs.cura
       pkgs.lychee
       chromium
