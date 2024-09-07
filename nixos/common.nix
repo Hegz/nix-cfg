@@ -125,6 +125,7 @@
 
   # Enable docker
   virtualisation.docker.enable = true;
+  virtualisation.docker.package = pkgs.docker_25;
 
   # Export X11 host to docker
   environment.shellInit = ''
