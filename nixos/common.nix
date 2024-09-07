@@ -124,10 +124,21 @@
   services.tailscale.enable = true;
 
   # Enable docker
-  virtualisation.docker.enable = true;
-  virtualisation.docker.package = pkgs.docker_25;
+  virtualisation = {
+    containers.enable = true;
+#    docker = {
+#      enable = true;
+#      package = pkgs.docker_27;
+#      daemon.settings.features.cdi = true;
+#    };
+    oci-containers.backend = "podman";
+    podman = {
+      enable = true;
+      dockerCompat = true;
+    };
+  };
 
-  # Export X11 host to docker
+   # Export X11 host to docker
   environment.shellInit = ''
     [ -n "$DISPLAY" ] && xhost +si:localuser:$USER || true
   '';
