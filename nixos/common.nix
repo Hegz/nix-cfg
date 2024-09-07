@@ -148,7 +148,7 @@
     nmap
     git-crypt
     kdePackages.bluedevil
-    # distrobox - running unstable for v 1.6.0.1.
+    distrobox
   ];
 
   #zsh settings

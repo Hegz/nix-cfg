@@ -4,8 +4,8 @@
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Adam Fairbrother";
-    extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
-    packages = with pkgs; [
+    extraGroups = [ "plugdev" "video" "networkmanager" "wheel" "distrobox" "docker" ];
+    packag = with pkgs; [
       pkgs.cura
       pkgs.lychee
       chromium
