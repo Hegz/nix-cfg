@@ -21,7 +21,7 @@ in
       ../common.nix
       #../syncthing.nix
       #../suspend2Hibernate.nix
-      ../dokuwiki.nix
+      #../dokuwiki.nix
     ];
 
   networking.hostName = "HePhaestus"; # Define your hostname.
