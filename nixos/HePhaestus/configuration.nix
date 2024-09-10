@@ -20,7 +20,7 @@ in
       ../users/afairbrother.nix
       ../common.nix
       #../syncthing.nix
-      ../suspend2Hibernate.nix
+      #../suspend2Hibernate.nix
       ../dokuwiki.nix
     ];
 
