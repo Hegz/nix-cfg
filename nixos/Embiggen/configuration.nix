@@ -135,7 +135,7 @@
   hardware.nvidia-container-toolkit.enable = true;
 
   # Enable game mode support
-  programs.gamemode.enable;
+  programs.gamemode.enable = true;
 
   #programs.gamemode.settings = {
   #  general = {

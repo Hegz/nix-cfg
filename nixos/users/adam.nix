@@ -4,10 +4,16 @@
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Adam Fairbrother";
-    extraGroups = [ "plugdev" "video" "networkmanager" "wheel" "distrobox" "docker" ];
+    extraGroups = [ 
+                    "distrobox" 
+                    "docker" 
+                    "gamemode"
+                    "networkmanager" 
+                    "plugdev" 
+                    "video" 
+                    "wheel" 
+                  ];
     packages = with pkgs; [
-      pkgs.cura
-      pkgs.lychee
       chromium
       esphome
       firefox
@@ -16,14 +22,16 @@
       git
       inkscape-with-extensions
       kate
-      kdePackages.kdeconnect-kde
-      libreoffice-fresh
       kdePackages.ark
       kdePackages.gwenview
       kdePackages.kalk
+      kdePackages.kdeconnect-kde
       kdePackages.okular
       kdePackages.yakuake
+      libreoffice-fresh
+      nvtopPackages.full
       openscad
+      pkgs.cura
       playonlinux
       steam
       tenacity
@@ -31,7 +39,6 @@
       wine
       x2goclient
       xclip
-      nvtopPackages.full
     ];
   };
 }
