@@ -9,6 +9,7 @@
       chromium
       firefox
       freecad
+      gam
       gimp-with-plugins
       git
       google-chrome
