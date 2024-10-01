@@ -15,7 +15,7 @@
         autocmd BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" | endif
       endif
                   '';
-    plugins = [ pkgs.vimPlugins.cmp-copilot ];
+    #plugins = [ pkgs.vimPlugins.cmp-copilot ];
     settings = {
       background = "dark";
       copyindent = true;
