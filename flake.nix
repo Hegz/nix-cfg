@@ -15,6 +15,9 @@
     home-manager.url = "github:nix-community/home-manager/release-24.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Nix User Repository
+    nur.url = "github:nix-community/NUR";
+
     valheim-server = {
       url = "github:aidalgol/valheim-server-flake";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -26,6 +29,7 @@
     nixpkgs,
     home-manager,
     valheim-server,
+    nur,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -102,6 +106,7 @@
         modules = [
           # > Our main home-manager configuration file <
           ./home-manager/afairbrother.nix
+          nur.hmModules.nur
         ];
       };
       "afairbrother@HePhaestus" = home-manager.lib.homeManagerConfiguration {
