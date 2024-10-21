@@ -16,6 +16,11 @@
 
   networking.hostName = "Embiggen"; # Define your hostname.
 
+  # Extra Kernal Parameters
+  boot.kernelParams = [
+    "nvidia-drm.modeset=1"
+  ];
+
   # Enable CUPS to print documents.
   services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
 
@@ -33,6 +38,7 @@
     enable = true;
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
+    gamescopeSession.enable = true;
   };
 
   nixpkgs.config.allowUnfreePredicate = pkg:
@@ -42,7 +48,7 @@
     ];
   # ...
   services.valheim = {
-    enable = true;
+    enable = false;
     serverName = "Worldland";
     worldName = "Worldland";
     openFirewall = true;
