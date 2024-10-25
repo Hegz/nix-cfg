@@ -8,7 +8,7 @@
     packages = with pkgs; [
       chromium
       firefox
-      freecad
+      #freecad
       gam
       gimp-with-plugins
       git
@@ -22,6 +22,7 @@
       kdePackages.kalk
       kdePackages.okular
       kdePackages.yakuake
+      pkgs.freecad
       playonlinux
       quickemu
       tenacity
