@@ -22,6 +22,7 @@
       kdePackages.kalk
       kdePackages.okular
       kdePackages.yakuake
+      pkgs.cura
       pkgs.freecad
       playonlinux
       quickemu
