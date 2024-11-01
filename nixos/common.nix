@@ -146,7 +146,7 @@
     xorg.xhost
     keybase-gui
     keybase
-    rclone
+    pkgs.unstable.rclone
     pkgs.cifs-utils
     pkgs.itd
     zoom-us
