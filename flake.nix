@@ -86,6 +86,14 @@
           ./nixos/HePhaestus/configuration.nix
         ];
       };
+      SecUnit = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/SecUnit/configuration.nix
+        ];
+      };
+
     };
 
     # Standalone home-manager configuration entrypoint
