@@ -24,7 +24,6 @@
       kdePackages.yakuake
       pkgs.cura
       pkgs.freecad
-      pkgs.s3drive
       playonlinux
       quickemu
       tenacity
