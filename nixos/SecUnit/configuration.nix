@@ -13,7 +13,7 @@ let
     sha256 = "sha256:158n4gwrjpxkgjivmmnlzsy81sxlirmfxgdxhyck5d1pqrwliwls";
   }; 
 
-  ZMstorage = "/storage/tank"; 
+  ZMStorage = "/storage/tank"; 
 in
 {
   imports =
@@ -22,7 +22,7 @@ in
       ./hardware-configuration.nix
       ../common.nix
       #../dokuwiki.nix
-      ../users/adam.nix
+      ../users/adam-blank.nix
       #./suspend2Hibernate.nix
       #./unstable.nix
       #./unstable-keybase.nix
@@ -35,19 +35,21 @@ in
     device = "/dev/disk/by-uuid/5cc187b4-b98c-450c-b28f-c8e58bce7da5";
   };
 
-  services.zoneminder = {
-    enable = true;
-    storageDir = ${ZMStorage};
-    port = 80;
-    cameras = 3;
-  }
+#  services.zoneminder = {
+#    enable = true;
+#    storageDir = "${ZMStorage}";
+#    port = 80;
+#    cameras = 3;
+#  };
 
   services.create_ap = {
 	enable = true;
 	settings = {
-	  WIFI_IFACE = "wlan0";
+	  WIFI_IFACE = "wlp2s0";
+      SHARE_METHOD="none";
 	  SSID = "AccessPoint";
 	  PASSPHRASE = "1234567890";
+      FREQ_BAND="2.4";
 	};
   };
 }
