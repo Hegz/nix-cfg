@@ -35,12 +35,12 @@ in
     device = "/dev/disk/by-uuid/5cc187b4-b98c-450c-b28f-c8e58bce7da5";
   };
 
-#  services.zoneminder = {
-#    enable = true;
-#    storageDir = "${ZMStorage}";
+  services.zoneminder = {
+    enable = true;
+    storageDir = "${ZMStorage}";
 #    port = 80;
-#    cameras = 3;
-#  };
+    cameras = 3;
+  };
 
   services.create_ap = {
 	enable = true;
