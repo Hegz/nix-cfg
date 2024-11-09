@@ -14,6 +14,7 @@ let
   }; 
 
   ZMStorage = "/storage/tank"; 
+  wifiInterface = "wlp2s0";
 in
 {
   imports =
@@ -45,11 +46,32 @@ in
   services.create_ap = {
 	enable = true;
 	settings = {
-	  WIFI_IFACE = "wlp2s0";
+	  WIFI_IFACE = "${wifiInterface}";
       SHARE_METHOD="none";
-	  SSID = "AccessPoint";
-	  PASSPHRASE = "1234567890";
+	  SSID = "${secrets.zoneminder.wifi_name}";
+	  PASSPHRASE = "${secrets.zoneminder.wifi_pass}";
       FREQ_BAND="2.4";
 	};
   };
+
+  services.dnsmasq = {
+    enable = true;
+    settings = {
+      domain-needed = true;
+      bogus-priv = true;
+      no-resolv = true;
+      cache-size = 1000;
+      dhcp-range = [ "${wifiInterface},192.168.10.50,192.168.10.254,24h" ];
+      interface = "${wifiInterface}";
+      dhcp-host = "192.168.10.1";
+      local = "/cam/";
+      domain = "cam";
+      expand-hosts = true;
+
+      no-hosts = true;
+      address = "/zm.cam/192.168.10.1"; 
+    };
+  };
+
+
 }
