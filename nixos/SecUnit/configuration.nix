@@ -20,7 +20,7 @@ in
     [ # Include the results of the hardware scan.
       (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
-      ../common.nix
+      ../server.nix
       #../dokuwiki.nix
       ../users/adam-blank.nix
       #./suspend2Hibernate.nix
