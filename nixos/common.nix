@@ -146,7 +146,7 @@
     xorg.xhost
     keybase-gui
     keybase
-    rclone
+    pkgs.unstable.rclone
     pkgs.cifs-utils
     pkgs.itd
     zoom-us
@@ -175,6 +175,7 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+  services.openssh.settings.X11Forwarding = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];

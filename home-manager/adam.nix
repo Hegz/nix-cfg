@@ -3,7 +3,6 @@
   # You can import other home-manager modules here
   imports = [
       ./git.nix
-      ./ssh-hosts.nix 
       ./ssh.nix
       ./tmux.nix
       ./vim.nix
