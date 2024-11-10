@@ -32,12 +32,13 @@ in
 
   networking.hostName = "SecUnit"; # Define your hostname.
 
+  # Mount SSD to the ZM storage location
   fileSystems.${ZMStorage} = { 
     device = "/dev/disk/by-uuid/5cc187b4-b98c-450c-b28f-c8e58bce7da5";
   };
 
   services.zoneminder = {
-    enable = true;
+    enable = false;
     storageDir = "${ZMStorage}";
 #    port = 80;
     cameras = 3;
@@ -56,7 +57,7 @@ in
   };
 
   services.dnsmasq = {
-    enable = true;
+    enable = false;
     settings = {
       domain-needed = true;
       bogus-priv = true;
