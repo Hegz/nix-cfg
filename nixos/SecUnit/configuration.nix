@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ inputs, outputs, lib, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 
 let
   # Sops secret management
@@ -41,6 +41,7 @@ in
     storageDir = "${ZMStorage}";
 #    port = 80;
     cameras = 3;
+    openFirewall = true;
   };
 
   services.create_ap = {

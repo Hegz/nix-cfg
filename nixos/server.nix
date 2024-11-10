@@ -65,7 +65,7 @@
   # Filter 'Martian' Packets
   boot.kernel = {
 	sysctl = {
-	  "net.ipv4.conf.default.rp_filter" = 1
+	  "net.ipv4.conf.default.rp_filter" = 1;
 	  "net.ipv4.conf.wan.rp_filter" = 1;
 	  "net.ipv4.conf.br-lan.rp_filter" = 0;
 	};
