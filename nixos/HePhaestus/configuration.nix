@@ -18,10 +18,10 @@ in
       (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
       ../users/afairbrother.nix
-      ../common.nix
+      ../desktop.nix
       #../syncthing.nix
-      ../suspend2Hibernate.nix
-      ../dokuwiki.nix
+      #../suspend2Hibernate.nix
+      #../dokuwiki.nix
     ];
 
   networking.hostName = "HePhaestus"; # Define your hostname.

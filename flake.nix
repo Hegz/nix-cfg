@@ -41,6 +41,10 @@
       #"aarch64-darwin"
       #"x86_64-darwin"
     ];
+
+    # Read in secrets
+    secrets = builtins.fromJSON (builtins.readFile "${self}/secrets/secrets.json");
+
     # This is a function that generates an attribute by calling a function you
     # pass to it, with each system as an argument
     forAllSystems = nixpkgs.lib.genAttrs systems;
@@ -65,7 +69,7 @@
     # Available through 'nixos-rebuild --flake .#hostname'
     nixosConfigurations = {
       Embiggen = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
+        specialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Embiggen/configuration.nix
@@ -73,19 +77,29 @@
         ];
       };
       Cromulent = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
+        specialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Cromulent/configuration.nix
-        ];
+	];
       };
       HePhaestus = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
+        specialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main nixos configuration file <
           ./nixos/HePhaestus/configuration.nix
         ];
       };
+      SecUnit = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/SecUnit/configuration.nix
+	  home-manager.nixosModules.home-manager
+
+        ];
+      };
+
     };
 
     # Standalone home-manager configuration entrypoint
@@ -94,7 +108,15 @@
       # FIXME replace with your username@hostname
       "adam@Embiggen" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-        extraSpecialArgs = {inherit inputs outputs;};
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/adam.nix
+        ];
+      };
+      "adam@SecUnit" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main home-manager configuration file <
           ./home-manager/adam.nix
@@ -102,7 +124,7 @@
       };
       "afairbrother@Cromulent" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-        extraSpecialArgs = {inherit inputs outputs;};
+        extraSpecialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main home-manager configuration file <
           ./home-manager/afairbrother.nix
@@ -111,7 +133,7 @@
       };
       "afairbrother@HePhaestus" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-        extraSpecialArgs = {inherit inputs outputs;};
+        extraSpecialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main home-manager configuration file <
           ./home-manager/afairbrother.nix
