@@ -55,8 +55,17 @@ in
       NO_DNSMASQ=1;
       GATEWAY="${accessPointIP}";
       IEEE80211N=1;
+      IEEE80211AC=1;
+      IEEE80211AX=1;
       #ISOLATE_CLIENTS=1;
 	};
+  };
+
+  # Enable TMP for better wifi performance?
+  security.tpm2 = {
+    enable = true;
+    pkcs11.enable = true;  # expose /run/current-system/sw/lib/libtpm2_pkcs11.so
+    tctiEnvironment.enable = true;  # TPM2TOOLS_TCTI and TPM2_PKCS11_TCTI env variables
   };
 
   #Provide NTP Services
