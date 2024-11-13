@@ -19,8 +19,9 @@ in
 
   networking.hostName = "SecUnit"; # Define your hostname.
 
+  # manually open required ports for AP
   networking.firewall.interfaces.ap0.allowedUDPPorts = [
-      67 # Allow DHCP on local wireless
+      67  # Allow DHCP
       123 # Allow NTP
   ];
 
@@ -42,7 +43,7 @@ in
     };
   };
 
-  #Create access point, local access only
+  # Create access point, local access only
   services.create_ap = {
 	enable = true;
 	settings = {
