@@ -68,6 +68,14 @@ in
     tctiEnvironment.enable = true;  # TPM2TOOLS_TCTI and TPM2_PKCS11_TCTI env variables
   };
 
+  # Enable harware acceleration for video streams
+  hardware.opengl = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-sdk   # for older GPUs
+    ];
+  };
+
   #Provide NTP Services
   services.chrony = {
     enable = true;
