@@ -17,6 +17,8 @@ in
       ../users/adam-blank.nix
     ];
 
+  hardware.cpu.intel.updateMicrocode = true;
+
   networking.hostName = "SecUnit"; # Define your hostname.
 
   # manually open required ports for AP
@@ -42,6 +44,8 @@ in
       #Manditory username for localdb
     };
   };
+
+  users.users.zoneminder.extraGroups = [ "render" "video" ]; 
 
   # Create access point, local access only
   services.create_ap = {
