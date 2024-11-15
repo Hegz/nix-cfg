@@ -65,6 +65,44 @@ in
 	};
   };
 
+
+  networking.wlanInterfaces = {
+    "wlan-ap0" = { device = ${wifiInterface}; };
+  };
+  # Hostapd based Access point
+  services.hostapd = {
+    enable        = true;
+    radios."wlan-ap0" = {
+      band        = "2g";
+      channel     = 1;
+      countryCode = "CA";
+      networks."wlan-ap0" = {
+    	ssid          = "${secrets.zoneminder.wifi_name}";
+        authentication = {
+          mode        = "wpa2-sha265";
+          wpaPassword = "${secrets.zoneminder.wifi_pass}";
+        };
+        macAcl = "allow";
+        macAllow = [
+			"${secrets.zoneminder.host0.mac}"
+			"${secrets.zoneminder.host1.mac}"
+			"${secrets.zoneminder.host2.mac}"
+			"${secrets.zoneminder.host3.mac}"
+			"${secrets.zoneminder.host4.mac}"
+        ];
+      };
+      wifi6 = {
+        enable = true;
+        multiUserBeamformer = true;
+        operatingChannelWidth = "20or40";
+        
+      };
+    }; 
+  }; 
+
+
+
+
   # Enable TMP for better wifi performance?
   security.tpm2 = {
     enable = true;
