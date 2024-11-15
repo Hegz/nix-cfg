@@ -5,8 +5,10 @@
 { inputs, outputs, lib, config, pkgs, secrets, ... }:
 
 let
+  hostName = "SecUnit";
   ZMStorage = "/storage/tank"; 
   wifiInterface = "wlp2s0";
+  apInterface = "wlan-ap0";
   accessPointIP = "192.168.10.1";
 in
 {
@@ -17,15 +19,12 @@ in
       ../users/adam-blank.nix
     ];
 
-  hardware.cpu.intel.updateMicrocode = true;
-
-  networking.hostName = "SecUnit"; # Define your hostname.
-
-  # manually open required ports for AP
-  networking.firewall.interfaces.ap0.allowedUDPPorts = [
-      67  # Allow DHCP
-      123 # Allow NTP
+  # Enable google coral kernel module
+  boot.extraModulePackages = with config.boot.kernelPackages; [
+    gasket
   ];
+
+  hardware.cpu.intel.updateMicrocode = true;
 
   # Mount SSD to the ZM storage location
   fileSystems.${ZMStorage} = { 
@@ -34,7 +33,7 @@ in
 
   # Enable the zoneminder service
   services.zoneminder = {
-    enable = true;
+    enable = false;
     storageDir = "${ZMStorage}";
     cameras = 3;
     openFirewall = true;
@@ -45,65 +44,78 @@ in
     };
   };
 
-  users.users.zoneminder.extraGroups = [ "render" "video" ]; 
+#  services.frigate = {
+#    enable = true;
+#    hostname = "${hostName}";
+#    settings = {
+#      cameras 
+#    };
+#  };
 
-  # Create access point, local access only
-  services.create_ap = {
-	enable = true;
-	settings = {
-	  WIFI_IFACE = "${wifiInterface}";
-      SHARE_METHOD="none";
-	  SSID = "${secrets.zoneminder.wifi_name}";
-	  PASSPHRASE = "${secrets.zoneminder.wifi_pass}";
-      FREQ_BAND="2.4";
-      NO_DNSMASQ=1;
-      GATEWAY="${accessPointIP}";
-      IEEE80211N=1;
-      IEEE80211AC=1;
-      IEEE80211AX=1;
-      #ISOLATE_CLIENTS=1;
-	};
+  networking = { 
+    hostName = "${hostName}";
+    firewall.interfaces."${apInterface}".allowedUDPPorts = [
+      67  # Allow DHCP
+      123 # Allow NTP
+    ];
+    wlanInterfaces = {
+      "${apInterface}" = { 
+        device = "${wifiInterface}"; 
+      };
+    };
+    interfaces."${apInterface}".ipv4.addresses = [ 
+      {
+        address = "${accessPointIP}";
+        prefixLength = 24;
+      }
+   ];
   };
-
-
-  networking.wlanInterfaces = {
-    "wlan-ap0" = { device = ${wifiInterface}; };
-  };
+  
   # Hostapd based Access point
   services.hostapd = {
     enable        = true;
-    radios."wlan-ap0" = {
+    radios."${apInterface}" = {
       band        = "2g";
       channel     = 1;
       countryCode = "CA";
-      networks."wlan-ap0" = {
+      noScan      = true;
+      networks."${apInterface}" = {
     	ssid          = "${secrets.zoneminder.wifi_name}";
         authentication = {
-          mode        = "wpa2-sha265";
+          mode        = "wpa2-sha256";
           wpaPassword = "${secrets.zoneminder.wifi_pass}";
         };
         macAcl = "allow";
         macAllow = [
-			"${secrets.zoneminder.host0.mac}"
-			"${secrets.zoneminder.host1.mac}"
-			"${secrets.zoneminder.host2.mac}"
-			"${secrets.zoneminder.host3.mac}"
-			"${secrets.zoneminder.host4.mac}"
+        	"${secrets.zoneminder.host0.mac}"
+        	"${secrets.zoneminder.host1.mac}"
+        	"${secrets.zoneminder.host2.mac}"
+        	"${secrets.zoneminder.host3.mac}"
+        	"${secrets.zoneminder.host4.mac}"
         ];
       };
+      wifi4 = {
+        enable = true;
+        capabilities = [
+            "LDPC"
+            "HT40+"
+            "HT40-"
+            "SHORT-GI-20"
+            "SHORT-GI-40"
+			"TX-STBC"
+			"RX-STBC1"
+			"DSSS_CCK-40"
+          ];
+      }; 
       wifi6 = {
         enable = true;
-        multiUserBeamformer = true;
         operatingChannelWidth = "20or40";
-        
+        singleUserBeamformee = true;
       };
     }; 
   }; 
 
-
-
-
-  # Enable TMP for better wifi performance?
+  # Enable TPM for better wifi performance?
   security.tpm2 = {
     enable = true;
     pkcs11.enable = true;  # expose /run/current-system/sw/lib/libtpm2_pkcs11.so
@@ -138,7 +150,7 @@ in
       bind-dynamic = true;
 
       # DHCP Settings
-      interface = "ap0";
+      interface = "${apInterface}";
       no-hosts = true;
 
       listen-address ="${accessPointIP}";
