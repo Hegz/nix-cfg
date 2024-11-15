@@ -48,7 +48,7 @@
     ];
   # ...
   services.valheim = {
-    enable = false;
+    enable = true;
     serverName = "Worldland";
     worldName = "Worldland";
     openFirewall = true;
