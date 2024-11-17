@@ -5,10 +5,11 @@
 { inputs, outputs, lib, config, pkgs, secrets, ... }:
 
 let
-  hostName = "SecUnit";
-  ZMStorage = "/storage/tank"; 
+  hostName      = "SecUnit";
+  Storage       = "/storage/tank"; 
   wifiInterface = "wlp2s0";
-  apInterface = "wlan-ap0";
+  ethInterface  = "eno1";
+  apInterface   = "wlan-ap0";
   accessPointIP = "192.168.10.1";
 in
 {
@@ -19,56 +20,118 @@ in
       ../users/adam-blank.nix
     ];
 
-  # Enable google coral kernel module
+  # Enablment for google coral
   boot.extraModulePackages = with config.boot.kernelPackages; [
     gasket
   ];
+  services.udev.packages = [ pkgs.unstable.libedgetpu ];
+  users.groups.plugdev = {}; 
 
   hardware.cpu.intel.updateMicrocode = true;
 
   # Mount SSD to the ZM storage location
-  fileSystems.${ZMStorage} = { 
-    device = "/dev/disk/by-uuid/${secrets.zoneminder.disk-uuid}";
+  fileSystems.${Storage} = { 
+    device = "/dev/disk/by-uuid/${secrets.secunit.disk-uuid}";
   };
 
-  # Enable the zoneminder service
-  services.zoneminder = {
-    enable = false;
-    storageDir = "${ZMStorage}";
-    cameras = 3;
-    openFirewall = true;
-    database = {
-      createLocally = true;
-      username = "zoneminder";
-      #Manditory username for localdb
+  # Grant extra access to frigate 
+  systemd.services.frigate = {
+	serviceConfig = {
+		SupplementaryGroups = ["render" "video" "plugdev" ] ; # for access to dev/dri/*, and usb-edgetpu
+	};
+    environment.LD_LIBRARY_PATH = "${pkgs.unstable.libedgetpu}/lib";
+  };
+
+  services.frigate = {
+    enable = true;
+    hostname = "${hostName}";
+    settings = {
+      ffmpeg = {
+        hwaccel_args = "preset-vaapi";		# For Intel video acceleration
+        input_args = "preset-rtsp-udp";     # For UDP cameras
+      };
+      record = {
+        enabled = true;
+        retain = {
+          days = 7;
+          mode = "motion";
+        };
+        events = {
+          retain = {
+            default = 30;
+            mode = "motion";
+          };
+        };
+      }; 
+      objects.track = [ "person" "bear" "cat" "dog" ];
+      detectors.coral = {
+        type = "edgetpu";                 # Google Coral TPU 
+        device = "usb";
+      };
+      cameras = {
+        "${secrets.secunit.host1.name}".ffmpeg.inputs = [ {
+          path = "rtsp://127.0.0.1:8554/${secrets.secunit.host1.name}";
+          input_args = "preset-rtsp-restream";
+          roles = [ "record" ];
+        } {
+          path = "rtsp://${secrets.secunit.host1.rtsp-user}:${secrets.secunit.host1.rtsp-pass}@${secrets.secunit.host1.name}:554/ch1";
+          roles = [ "detect" ];
+        } ];
+        "${secrets.secunit.host2.name}".ffmpeg.inputs = [ {
+          path = "rtsp://127.0.0.1:8554/${secrets.secunit.host2.name}";
+          input_args = "preset-rtsp-restream"; 
+          roles = [ "record" ];
+        } {
+          path = "rtsp://${secrets.secunit.host2.rtsp-user}:${secrets.secunit.host2.rtsp-pass}@${secrets.secunit.host2.name}:554/ch1";
+          roles = [ "detect" ];
+        } ];
+      };
+      go2rtc = {
+        streams = lib.listToAttrs (map (stream: lib.nameValuePair "${stream.name}" "rtsp://127.0.0.1:8554/${stream.name}") (
+          builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
+      };
     };
   };
 
-#  services.frigate = {
-#    enable = true;
-#    hostname = "${hostName}";
-#    settings = {
-#      cameras 
-#    };
-#  };
+  services.go2rtc = {
+    enable = true;
+    settings = {
+      streams = {
+        "${secrets.secunit.host1.name}" = [
+          "rtsp://${secrets.secunit.host1.rtsp-user}:${secrets.secunit.host1.rtsp-pass}@${secrets.secunit.host1.name}:554/ch0"
+        ];
+        "${secrets.secunit.host2.name}" = [
+          "rtsp://${secrets.secunit.host2.rtsp-user}:${secrets.secunit.host2.rtsp-pass}@${secrets.secunit.host2.name}:554/ch0"
+        ];
+      };
+      rtsp.listen = ":8554";
+      webrtc.listen = ":8555";
+    };
+  }; 
 
   networking = { 
     hostName = "${hostName}";
-    firewall.interfaces."${apInterface}".allowedUDPPorts = [
-      67  # Allow DHCP
-      123 # Allow NTP
-    ];
-    wlanInterfaces = {
-      "${apInterface}" = { 
-        device = "${wifiInterface}"; 
+    firewall = {
+      interfaces = {
+        "${apInterface}".allowedUDPPorts = [
+          67     # DHCP
+          123    # NTP
+        ];
+        "${ethInterface}".allowedTCPPorts = [
+          80     # Web interface
+          5000   # API for homeassistant
+          8554   # RTSP
+          8555   # WebRTC
+        ];
       };
     };
-    interfaces."${apInterface}".ipv4.addresses = [ 
-      {
+    wlanInterfaces = {
+      "${apInterface}" = { device = "${wifiInterface}"; };
+    };
+    interfaces."${apInterface}".ipv4.addresses = [ {
         address = "${accessPointIP}";
         prefixLength = 24;
-      }
-   ];
+      } ];
   };
   
   # Hostapd based Access point
@@ -78,21 +141,15 @@ in
       band        = "2g";
       channel     = 1;
       countryCode = "CA";
-      noScan      = true;
+      #noScan      = true;
       networks."${apInterface}" = {
-    	ssid          = "${secrets.zoneminder.wifi_name}";
+    	ssid          = "${secrets.secunit.wifi_name}";
         authentication = {
-          mode        = "wpa2-sha256";
-          wpaPassword = "${secrets.zoneminder.wifi_pass}";
+          mode        = "wpa2-sha1";
+          wpaPassword = "${secrets.secunit.wifi_pass}";
         };
         macAcl = "allow";
-        macAllow = [
-        	"${secrets.zoneminder.host0.mac}"
-        	"${secrets.zoneminder.host1.mac}"
-        	"${secrets.zoneminder.host2.mac}"
-        	"${secrets.zoneminder.host3.mac}"
-        	"${secrets.zoneminder.host4.mac}"
-        ];
+        macAllow = builtins.map (x: "${x.mac}") (secrets.secunit.hosts);
       };
       wifi4 = {
         enable = true;
@@ -126,9 +183,11 @@ in
   hardware.opengl = {
     enable = true;
     extraPackages = with pkgs; [
-      intel-media-sdk   # for older GPUs
+      #intel-media-sdk   # for older GPUs
+      intel-vaapi-driver
     ];
   };
+  hardware.intel-gpu-tools.enable = true;
 
   #Provide NTP Services
   services.chrony = {
@@ -160,13 +219,8 @@ in
         "option:ntp-server,${accessPointIP}"
       ];
       dhcp-range = [ "192.168.10.50,192.168.10.54,24h" ];
-      dhcp-host = [
-        "${secrets.zoneminder.host0.mac},${secrets.zoneminder.host0.name},192.168.10.50" 
-        "${secrets.zoneminder.host1.mac},${secrets.zoneminder.host1.name},192.168.10.51" 
-        "${secrets.zoneminder.host2.mac},${secrets.zoneminder.host2.name},192.168.10.52" 
-        "${secrets.zoneminder.host3.mac},${secrets.zoneminder.host3.name},192.168.10.53" 
-        "${secrets.zoneminder.host4.mac},${secrets.zoneminder.host4.name},192.168.10.54" 
-      ];
+      dhcp-host = builtins.map (x: "${x.mac},${x.name},${x.ip}" ) (
+         secrets.secunit.hosts );
     };
   };
 }
