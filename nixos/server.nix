@@ -92,14 +92,14 @@
   services.tailscale.enable = true;
 
   # Enable docker
-  virtualisation = {
-    containers.enable = true;
-    oci-containers.backend = "podman";
-    podman = {
-      enable = true;
-      dockerCompat = true;
-    };
-  };
+  #virtualisation = {
+  #  containers.enable = true;
+  #  oci-containers.backend = "podman";
+  #  podman = {
+  #    enable = true;
+  #    dockerCompat = true;
+  #  };
+  #};
 
    # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -109,11 +109,15 @@
     keybase
     #pkgs.unstable.rclone
     #pkgs.cifs-utils
-    docker
+    #docker
     #runc
     nmap
     git-crypt
     #distrobox
+    wirelesstools 
+    iw 
+    pciutils 
+    usbutils
   ];
 
   #zsh settings
@@ -133,7 +137,7 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
-  services.openssh.settings.X11Forwarding = true;
+  # services.openssh.settings.X11Forwarding = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
