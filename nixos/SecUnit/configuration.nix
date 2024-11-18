@@ -41,7 +41,7 @@ in
 	};
     environment.LD_LIBRARY_PATH = "${pkgs.unstable.libedgetpu}/lib";
   };
-
+  
   services.frigate = {
     enable = true;
     hostname = "${hostName}";
@@ -68,27 +68,23 @@ in
         type = "edgetpu";                 # Google Coral TPU 
         device = "usb";
       };
-      cameras = {
-        "${secrets.secunit.host1.name}".ffmpeg.inputs = [ {
-          path = "rtsp://127.0.0.1:8554/${secrets.secunit.host1.name}";
-          input_args = "preset-rtsp-restream";
-          roles = [ "record" ];
-        } {
-          path = "rtsp://${secrets.secunit.host1.rtsp-user}:${secrets.secunit.host1.rtsp-pass}@${secrets.secunit.host1.name}:554/ch1";
-          roles = [ "detect" ];
-        } ];
-        "${secrets.secunit.host2.name}".ffmpeg.inputs = [ {
-          path = "rtsp://127.0.0.1:8554/${secrets.secunit.host2.name}";
-          input_args = "preset-rtsp-restream"; 
-          roles = [ "record" ];
-        } {
-          path = "rtsp://${secrets.secunit.host2.rtsp-user}:${secrets.secunit.host2.rtsp-pass}@${secrets.secunit.host2.name}:554/ch1";
-          roles = [ "detect" ];
-        } ];
-      };
+      cameras = lib.listToAttrs (map
+        (cam: lib.nameValuePair "${cam.name}" {
+          ffmpeg.inputs = [ {
+            path = "rtsp://127.0.0.1:8554/${cam.name}";
+            input_args = "preset-rtsp-restream";
+            roles = ["record"];
+          } {
+            path = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
+            roles = [ "detect" ];
+          } ];
+          motion.mask = if builtins.hasAttr "mask" cam then cam.mask else null;
+        } )
+        (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       go2rtc = {
-        streams = lib.listToAttrs (map (stream: lib.nameValuePair "${stream.name}" "rtsp://127.0.0.1:8554/${stream.name}") (
-          builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
+        streams = lib.listToAttrs (map 
+          (stream: lib.nameValuePair "${stream.name}" "rtsp://127.0.0.1:8554/${stream.name}")
+          (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       };
     };
   };
@@ -96,14 +92,9 @@ in
   services.go2rtc = {
     enable = true;
     settings = {
-      streams = {
-        "${secrets.secunit.host1.name}" = [
-          "rtsp://${secrets.secunit.host1.rtsp-user}:${secrets.secunit.host1.rtsp-pass}@${secrets.secunit.host1.name}:554/ch0"
-        ];
-        "${secrets.secunit.host2.name}" = [
-          "rtsp://${secrets.secunit.host2.rtsp-user}:${secrets.secunit.host2.rtsp-pass}@${secrets.secunit.host2.name}:554/ch0"
-        ];
-      };
+      streams = lib.listToAttrs (map 
+        (stream: lib.nameValuePair "${stream.name}" "rtsp://${stream.rtsp-user}:${stream.rtsp-pass}@${stream.name}:554/ch0")
+        (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       rtsp.listen = ":8554";
       webrtc.listen = ":8555";
     };
