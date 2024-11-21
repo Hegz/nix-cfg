@@ -11,7 +11,6 @@
       band        = "2g";
       channel     = 1;
       countryCode = "CA";
-      #noScan      = true;
       networks."${interface}" = {
     	ssid          = "${secrets.secunit.wifi_name}";
         authentication = {
@@ -27,8 +26,8 @@
         # https://web.mit.edu/freebsd/head/contrib/wpa/hostapd/hostapd.conf
         capabilities = [
             "LDPC"
-            "HT40+"
-            "HT40-"
+           # "HT40+"    # Cams don't like 40mhz channels, disable.
+           # "HT40-"
             "SHORT-GI-20"
             "SHORT-GI-40"
 			"TX-STBC"
