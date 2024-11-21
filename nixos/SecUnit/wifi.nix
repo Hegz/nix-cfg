@@ -9,7 +9,7 @@
     enable        = true;
     radios."${interface}" = {
       band        = "2g";
-      channel     = 1;
+      channel     = 6;
       countryCode = "CA";
       networks."${interface}" = {
     	ssid          = "${secrets.secunit.wifi_name}";
