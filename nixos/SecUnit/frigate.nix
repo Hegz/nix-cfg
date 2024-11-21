@@ -46,6 +46,12 @@
         type = "edgetpu";                 # Google Coral TPU 
         device = "usb";
       };
+      detect = {
+        height = 360;
+        width = 640;
+        fps = 5;
+        annotation_offset = -1400;
+      };     
       cameras = lib.listToAttrs (map
         (cam: lib.nameValuePair "${cam.name}" {
           ffmpeg.inputs = [ {
