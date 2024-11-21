@@ -23,6 +23,8 @@
       };
       wifi4 = {
         enable = true;
+        # Capibilities obtained from '$iw phys ' and compaired to 
+        # https://web.mit.edu/freebsd/head/contrib/wpa/hostapd/hostapd.conf
         capabilities = [
             "LDPC"
             "HT40+"
@@ -31,6 +33,7 @@
             "SHORT-GI-40"
 			"TX-STBC"
 			"RX-STBC1"
+			"MAX-AMSDU-7935"
 			"DSSS_CCK-40"
           ];
       }; 
