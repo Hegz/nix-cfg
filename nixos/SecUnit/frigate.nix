@@ -41,7 +41,7 @@
           };
         };
       }; 
-      objects.track = [ "person" "bear" "cat" "dog" ];
+      objects.track = [ "person" "bird" "bear" "cat" "dog" ];
       detectors.coral = {
         type = "edgetpu";                 # Google Coral TPU 
         device = "usb";
