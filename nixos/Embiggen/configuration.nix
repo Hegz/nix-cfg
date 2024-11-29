@@ -47,6 +47,9 @@
       "steamworks-sdk-redist"
     ];
   # ...
+
+  # Don't auto start valheim service
+  systemd.services.valheim.wantedBy = lib.mkForce [];
   services.valheim = {
     enable = true;
     serverName = "Worldland";
@@ -55,15 +58,6 @@
     password = "12345";
     adminList = [ "76561197990259028" ];
     permittedList = [ "76561197990259028" "76561199314455669" "76561199221428738" ]; # Me, Mo, & G
-    # If you want to use BepInEx mods.
-    #bepinexMods = [
-      # This does NOT fetch mod dependencies.  You need to add those manually,
-      # if there are any (besides BepInEx).
-      # ...
-    #];
-    #bepinexConfigs = [
-      # ...
-    #];
   };
 
   programs.kdeconnect.enable = true;

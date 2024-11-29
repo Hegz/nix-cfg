@@ -17,7 +17,6 @@
       chromium
       esphome
       firefox
-      freecad
       gimp-with-plugins
       git
       inkscape-with-extensions
