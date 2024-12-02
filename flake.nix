@@ -103,7 +103,7 @@
         specialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main nixos configuration file <
-          ./nixos/mcp/configuration.nix
+          ./nixos/MCP/configuration.nix
           # home-manager.nixosModules.home-manager
         ];
       };

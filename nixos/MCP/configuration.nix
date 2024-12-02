@@ -5,7 +5,7 @@
 { inputs, outputs, lib, config, pkgs, secrets, ... }:
 
 let
-  hostName      = "mcp";
+  hostName      = "MCP";
   Storage       = "/storage/tank"; 
 in
 {
