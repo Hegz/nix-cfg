@@ -104,7 +104,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/MCP/configuration.nix
-          # home-manager.nixosModules.home-manager
+          home-manager.nixosModules.home-manager
         ];
       };
     };
