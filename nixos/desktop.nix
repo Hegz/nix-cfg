@@ -147,6 +147,7 @@
     keybase-gui
     keybase
     pkgs.unstable.rclone
+    pkgs.unstable.freecad
     pkgs.cifs-utils
     pkgs.itd
     zoom-us

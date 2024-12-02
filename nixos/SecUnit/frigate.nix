@@ -41,7 +41,7 @@
           };
         };
       }; 
-      objects.track = [ "person" "bear" "cat" "dog" ];
+      objects.track = [ "person" "bird" "bear" "cat" "dog" ];
       detectors.coral = {
         type = "edgetpu";                 # Google Coral TPU 
         device = "usb";
@@ -62,7 +62,7 @@
             path = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
             roles = [ "detect" ];
           } ];
-          motion.mask = if builtins.hasAttr "mask" cam then cam.mask else null;
+          objects.filters.person.mask = if builtins.hasAttr "mask" cam then cam.mask else null;
         } )
         (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       go2rtc = {
