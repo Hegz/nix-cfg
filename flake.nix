@@ -99,7 +99,14 @@
 
         ];
       };
-
+      MCP = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/mcp/configuration.nix
+          # home-manager.nixosModules.home-manager
+        ];
+      };
     };
 
     # Standalone home-manager configuration entrypoint
@@ -107,6 +114,14 @@
     homeConfigurations = {
       # FIXME replace with your username@hostname
       "adam@Embiggen" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/adam.nix
+        ];
+      };
+      "adam@MCP" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
         extraSpecialArgs = {inherit inputs outputs secrets;};
         modules = [
