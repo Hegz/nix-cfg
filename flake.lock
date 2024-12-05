@@ -53,6 +53,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1704290814,
+        "narHash": "sha256-LWvKHp7kGxk/GEtlrGYV68qIvPHkU9iToomNFGagixU=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "70bdadeb94ffc8806c0570eb5c2695ad29f0e421",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nur": {
       "locked": {
         "lastModified": 1733176009,
@@ -100,23 +116,19 @@
     },
     "valheim-server": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs_2",
         "steam-fetcher": "steam-fetcher"
       },
       "locked": {
         "lastModified": 1730228940,
         "narHash": "sha256-Cm+5VtUi3WXTnOEcmY/MEGCWrQx5UpiG6417D0cFgmc=",
-        "owner": "aidalgol",
-        "repo": "valheim-server-flake",
+        "path": "/nix/store/wdf4whb8byqi0jaj8ify9j4zrj88xaj1-source",
         "rev": "a72c9ec8046164f6c7656601c99ba55846fcb16b",
-        "type": "github"
+        "type": "path"
       },
       "original": {
-        "owner": "aidalgol",
-        "repo": "valheim-server-flake",
-        "type": "github"
+        "id": "valheim-server",
+        "type": "indirect"
       }
     }
   },
