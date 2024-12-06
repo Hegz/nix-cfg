@@ -19,6 +19,7 @@
   # Extra Kernal Parameters
   boot.kernelParams = [
     "nvidia-drm.modeset=1"
+    "nvidia-drm.fbdev=1"
   ];
 
   # Enable CUPS to print documents.
