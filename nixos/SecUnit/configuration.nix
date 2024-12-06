@@ -24,6 +24,9 @@ in
 
     ];
 
+  # Netdata for Debug
+  services.netdata.enable = true;
+
   hardware.cpu.intel.updateMicrocode = true;
 
   # Enable harware acceleration for video streams
@@ -53,6 +56,7 @@ in
           5000   # API for homeassistant
           8554   # RTSP
           8555   # WebRTC
+          19999  # Netdata
         ];
       };
     };
