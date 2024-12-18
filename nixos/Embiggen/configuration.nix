@@ -21,6 +21,9 @@
     "nvidia-drm.modeset=1"
     "nvidia-drm.fbdev=1"
   ];
+  
+  # Switch to zen kernel 
+  boot.kernelPackages = pkgs.linuxPackages_zen;
 
   # Enable CUPS to print documents.
   services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
