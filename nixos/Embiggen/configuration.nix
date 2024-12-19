@@ -19,6 +19,7 @@
   # Extra Kernal Parameters
   boot.kernelParams = [
     "nvidia-drm.modeset=1"
+    "nvidia-drm.fbdev=1"
   ];
 
   # Enable CUPS to print documents.
@@ -175,7 +176,7 @@
     nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;  # stable runs latest version 545
-    # package = config.boot.kernelPackages.nvidiaPackages.production;  # Production lags a bit 535
+    # package = config.boot.kernelPackages.nvidiaPackages.stable;  # stable runs latest version 545
+    package = config.boot.kernelPackages.nvidiaPackages.production;  # Production lags a bit 535
   };
 }
