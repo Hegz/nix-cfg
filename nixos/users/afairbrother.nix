@@ -4,7 +4,7 @@
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Adam Fairbrother";
-    extraGroups = [ "plugdev" "networkmanager" "wheel" "distrobox" "docker" ];
+    extraGroups = [ "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" ];
     packages = with pkgs; [
       chromium
       firefox

@@ -143,7 +143,6 @@
         modules = [
           # > Our main home-manager configuration file <
           ./home-manager/afairbrother.nix
-          nur.hmModules.nur
         ];
       };
       "afairbrother@HePhaestus" = home-manager.lib.homeManagerConfiguration {
