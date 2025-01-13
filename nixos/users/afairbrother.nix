@@ -33,6 +33,8 @@
       teams-for-linux
       scrcpy
       steam
+      uni2ascii 
+      file
     ];
   };
 }
