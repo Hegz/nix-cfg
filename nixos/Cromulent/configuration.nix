@@ -5,6 +5,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 
 let
+  hostname = "cromulent";
   # Sops secret management
   sops-nix = builtins.fetchTarball {
     # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
@@ -21,13 +22,21 @@ in
       ../desktop.nix
       ../dokuwiki.nix
       ../users/afairbrother.nix
+      ../containers/adguard.nix
       #./suspend2Hibernate.nix
       #./unstable.nix
       #./unstable-keybase.nix
       #./dokuwiki.nix
     ];
 
-  networking.hostName = "Cromulent"; # Define your hostname.
+  networking = {
+    hostName = "${hostname}";
+    bridges.br0.interfaces = [ "enp3s0" ];
+
+    useDHCP = false;
+    interfaces."br0".useDHCP = true;
+ 
+  };
 
   hardware.bluetooth.enable = true;
 
@@ -43,23 +52,6 @@ in
     SUBSYSTEMS=="usb", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666"
     KERNEL=="ttyACM*", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666", ENV{ID_MM_DEVICE_IGNORE}="1"
   '';
-
-  containers.adGuard = {
-    autoStart = true;
-    config = {config, pkgs, lib, ... }: {
-      system.stateVersion = "24.05";
-	  networking = {
-        firewall = {
-          enable = true;
-          allowedTCPPorts = [ 80 ];
-        };
-		# Use systemd-resolved inside the container
-      	# Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-      	useHostResolvConf = lib.mkForce false;
-      };
-	  services.resolved.enable = true;
-    };
-  };
 
   # Steam settings.
   programs.steam = {
