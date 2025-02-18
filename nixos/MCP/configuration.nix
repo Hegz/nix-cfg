@@ -27,8 +27,14 @@ in
   };
   hardware.intel-gpu-tools.enable = true;
 
-  networking = { 
-    hostName = "${hostName}";
+  # Enable bridge mode for containers.
+  networking = {
+     hostName = "${hostName}";
+     bridges.br0.interfaces = [ "enp1s0" ];
+
+     useDHCP = false;
+     interfaces."br0".useDHCP = true;
+ 
   };
 
 }
