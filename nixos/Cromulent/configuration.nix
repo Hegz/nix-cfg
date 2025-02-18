@@ -5,7 +5,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 
 let
-  hostname = "cromulent";
+  hostName = "cromulent";
   # Sops secret management
   sops-nix = builtins.fetchTarball {
     # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
@@ -30,7 +30,7 @@ in
     ];
 
   networking = {
-    hostName = "${hostname}";
+    hostName = "${hostName}";
     bridges.br0.interfaces = [ "enp3s0" ];
 
     useDHCP = false;
