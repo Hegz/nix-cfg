@@ -140,22 +140,26 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    outils
-    xorg.xhost
-    keybase-gui
-    keybase
-    pkgs.unstable.rclone
-    pkgs.unstable.freecad
-    pkgs.cifs-utils
-    pkgs.itd
-    zoom-us
+    arduino-ide
+    distrobox
     docker
-    runc
-    nmap
     git-crypt
     kdePackages.bluedevil
-    distrobox
+    keybase
+    keybase-gui
+    libusb1
+    micronucleus            # For digispark
+    nmap
+    outils
+    pkgs.cifs-utils
+    pkgs.itd
+    pkgs.unstable.freecad
+    pkgs.unstable.rclone
+    runc
+    usbutils
+    vim 
+    xorg.xhost
+    zoom-us
   ];
 
   #zsh settings
