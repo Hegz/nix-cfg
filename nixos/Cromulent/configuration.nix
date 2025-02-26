@@ -22,7 +22,7 @@ in
       ../desktop.nix
       ../dokuwiki.nix
       ../users/afairbrother.nix
-      ../containers/adguard.nix
+      ../containers/adGuard.nix
       #./suspend2Hibernate.nix
       #./unstable.nix
       #./unstable-keybase.nix
