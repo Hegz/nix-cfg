@@ -1,4 +1,4 @@
-{ inputs, outputs, config, pkgs, lib, ... }:
+{ inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "adGuard";
 in
@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        # networkmanager.ethernet.macAddress = "00:11:22:33:44:55";
+        networkmanager.ethernet.macAddress = "${secrets.cromulent.containers.${hostname}.macAddress}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];
