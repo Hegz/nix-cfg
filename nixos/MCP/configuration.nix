@@ -18,6 +18,9 @@ in
 
   hardware.cpu.intel.updateMicrocode = true;
 
+  boot.supportedFilesystems = [ "zfs" ];
+  networking.hostId = "${secrets.MCP.hostId}";
+
   # Enable harware acceleration for video streams
   hardware.graphics = {
     enable = true;
