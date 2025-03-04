@@ -18,8 +18,6 @@ in
 
   hardware.cpu.intel.updateMicrocode = true;
 
-  boot.supportedFilesystems = [ "zfs" ];
-
   # Enable harware acceleration for video streams
   hardware.opengl = {
     enable = true;
