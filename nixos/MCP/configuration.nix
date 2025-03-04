@@ -19,7 +19,7 @@ in
   hardware.cpu.intel.updateMicrocode = true;
 
   # Enable harware acceleration for video streams
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
       intel-vaapi-driver
