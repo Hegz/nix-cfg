@@ -118,6 +118,7 @@
     iw 
     pciutils 
     usbutils
+    zfs
   ];
 
   #zsh settings
