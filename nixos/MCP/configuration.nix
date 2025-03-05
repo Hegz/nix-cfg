@@ -6,7 +6,6 @@
 
 let
   hostName      = "MCP";
-  Storage       = "/storage/tank"; 
 in
 {
   imports =
@@ -19,7 +18,26 @@ in
   hardware.cpu.intel.updateMicrocode = true;
 
   boot.supportedFilesystems = [ "zfs" ];
-  networking.hostId = "${secrets.MCP.hostId}";
+  networking.hostId = "${secrets.${hostName}.hostId}";
+  boot.zfs.extraPools = [ "zpool" ];
+
+  fileSystems."/home/media" = {
+    device = "zpool/ds1/media";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
+
+  fileSystems."/home/container" = {
+    device = "zpool/ds1/container";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
+
+  fileSystems."/home/important" = {
+    device = "zpool/ds1/important";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
 
   # Enable harware acceleration for video streams
   hardware.graphics = {
@@ -30,7 +48,7 @@ in
   };
   hardware.intel-gpu-tools.enable = true;
 
-  # Enable bridge mode for containers.
+  # Enable bridge mode networking for containers.
   networking = {
      hostName = "${hostName}";
      bridges.br0.interfaces = [ "enp1s0" ];
