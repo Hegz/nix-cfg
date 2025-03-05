@@ -13,6 +13,7 @@ in
       ./hardware-configuration.nix
       ../server.nix
       ../users/adam-blank.nix
+      (import ../containers/adGuard.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
