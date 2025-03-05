@@ -22,8 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        # Something like that should allow per host container mac addresses
-        networkmanager.ethernet.macAddress = "${secrets.${config.networking.hostName}.containers.${hostname}.macAddress}";
+        networkmanager.ethernet.macAddress = "${secrets.containers.${hostname}.macAddress}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];
