@@ -1,4 +1,4 @@
-{ inputs, outputs, config, pkgs, lib, secrets, ... }:
+{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "transmission";
 in
@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        networkmanager.ethernet.macAddress = "${secrets.containers.${hostname}.macAddress}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];
@@ -39,8 +39,8 @@ in
         enable = true;                                                                                                 
         rpcEnabled = true;                                                                                              
         rpcPort = 3000;                                                                                                 
-        rpcUsername = "${secrets.containers.${hostname}.rpcUsername}";                                                  
-        rpcPassword = "${secrets.containers.${hostname}.rpcPassword}";                                                  
+        rpcUsername = "${secrets.${serverName}.containers.${hostname}.rpcUsername}";                                                  
+        rpcPassword = "${secrets.${serverName}.containers.${hostname}.rpcPassword}";                                                  
         downloadDir = "/var/lib/private/downloads";                                                                     
         incompleteDir = "/var/lib/private/incomplete";                                                                  
         watchDir = "/var/lib/private/watch";                                                                            

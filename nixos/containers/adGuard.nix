@@ -22,7 +22,6 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        #networkmanager.ethernet.macAddress = "${secrets.${config.networking.hostName}.containers.${hostname}.mac}";
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
@@ -38,11 +37,7 @@ in
       services.adguardhome = { 
         enable = true;
         allowDHCP = false;
-        # port = 80;           
-        # host = "0.0.0.0"; 
-        # openFirewall = true;
         mutableSettings = true;
-        # settings = {};
       };
     };                                                   
   };

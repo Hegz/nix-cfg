@@ -1,4 +1,4 @@
-{ inputs, outputs, config, pkgs, lib, secrets, ... }:
+{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "template";
 in
@@ -22,8 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        # Something like that should allow per host container mac addresses
-        networkmanager.ethernet.macAddress = "${secrets.${config.networking.hostName}.containers.${hostname}.macAddress}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];
