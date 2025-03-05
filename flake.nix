@@ -76,12 +76,12 @@
           valheim-server.nixosModules.default
         ];
       };
-      Cromulent = nixpkgs.lib.nixosSystem {
+      cromulent = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Cromulent/configuration.nix
-	];
+    	];
       };
       HePhaestus = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};

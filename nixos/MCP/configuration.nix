@@ -6,7 +6,6 @@
 
 let
   hostName      = "MCP";
-  Storage       = "/storage/tank"; 
 in
 {
   imports =
@@ -14,12 +13,35 @@ in
       ./hardware-configuration.nix
       ../server.nix
       ../users/adam-blank.nix
+      (import ../containers/adGuard.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
 
+  boot.supportedFilesystems = [ "zfs" ];
+  networking.hostId = "${secrets.${hostName}.hostId}";
+  boot.zfs.extraPools = [ "zpool" ];
+
+  fileSystems."/home/media" = {
+    device = "zpool/ds1/media";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
+
+  fileSystems."/home/container" = {
+    device = "zpool/ds1/container";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
+
+  fileSystems."/home/important" = {
+    device = "zpool/ds1/important";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
+
   # Enable harware acceleration for video streams
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
       intel-vaapi-driver
@@ -27,8 +49,14 @@ in
   };
   hardware.intel-gpu-tools.enable = true;
 
-  networking = { 
-    hostName = "${hostName}";
+  # Enable bridge mode networking for containers.
+  networking = {
+     hostName = "${hostName}";
+     bridges.br0.interfaces = [ "enp1s0" ];
+
+     useDHCP = false;
+     interfaces."br0".useDHCP = true;
+ 
   };
 
 }
