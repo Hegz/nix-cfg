@@ -22,7 +22,7 @@ in
       ../desktop.nix
       ../dokuwiki.nix
       ../users/afairbrother.nix
-      ../containers/adGuard.nix
+      #../containers/adGuard.nix
       #./suspend2Hibernate.nix
       #./unstable.nix
       #./unstable-keybase.nix
@@ -31,10 +31,10 @@ in
 
   networking = {
     hostName = "${hostName}";
-    bridges.br0.interfaces = [ "enp3s0" ];
+#    bridges.br0.interfaces = [ "enp3s0" ];
 
-    useDHCP = false;
-    interfaces."br0".useDHCP = true;
+#    useDHCP = false;
+#    interfaces."br0".useDHCP = true;
  
   };
 
