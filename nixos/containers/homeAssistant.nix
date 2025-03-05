@@ -10,10 +10,14 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/private" = {                               
-        hostPath = "/home/containers/${hostname}";
+      "/var/lib/hass" = {                               
+        hostPath = "/home/container/${hostname}/hass";
         isReadOnly = false;                                
       };                                                   
+      "/etc/home-assistant" = {                               
+        hostPath = "/home/container/${hostname}/etc";
+        isReadOnly = false;                                
+      }; 
     };
 
     config = {config, pkgs, lib, ... }: {          
@@ -22,9 +26,9 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        #networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
-          enable = true;                                   
+          enable = false;                                   
           allowedTCPPorts = [ 3000 ];
           allowedUDPPorts = [ 53 ];
         };                           
@@ -37,15 +41,24 @@ in
       # Add service definitions here.
       services.home-assistant = {                                                                                      
         enable = true;                                                                                                 
-        config = {                                                                                                      
-          homeAssistant = {                                                                                             
-            internalUrl = "https://${hostname}.local";                                                                   
-           #  internalUrl = "http://localhost:8123";                                                                       
-           # ssl = true;                                                                                                  
-           # certfile = "/var/lib/private/ssl/fullchain.pem";                                                             
-           # keyfile = "/var/lib/private/ssl/privkey.pem";                                                                
-          };                                                                                                            
-        };                                                                                                              
+        configWritable = true;
+        openFirewall = true;
+        lovelaceConfigWritable = true;
+        config = {
+          lovelace.mode = "storage";
+          http = {
+            server_port = 8123;
+            server_host = "0.0.0.0";
+          };
+          homeassistant = {
+            unit_system = "metric";
+            time_zone = "${secrets.${serverName}.containers.${hostname}.tz}";
+            temperature_unit = "C";
+            name = "Home";
+            longitude = secrets.${serverName}.containers.${hostname}.lat;
+            latitude = secrets.${serverName}.containers.${hostname}.long;
+          };
+        };
       };
 
     };                                                   
