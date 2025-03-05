@@ -14,6 +14,7 @@ in
       ../server.nix
       ../users/adam-blank.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
+      (import ../containers/homeAssistant.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;

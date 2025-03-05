@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        #networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];
@@ -39,11 +39,11 @@ in
         enable = true;                                                                                                 
         config = {                                                                                                      
           homeAssistant = {                                                                                             
-            externalUrl = "https://${hostname}.local";                                                                   
-            internalUrl = "http://localhost:8123";                                                                       
-            ssl = true;                                                                                                  
-            certfile = "/var/lib/private/ssl/fullchain.pem";                                                             
-            keyfile = "/var/lib/private/ssl/privkey.pem";                                                                
+            internalUrl = "https://${hostname}.local";                                                                   
+           #  internalUrl = "http://localhost:8123";                                                                       
+           # ssl = true;                                                                                                  
+           # certfile = "/var/lib/private/ssl/fullchain.pem";                                                             
+           # keyfile = "/var/lib/private/ssl/privkey.pem";                                                                
           };                                                                                                            
         };                                                                                                              
       };
