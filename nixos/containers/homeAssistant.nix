@@ -50,8 +50,8 @@ in
             time_zone = "${secrets.${serverName}.containers.${hostname}.tz}";
             temperature_unit = "C";
             name = "Home";
-            longitude = secrets.${serverName}.containers.${hostname}.lat;
-            latitude = secrets.${serverName}.containers.${hostname}.long;
+            longitude = secrets.${serverName}.containers.${hostname}.long;
+            latitude = secrets.${serverName}.containers.${hostname}.lat;
           };
         };
       };
