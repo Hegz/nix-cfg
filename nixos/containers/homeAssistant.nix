@@ -24,7 +24,7 @@ in
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
-          enable = false;                                   
+          enable = true;                                   
           allowedTCPPorts = [ 8123 ];
         };                           
         # Use systemd-resolved inside the container 
