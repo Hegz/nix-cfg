@@ -1,4 +1,4 @@
-{ inputs, outputs, config, pkgs, lib, secrets, ... }:
+{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "adGuard";
 in
@@ -23,7 +23,7 @@ in
         hostName = "${hostname}";
         networkmanager.enable = true;
         #networkmanager.ethernet.macAddress = "${secrets.${config.networking.hostName}.containers.${hostname}.mac}";
-        networkmanager.ethernet.macAddress = "${secrets." + serverName + ".containers.${hostname}.mac}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];

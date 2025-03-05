@@ -8,64 +8,55 @@ let
   hostName      = "MCP";
 in
 {
+  imports =
+    [ # Include the results of the hardware scan.
+      ./hardware-configuration.nix
+      ../server.nix
+      ../users/adam-blank.nix
+      (import ../containers/adGuard.nix {serverName = "${hostName}";})
+    ];
 
-  options = {
-    systemName = lib.mkOption {
-      type = lib.types.string;
-      default = ${hostName};
-    };
+  hardware.cpu.intel.updateMicrocode = true;
+
+  boot.supportedFilesystems = [ "zfs" ];
+  networking.hostId = "${secrets.${hostName}.hostId}";
+  boot.zfs.extraPools = [ "zpool" ];
+
+  fileSystems."/home/media" = {
+    device = "zpool/ds1/media";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
   };
 
-  config = {
-    imports =
-      [ # Include the results of the hardware scan.
-        ./hardware-configuration.nix
-        ../server.nix
-        ../users/adam-blank.nix
-        ../containers/adGuard.nix
-      ];
+  fileSystems."/home/container" = {
+    device = "zpool/ds1/container";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
 
-    hardware.cpu.intel.updateMicrocode = true;
+  fileSystems."/home/important" = {
+    device = "zpool/ds1/important";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
 
-    boot.supportedFilesystems = [ "zfs" ];
-    networking.hostId = "${secrets.${hostName}.hostId}";
-    boot.zfs.extraPools = [ "zpool" ];
+  # Enable harware acceleration for video streams
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-vaapi-driver
+    ];
+  };
+  hardware.intel-gpu-tools.enable = true;
 
-    fileSystems."/home/media" = {
-      device = "zpool/ds1/media";
-      fsType = "zfs";
-      options = [ "zfsutil" ];
-    };
+  # Enable bridge mode networking for containers.
+  networking = {
+     hostName = "${hostName}";
+     bridges.br0.interfaces = [ "enp1s0" ];
 
-    fileSystems."/home/container" = {
-      device = "zpool/ds1/container";
-      fsType = "zfs";
-      options = [ "zfsutil" ];
-    };
-
-    fileSystems."/home/important" = {
-      device = "zpool/ds1/important";
-      fsType = "zfs";
-      options = [ "zfsutil" ];
-    };
-
-    # Enable harware acceleration for video streams
-    hardware.graphics = {
-      enable = true;
-      extraPackages = with pkgs; [
-        intel-vaapi-driver
-      ];
-    };
-    hardware.intel-gpu-tools.enable = true;
-
-    # Enable bridge mode networking for containers.
-    networking = {
-       hostName = "${hostName}";
-       bridges.br0.interfaces = [ "enp1s0" ];
-
-       useDHCP = false;
-       interfaces."br0".useDHCP = true;
-   
-    };
+     useDHCP = false;
+     interfaces."br0".useDHCP = true;
+ 
+  };
 
 }
