@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        #networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
         };                           
