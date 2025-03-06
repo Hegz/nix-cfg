@@ -10,7 +10,7 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/private" = {                               
+      "/var/lib/private/AdGuardHome" = {                               
         hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
       };                                                   
