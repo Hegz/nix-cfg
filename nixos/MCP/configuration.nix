@@ -13,8 +13,8 @@ in
       ./hardware-configuration.nix
       ../server.nix
       ../users/adam-blank.nix
+      ../virt/virt.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
-      (import ../containers/homeAssistant.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
     ];
