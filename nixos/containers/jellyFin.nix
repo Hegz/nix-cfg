@@ -16,6 +16,13 @@ in
       };                                                   
     };
 
+    bindMounts = {                                         
+      "/media" = {                               
+        hostPath = "/home/media";
+        isReadOnly = false;                                
+      };                                                   
+    };
+
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
 
