@@ -21,9 +21,17 @@ in
 
   hardware.cpu.intel.updateMicrocode = true;
 
-  boot.supportedFilesystems = [ "zfs" ];
+  boot.supportedFilesystems = [ "zfs" "nfs" ];
   networking.hostId = "${secrets.${hostName}.hostId}";
   boot.zfs.extraPools = [ "zpool" ];
+ 
+  services.nfs.server.enable = true;
+
+  fileSystems."/home/haos/Backup" = {
+    device = "zpool/ds1/haos/Backup";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
 
   fileSystems."/home/media" = {
     device = "zpool/ds1/media";
@@ -59,7 +67,9 @@ in
 
      useDHCP = false;
      interfaces."br0".useDHCP = true;
- 
+     firewall = {
+       enable = true;
+    };
   };
 
 }
