@@ -24,6 +24,11 @@ in
   boot.supportedFilesystems = [ "zfs" "nfs" ];
   networking.hostId = "${secrets.${hostName}.hostId}";
   boot.zfs.extraPools = [ "zpool" ];
+
+  boot.kernel.sysctl = { 
+    "net.core.rmem_max" = 4194304;
+    "net.core.wmem_max" = 1048576;
+  };
  
   services.nfs.server.enable = true;
 
