@@ -10,16 +10,16 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/private" = {                               
+      "/var/lib/transmission" = {                               
         hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
       };                                                   
-      "/var/lib/private/downloads" = {                               
-        hostPath = "/home/media/";
+      "/var/lib/transmission/Downloads" = {                               
+        hostPath = "/home/media/Downloads";
         isReadOnly = false;                                
       };
-      "/var/lib/private/incomplete" = {                               
-        hostPath = "/home/media/.incomplete";
+      "/var/lib/transmission/.incomplete" = {                               
+        hostPath = "/home/media/Downloads/.incomplete";
         isReadOnly = false;                                
       };
 
@@ -28,14 +28,16 @@ in
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
 
+      imports = [
+        ../../modules/wireguard.nix
+      ];
+
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
-          allowedTCPPorts = [ 3000 ];
-          allowedUDPPorts = [ 53 ];
         };                           
         # Use systemd-resolved inside the container 
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
@@ -43,14 +45,26 @@ in
       };                                                   
       services.resolved.enable = true;
 
+      # Fix for transmission failing to start 
+      # https://github.com/NixOS/nixpkgs/issues/258793
+	  systemd.services.transmission.serviceConfig = {
+	    BindReadOnlyPaths = lib.mkForce [ builtins.storeDir "/etc" ];
+        RootDirectoryStartOnly = lib.mkForce false;
+        RootDirectory = lib.mkForce "";
+      };
+
       # Add service definitions here.
       services.transmission = {                                                                                        
         enable = true;                                                                                                 
         openRPCPort = true;
         openPeerPorts = true;
         settings = { 
-          download-dir = "/var/lib/private/downloads";                                                                     
-          incomplete-dir = "/var/lib/private/incomplete"; 
+          rpc-host-whitelist = "${hostname}.fair";
+          rpc-bind-address = "0.0.0.0";
+          rpc-whitelist-enabled = false;
+          download-dir = "/var/lib/transmission/Downloads";                                                                     
+          incomplete-dir = "/var/lib/transmission/.incomplete"; 
+          umask = 2;
         };          
       };
 
