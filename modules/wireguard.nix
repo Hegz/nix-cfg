@@ -1,17 +1,18 @@
-{ inputs, outputs, config, pkgs, lib, secrets, ... }:
+{ inputs, outputs, config, pkgs, lib, specialArgs, ... }:
 let
-  hostName  = ${config.networking.hostName};
-  keySource = "../secrets/wireguard/${hostName}.key";
-  addressIP = ${secrets.${hostName}.wireguard.addressIP};
-  addresDNS = ${secrets.${hostName}.wireguard.addressDNS};
-  publicKey = ${secrets.${hostName}.wireguard.publicKey};
-  serverIP  = ${secrets.${hostName}.wireguard.serverIP};
-  port      = ${secrets.${hostName}.wireguard.port};
+
+  hostName   = "${config.networking.hostName}";
+  keySource  = ../secrets/wireguard/${hostName}.key;
+  addressIP  = "${specialArgs.secret.${hostName}.wireguard.addressIP}";
+  addressDNS = "${specialArgs.secret.${hostName}.wireguard.addressDNS}";
+  publicKey  = "${specialArgs.secret.${hostName}.wireguard.publicKey}";
+  serverIP   = "${specialArgs.secret.${hostName}.wireguard.serverIP}";
+  port       = "${specialArgs.secret.${hostName}.wireguard.port}";
 
 in
 {
   environment.etc = {
-    wgKey.source = keySource;
+    wgKey.source = "${keySource}";
   };
 
   networking.wg-quick.interfaces = {
@@ -22,14 +23,14 @@ in
 
       autostart = true;
 
-      listenPort = ${port}; 
+      listenPort = lib.strings.toInt "${port}"; 
 
       privateKeyFile = "/etc/wgKey";
 
       peers = [{
         publicKey = "${publicKey}";
         allowedIPs = [ "0.0.0.0/0" ];
-        endpoint = "${server_ip}:${port}";
+        endpoint = "${serverIP}:${port}";
         persistentKeepalive = 25;
       }];
     };
