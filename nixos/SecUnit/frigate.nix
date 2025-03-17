@@ -17,7 +17,7 @@
 	serviceConfig = {
 		SupplementaryGroups = ["render" "video" "plugdev" ] ; # for access to dev/dri/*, and usb-edgetpu
 	};
-    environment.LD_LIBRARY_PATH = "${pkgs.unstable.libedgetpu}/lib";
+#    environment.LD_LIBRARY_PATH = "${pkgs.unstable.libedgetpu}/lib";
   };
   
   services.frigate = {
