@@ -5,6 +5,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 
 let
+  hostName = "cromulent";
   # Sops secret management
   sops-nix = builtins.fetchTarball {
     # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
@@ -21,13 +22,21 @@ in
       ../desktop.nix
       ../dokuwiki.nix
       ../users/afairbrother.nix
+      #../containers/adGuard.nix
       #./suspend2Hibernate.nix
       #./unstable.nix
       #./unstable-keybase.nix
       #./dokuwiki.nix
     ];
 
-  networking.hostName = "Cromulent"; # Define your hostname.
+  networking = {
+    hostName = "${hostName}";
+#    bridges.br0.interfaces = [ "enp3s0" ];
+
+#    useDHCP = false;
+#    interfaces."br0".useDHCP = true;
+ 
+  };
 
   hardware.bluetooth.enable = true;
 
@@ -35,22 +44,14 @@ in
 
   services.opensnitch.enable = true;
 
-  containers.adGuard = {
-    autoStart = true;
-    config = {config, pkgs, lib, ... }: {
-      system.stateVersion = "24.05";
-	  networking = {
-        firewall = {
-          enable = true;
-          allowedTCPPorts = [ 80 ];
-        };
-		# Use systemd-resolved inside the container
-      	# Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-      	useHostResolvConf = lib.mkForce false;
-      };
-	  services.resolved.enable = true;
-    };
-  };
+  services.udev.extraRules = ''
+    # Allow users in the plugdev group to access the USB devices
+    #SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE="0664", GROUP="plugdev"
+    
+    # Added to allow access to ATTiny85 USB devices
+    SUBSYSTEMS=="usb", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666"
+    KERNEL=="ttyACM*", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666", ENV{ID_MM_DEVICE_IGNORE}="1"
+  '';
 
   # Steam settings.
   programs.steam = {

@@ -10,7 +10,7 @@
       ./zsh.nix
       ./home.nix
       ./firefox.nix
-      inputs.nur.hmModules.nur
+      #inputs.nur.hmModules.nur
   ];
 
   home = {
