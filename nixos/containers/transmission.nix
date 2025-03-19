@@ -1,12 +1,14 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "transmission";
+  mac = "${secrets.${serverName}.containers.${hostname}.mac}";
 in
 {
   containers."${hostname}" = {                                                                                              
     autoStart = true;                                      
 	privateNetwork = true;
     hostBridge = "br0";
+    specialArgs =  {secret = secrets; };
 
     # Filesystem mount points
     bindMounts = {                                         
@@ -25,17 +27,17 @@ in
 
     };
 
-    config = {config, pkgs, lib, ... }: {          
+    config = { config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
 
       imports = [
-        ../../modules/wireguard.nix
+         ../../modules/wireguard.nix
       ];
 
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        networkmanager.ethernet.macAddress = "${mac}";
         firewall = {                                                                                                  
           enable = true;                                   
         };                           
@@ -67,7 +69,6 @@ in
           umask = 2;
         };          
       };
-
     };                                                   
   };
 }
