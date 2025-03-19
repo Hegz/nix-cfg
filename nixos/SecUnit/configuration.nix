@@ -24,10 +24,13 @@ in
 
     ];
 
+  # Netdata for Debug
+  services.netdata.enable = true;
+
   hardware.cpu.intel.updateMicrocode = true;
 
   # Enable harware acceleration for video streams
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
       intel-vaapi-driver
@@ -48,12 +51,18 @@ in
           67     # DHCP
           123    # NTP
         ];
-        "${ethInterface}".allowedTCPPorts = [
-          80     # Web interface
-          5000   # API for homeassistant
-          8554   # RTSP
-          8555   # WebRTC
-        ];
+        "${ethInterface}" = { 
+          allowedTCPPorts = [
+            80     # Web interface
+            8554   # RTSP
+            8555   # WebRTC
+            19999  # Netdata
+          ];
+          allowedUDPPorts = [
+            8554   # RTSP
+            8555   # WebRTC
+          ];
+        };
       };
     };
     wlanInterfaces = {
