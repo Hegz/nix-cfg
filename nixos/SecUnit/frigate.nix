@@ -24,6 +24,15 @@
     enable = true;
     hostname = "${hostName}";
     settings = {
+      tls = {
+        enabled = false;
+      };
+      mqtt = {
+        enabled = true;
+        user = "mosquitto";
+        password = "BuzzBuzz";
+        host = "192.168.1.100";
+      };
       ffmpeg = {
         hwaccel_args = "preset-vaapi";		# For Intel video acceleration
         input_args = "preset-rtsp-udp";     # For UDP cameras
@@ -55,7 +64,7 @@
       cameras = lib.listToAttrs (map
         (cam: lib.nameValuePair "${cam.name}" {
           ffmpeg.inputs = [ {
-            path = "rtsp://127.0.0.1:8554/${cam.name}";
+            path = "rtsp://0.0.0.0:8554/${cam.name}";
             input_args = "preset-rtsp-restream";
             roles = ["record"];
           } {
@@ -67,7 +76,7 @@
         (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       go2rtc = {
         streams = lib.listToAttrs (map 
-          (stream: lib.nameValuePair "${stream.name}" "rtsp://127.0.0.1:8554/${stream.name}")
+          (stream: lib.nameValuePair "${stream.name}" "rtsp://0.0.0.0:8554/${stream.name}")
           (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       };
     };
