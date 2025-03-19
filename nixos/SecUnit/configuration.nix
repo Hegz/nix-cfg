@@ -51,13 +51,18 @@ in
           67     # DHCP
           123    # NTP
         ];
-        "${ethInterface}".allowedTCPPorts = [
-          80     # Web interface
-          5000   # API for homeassistant
-          8554   # RTSP
-          8555   # WebRTC
-          19999  # Netdata
-        ];
+        "${ethInterface}" = { 
+          allowedTCPPorts = [
+            80     # Web interface
+            8554   # RTSP
+            8555   # WebRTC
+            19999  # Netdata
+          ];
+          allowedUDPPorts = [
+            8554   # RTSP
+            8555   # WebRTC
+          ];
+        };
       };
     };
     wlanInterfaces = {
