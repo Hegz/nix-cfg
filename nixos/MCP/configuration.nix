@@ -56,6 +56,14 @@ in
     options = [ "zfsutil" ];
   };
 
+  services.zfs = {
+    autoScrub.enable = true;
+    autoSnapshot = {
+      enable = true;
+      flags = "-k -p --utc";
+    };
+  };
+
   # Enable harware acceleration for video streams
   hardware.graphics = {
     enable = true;
@@ -74,6 +82,9 @@ in
      interfaces."br0".useDHCP = true;
      firewall = {
        enable = true;
+       allowedTCPPorts = [ 
+         2049  # nfs v4 
+       ];
     };
   };
 
