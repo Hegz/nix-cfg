@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        #networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = false;                                   
           #allowedTCPPorts = [ 3000 ];
@@ -37,6 +37,7 @@ in
       # Add service definitions here.
       services.smokeping = {
         enable = true;
+        hostName = "${hostname}.fair";
         targetConfig = ''
 		  probe = FPing
 		  menu = Top
@@ -69,7 +70,7 @@ in
 		  menu = Cloudflare DNS
 		  title = cloudflare 1.1.1.1
 		  host = 1.1.1.1
-		''
+		'';
       };
 
     };                                                   
