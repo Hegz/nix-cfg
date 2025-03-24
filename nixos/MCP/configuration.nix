@@ -18,6 +18,7 @@ in
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
       (import ../containers/smokeping.nix {serverName = "${hostName}";})
+      (import ../containers/tt-rss.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
