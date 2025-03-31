@@ -2,8 +2,9 @@
 {
   virtualisation.libvirtd = {
     enable = true;
+    onShutdown = "shutdown";
     qemu = {
-      vhostUserPackages = [ pkgs.virtiofsd ];
+      # vhostUserPackages = [ pkgs.virtiofsd ];
       package = pkgs.qemu_kvm;
       runAsRoot = true;
       swtpm.enable = true;
