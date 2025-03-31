@@ -160,6 +160,7 @@
     vim 
     xorg.xhost
     zoom-us
+    virt-viewer
   ];
 
   #zsh settings
