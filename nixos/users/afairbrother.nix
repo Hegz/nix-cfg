@@ -35,6 +35,7 @@
       steam
       uni2ascii 
       file
+      vlc
     ];
   };
 }
