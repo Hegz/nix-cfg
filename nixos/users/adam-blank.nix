@@ -12,6 +12,7 @@
                     "plugdev" 
                     "video" 
                     "wheel" 
+                    "libvirtd"
                   ];
     packages = with pkgs; [
 	git

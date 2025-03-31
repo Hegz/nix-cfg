@@ -1,6 +1,6 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
-  hostname = "jellyFin";
+  hostname = "tt-rss";
 in
 {
   containers."${hostname}" = {                                                                                              
@@ -10,15 +10,8 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/jellyfin" = {                               
+      "/var/lib/tt-rss" = {                               
         hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
-    };
-
-    bindMounts = {                                         
-      "/media" = {                               
-        hostPath = "/home/media";
         isReadOnly = false;                                
       };                                                   
     };
@@ -32,6 +25,8 @@ in
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
+          allowedTCPPorts = [ 80 ];
+          # allowedUDPPorts = [ 53 ];
         };                           
         # Use systemd-resolved inside the container 
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
@@ -40,9 +35,16 @@ in
       services.resolved.enable = true;
 
       # Add service definitions here.
-      services.jellyfin = {                                                                                             
-        enable = true;                                                                                                  
-        openFirewall = true;
+
+      services.tt-rss = {
+        enable = true;
+        selfUrlPath = "http://${hostname}.fair";
+      };
+      
+      # Enable tailscale
+      services.tailscale = {
+        enable = true;
+        interfaceName = "userspace-networking";
       };
 
     };                                                   

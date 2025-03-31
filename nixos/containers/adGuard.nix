@@ -10,7 +10,7 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/private" = {                               
+      "/var/lib/private/AdGuardHome" = {                               
         hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
       };                                                   
@@ -25,14 +25,14 @@ in
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
-          allowedTCPPorts = [ 3000 ];
+          allowedTCPPorts = [ 80 ];
           allowedUDPPorts = [ 53 ];
         };                           
         # Use systemd-resolved inside the container 
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
         useHostResolvConf = lib.mkForce false;             
       };                                                   
-      services.resolved.enable = true;
+      #services.resolved.enable = true;
 
       services.adguardhome = { 
         enable = true;
