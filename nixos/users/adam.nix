@@ -11,6 +11,7 @@
                     "networkmanager" 
                     "plugdev" 
                     "video" 
+                    "dialout"
                     "wheel" 
                   ];
     packages = with pkgs; [
