@@ -17,30 +17,29 @@ in
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
+      (import ../containers/smokeping.nix {serverName = "${hostName}";})
+      (import ../containers/tt-rss.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
 
-  boot.supportedFilesystems = [ "zfs" ];
+  boot.supportedFilesystems = [ "zfs" "nfs" ];
   networking.hostId = "${secrets.${hostName}.hostId}";
   boot.zfs.extraPools = [ "zpool" ];
 
-  fileSystems."/home/media" = {
-    device = "zpool/ds1/media";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
+  boot.kernel.sysctl = { 
+    "net.core.rmem_max" = 4194304;
+    "net.core.wmem_max" = 1048576;
   };
+ 
+  services.nfs.server.enable = true;
 
-  fileSystems."/home/container" = {
-    device = "zpool/ds1/container";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
-  };
-
-  fileSystems."/home/important" = {
-    device = "zpool/ds1/important";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
+  services.zfs = {
+    autoScrub.enable = true;
+    autoSnapshot = {
+      enable = true;
+      flags = "-k -p --utc";
+    };
   };
 
   # Enable harware acceleration for video streams
@@ -59,7 +58,12 @@ in
 
      useDHCP = false;
      interfaces."br0".useDHCP = true;
- 
+     firewall = {
+       enable = true;
+       allowedTCPPorts = [ 
+         2049  # nfs v4 
+       ];
+    };
   };
 
 }
