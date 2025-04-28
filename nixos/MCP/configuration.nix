@@ -17,6 +17,8 @@ in
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
+      (import ../containers/smokeping.nix {serverName = "${hostName}";})
+      (import ../containers/tt-rss.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
@@ -32,28 +34,12 @@ in
  
   services.nfs.server.enable = true;
 
-  fileSystems."/home/haos/Backup" = {
-    device = "zpool/ds1/haos/Backup";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
-  };
-
-  fileSystems."/home/media" = {
-    device = "zpool/ds1/media";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
-  };
-
-  fileSystems."/home/container" = {
-    device = "zpool/ds1/container";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
-  };
-
-  fileSystems."/home/important" = {
-    device = "zpool/ds1/important";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
+  services.zfs = {
+    autoScrub.enable = true;
+    autoSnapshot = {
+      enable = true;
+      flags = "-k -p --utc";
+    };
   };
 
   # Enable harware acceleration for video streams
@@ -74,6 +60,9 @@ in
      interfaces."br0".useDHCP = true;
      firewall = {
        enable = true;
+       allowedTCPPorts = [ 
+         2049  # nfs v4 
+       ];
     };
   };
 
