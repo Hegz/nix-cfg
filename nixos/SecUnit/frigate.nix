@@ -13,7 +13,7 @@
   users.groups.plugdev = {}; 
 
   #Enable frigate+
-  environment.variables = { PLUS_API_KEY = "${secrets.secunit.frigate+}"; };
+  environment.variables = { PLUS_API_KEY = "${secrets.secunit.frigate}"; };
 
   # Grant extra access to frigate 
   systemd.services.frigate = {
