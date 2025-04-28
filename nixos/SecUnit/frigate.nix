@@ -31,7 +31,7 @@
         enabled = true;
         user = "mosquitto";
         password = "BuzzBuzz";
-        host = "192.168.1.100";
+        host = "192.168.1.3";
       };
       ffmpeg = {
         hwaccel_args = "preset-vaapi";		# For Intel video acceleration
