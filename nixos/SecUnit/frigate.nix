@@ -32,9 +32,9 @@
       };
       mqtt = {
         enabled = true;
-        user = "mosquitto";
-        password = "BuzzBuzz";
-        host = "192.168.1.3";
+        user = "${secrets.secunit.mqtt.user}";
+        password = "${secrets.secunit.mqtt.password}";
+        host = "${secrets.secunit.mqtt.host}";
       };
       ffmpeg = {
         hwaccel_args = "preset-vaapi";		# For Intel video acceleration
