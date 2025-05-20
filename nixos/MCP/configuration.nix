@@ -19,6 +19,7 @@ in
       (import ../containers/transmission.nix {serverName = "${hostName}";})
       (import ../containers/smokeping.nix {serverName = "${hostName}";})
       (import ../containers/tt-rss.nix {serverName = "${hostName}";})
+      (import ../containers/budget.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
