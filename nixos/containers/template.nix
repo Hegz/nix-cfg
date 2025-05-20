@@ -11,7 +11,7 @@ in
     # Filesystem mount points
     bindMounts = {                                         
       "/var/lib/private" = {                               
-        hostPath = "/home/containers/${hostname}";
+        hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
       };                                                   
     };
@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        # networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
           allowedTCPPorts = [ 3000 ];
