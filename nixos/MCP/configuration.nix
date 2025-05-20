@@ -20,6 +20,7 @@ in
       (import ../containers/smokeping.nix {serverName = "${hostName}";})
       (import ../containers/tt-rss.nix {serverName = "${hostName}";})
       (import ../containers/minecraft.nix {serverName = "${hostName}";})
+      (import ../containers/budget.nix {serverName = "${hostName}";})
     ];
 
   hardware.cpu.intel.updateMicrocode = true;
