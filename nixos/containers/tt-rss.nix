@@ -40,6 +40,12 @@ in
         enable = true;
         selfUrlPath = "http://${hostname}.fair";
       };
+
+      services.nginx.virtualHosts."${config.services.tt-rss.virtualHost}" = {
+        forceSSL = true;
+        sslCertificate = "/var/lib/tt-rss/ssl/tt-rss.taild7a71.ts.net.crt";
+        sslCertificateKey = "/var/lib/tt-rss/ssl/tt-rss.taild7a71.ts.net.key";
+      };
       
       # Enable tailscale
       services.tailscale = {
