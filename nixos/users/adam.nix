@@ -20,7 +20,7 @@
       gimp-with-plugins
       git
       inkscape-with-extensions
-      kate
+      kdePackages.kate
       kdePackages.ark
       kdePackages.gwenview
       kdePackages.kalk
