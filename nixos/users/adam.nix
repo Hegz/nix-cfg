@@ -11,6 +11,7 @@
                     "networkmanager" 
                     "plugdev" 
                     "video" 
+                    "dialout"
                     "wheel" 
                   ];
     packages = with pkgs; [
@@ -38,6 +39,7 @@
       wine
       x2goclient
       xclip
+      prismlauncher
     ];
   };
 }

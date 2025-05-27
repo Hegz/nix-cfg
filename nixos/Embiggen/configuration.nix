@@ -101,26 +101,26 @@
   { device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
   };
   
-  fileSystems."/home/Important" = {
-    device = "freenas.fair:/mnt/S1/Important";
-    fsType = "nfs";
-    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
-  };
-  
-  fileSystems."/home/Torrents" = {
-    device = "freenas.fair:/mnt/S1/Torrents";
-    fsType = "nfs";
-    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
-  };
+ # fileSystems."/home/Important" = {
+ #   device = "freenas.fair:/mnt/S1/Important";
+ #   fsType = "nfs";
+ #   options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+ # };
+ # 
+ # fileSystems."/home/Torrents" = {
+ #   device = "freenas.fair:/mnt/S1/Torrents";
+ #   fsType = "nfs";
+ #   options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+ # };
 
-  fileSystems."/home/esphome" = {
-    device = "//freenas.fair/esphome";
-    fsType = "cifs";
-    options = let
-      # this line prevents hanging on network split
-    automount_opts = "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s";
-      in ["${automount_opts},credentials=/etc/nixos/smb-secrets,uid=1000,gid=100"];
-  };
+ # fileSystems."/home/esphome" = {
+ #   device = "//freenas.fair/esphome";
+ #   fsType = "cifs";
+ #   options = let
+ #     # this line prevents hanging on network split
+ #   automount_opts = "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s";
+ #     in ["${automount_opts},credentials=/etc/nixos/smb-secrets,uid=1000,gid=100"];
+ # };
 
   # Nvidia graphics options below
   # ==============================
