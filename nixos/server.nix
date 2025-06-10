@@ -103,25 +103,6 @@
 
    # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    #distrobox
-    #docker
-    #pkgs.cifs-utils
-    #pkgs.unstable.rclone
-    #runc
-    git-crypt
-    iw 
-    keybase
-    nmap
-    outils
-    pciutils 
-    usbutils
-    vim 
-    virt-manager
-    virt-viewer
-    wirelesstools 
-    zfs
-  ];
 
   #zsh settings
   environment.shells = with pkgs; [ zsh ];

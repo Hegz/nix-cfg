@@ -23,6 +23,16 @@ in
       (import ../containers/budget.nix {serverName = "${hostName}";})
     ];
 
+  environment.systemPackages = with pkgs; [
+    git-crypt
+    keybase
+    nmap
+    vim 
+    virt-manager
+    zfs
+    compose2nix
+  ];
+
   hardware.cpu.intel.updateMicrocode = true;
 
   boot.supportedFilesystems = [ "zfs" "nfs" ];
