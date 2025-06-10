@@ -23,6 +23,7 @@
       kdePackages.okular
       kdePackages.yakuake
       pkgs.cura
+      orca-slicer
       playonlinux
       quickemu
       tenacity
