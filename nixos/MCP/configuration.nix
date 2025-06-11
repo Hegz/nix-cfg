@@ -14,7 +14,7 @@ in
       ../server.nix
       ../users/adam-blank.nix
       ../virt/virt.nix
-      ../virt/docker.nix
+      ../docker/dawarich.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
