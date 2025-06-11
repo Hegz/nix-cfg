@@ -1,5 +1,7 @@
 { inputs, outputs, config, pkgs, lib, secrets, ... }:
 {
+  environment.pathsToLink = [ "/share/qemu" ];
+
   virtualisation.libvirtd = {
     enable = true;
     onShutdown = "shutdown";
