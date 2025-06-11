@@ -23,15 +23,15 @@ in
       boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
 
 	  # Bring actual in from unstable
-      imports =
-        [ # Importing Actual budget server from unstable
-        "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/actual.nix"
-        ];
+      #imports =
+      #  [ # Importing Actual budget server from unstable
+      #  "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/actual.nix"
+      #  ];
 
-      nixpkgs.overlays = [
-        outputs.overlays.unstable-packages
-        (new: prev: { mtr-exporter = pkgs.unstable.pkgs.actual; })
-      ];
+      #nixpkgs.overlays = [
+      #  outputs.overlays.unstable-packages
+      #  (new: prev: { mtr-exporter = pkgs.unstable.pkgs.actual; })
+      #];
 
       networking = {                                   
         hostName = "${hostname}";
@@ -59,7 +59,6 @@ in
           };
         };
 
-        package = pkgs.unstable.actual-server;
       };
 
       # Enable tailscale
