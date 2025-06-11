@@ -14,6 +14,7 @@ in
       ../server.nix
       ../users/adam-blank.nix
       ../virt/virt.nix
+      ../virt/docker.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
@@ -22,6 +23,16 @@ in
       (import ../containers/minecraft.nix {serverName = "${hostName}";})
       (import ../containers/budget.nix {serverName = "${hostName}";})
     ];
+
+  environment.systemPackages = with pkgs; [
+    git-crypt
+    keybase
+    nmap
+    vim 
+    virt-manager
+    zfs
+    compose2nix
+  ];
 
   hardware.cpu.intel.updateMicrocode = true;
 
