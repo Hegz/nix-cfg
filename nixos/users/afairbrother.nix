@@ -14,7 +14,7 @@
       git
       google-chrome
       inkscape-with-extensions
-      kate
+      kdePackages.kate
       kdePackages.kdeconnect-kde
       libreoffice-fresh
       kdePackages.ark

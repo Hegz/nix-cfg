@@ -55,7 +55,6 @@ let
 
 in {
   services.dokuwiki.sites."localhost" = {
-    enable = true;
     settings = {
       title = "My Wiki";
       useacl = true;
