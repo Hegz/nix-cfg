@@ -23,7 +23,7 @@
   virtualisation.oci-containers.containers."dawarich_app" = {
     image = "freikin/dawarich:latest";
     environment = {
-      "APPLICATION_HOSTS" = "localhost";
+      "APPLICATION_HOSTS" = "localhost,mcp.taild7a71.ts.net";
       "APPLICATION_PROTOCOL" = "http";
       "DATABASE_HOST" = "dawarich_db";
       "DATABASE_NAME" = "dawarich_development";
@@ -37,13 +37,13 @@
       "REDIS_URL" = "redis://dawarich_redis:6379";
       "SELF_HOSTED" = "true";
       "STORE_GEODATA" = "true";
-      "TIME_ZONE" = "Europe/London";
+      "TIME_ZONE" = "America/Vancouver";
     };
     volumes = [
-      "myproject_dawarich_db_data:/dawarich_db_data:rw"
-      "myproject_dawarich_public:/var/app/public:rw"
-      "myproject_dawarich_storage:/var/app/storage:rw"
-      "myproject_dawarich_watched:/var/app/tmp/imports/watched:rw"
+      "dawarich_dawarich_db_data:/dawarich_db_data:rw"
+      "dawarich_dawarich_public:/var/app/public:rw"
+      "dawarich_dawarich_storage:/var/app/storage:rw"
+      "dawarich_dawarich_watched:/var/app/tmp/imports/watched:rw"
     ];
     ports = [
       "3000:3000/tcp"
@@ -64,7 +64,7 @@
       "--health-timeout=10s"
       "--memory=4294967296b"
       "--network-alias=dawarich_app"
-      "--network=myproject_dawarich"
+      "--network=dawarich_dawarich"
     ];
   };
   systemd.services."podman-dawarich_app" = {
@@ -72,24 +72,24 @@
       Restart = lib.mkOverride 90 "on-failure";
     };
     after = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_db_data.service"
-      "podman-volume-myproject_dawarich_public.service"
-      "podman-volume-myproject_dawarich_storage.service"
-      "podman-volume-myproject_dawarich_watched.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_db_data.service"
+      "podman-volume-dawarich_dawarich_public.service"
+      "podman-volume-dawarich_dawarich_storage.service"
+      "podman-volume-dawarich_dawarich_watched.service"
     ];
     requires = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_db_data.service"
-      "podman-volume-myproject_dawarich_public.service"
-      "podman-volume-myproject_dawarich_storage.service"
-      "podman-volume-myproject_dawarich_watched.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_db_data.service"
+      "podman-volume-dawarich_dawarich_public.service"
+      "podman-volume-dawarich_dawarich_storage.service"
+      "podman-volume-dawarich_dawarich_watched.service"
     ];
     partOf = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
     wantedBy = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
   };
   virtualisation.oci-containers.containers."dawarich_db" = {
@@ -100,8 +100,8 @@
       "POSTGRES_USER" = "postgres";
     };
     volumes = [
-      "myproject_dawarich_db_data:/var/lib/postgresql/data:rw"
-      "myproject_dawarich_shared:/var/shared:rw"
+      "dawarich_dawarich_db_data:/var/lib/postgresql/data:rw"
+      "dawarich_dawarich_shared:/var/shared:rw"
     ];
     log-driver = "journald";
     extraOptions = [
@@ -111,7 +111,7 @@
       "--health-start-period=30s"
       "--health-timeout=10s"
       "--network-alias=dawarich_db"
-      "--network=myproject_dawarich"
+      "--network=dawarich_dawarich"
       "--shm-size=1073741824"
     ];
   };
@@ -120,26 +120,26 @@
       Restart = lib.mkOverride 90 "always";
     };
     after = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_db_data.service"
-      "podman-volume-myproject_dawarich_shared.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_db_data.service"
+      "podman-volume-dawarich_dawarich_shared.service"
     ];
     requires = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_db_data.service"
-      "podman-volume-myproject_dawarich_shared.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_db_data.service"
+      "podman-volume-dawarich_dawarich_shared.service"
     ];
     partOf = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
     wantedBy = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
   };
   virtualisation.oci-containers.containers."dawarich_redis" = {
     image = "redis:7.4-alpine";
     volumes = [
-      "myproject_dawarich_shared:/data:rw"
+      "dawarich_dawarich_shared:/data:rw"
     ];
     cmd = [ "redis-server" ];
     log-driver = "journald";
@@ -150,7 +150,7 @@
       "--health-start-period=30s"
       "--health-timeout=10s"
       "--network-alias=dawarich_redis"
-      "--network=myproject_dawarich"
+      "--network=dawarich_dawarich"
     ];
   };
   systemd.services."podman-dawarich_redis" = {
@@ -158,24 +158,24 @@
       Restart = lib.mkOverride 90 "always";
     };
     after = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_shared.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_shared.service"
     ];
     requires = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_shared.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_shared.service"
     ];
     partOf = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
     wantedBy = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
   };
   virtualisation.oci-containers.containers."dawarich_sidekiq" = {
     image = "freikin/dawarich:latest";
     environment = {
-      "APPLICATION_HOSTS" = "localhost";
+      "APPLICATION_HOSTS" = "localhost,mcp.taild7a71.ts.net";
       "APPLICATION_PROTOCOL" = "http";
       "BACKGROUND_PROCESSING_CONCURRENCY" = "10";
       "DATABASE_HOST" = "dawarich_db";
@@ -191,9 +191,9 @@
       "STORE_GEODATA" = "true";
     };
     volumes = [
-      "myproject_dawarich_public:/var/app/public:rw"
-      "myproject_dawarich_storage:/var/app/storage:rw"
-      "myproject_dawarich_watched:/var/app/tmp/imports/watched:rw"
+      "dawarich_dawarich_public:/var/app/public:rw"
+      "dawarich_dawarich_storage:/var/app/storage:rw"
+      "dawarich_dawarich_watched:/var/app/tmp/imports/watched:rw"
     ];
     cmd = [ "sidekiq" ];
     dependsOn = [
@@ -210,7 +210,7 @@
       "--health-start-period=30s"
       "--health-timeout=10s"
       "--network-alias=dawarich_sidekiq"
-      "--network=myproject_dawarich"
+      "--network=dawarich_dawarich"
     ];
   };
   systemd.services."podman-dawarich_sidekiq" = {
@@ -218,106 +218,106 @@
       Restart = lib.mkOverride 90 "on-failure";
     };
     after = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_public.service"
-      "podman-volume-myproject_dawarich_storage.service"
-      "podman-volume-myproject_dawarich_watched.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_public.service"
+      "podman-volume-dawarich_dawarich_storage.service"
+      "podman-volume-dawarich_dawarich_watched.service"
     ];
     requires = [
-      "podman-network-myproject_dawarich.service"
-      "podman-volume-myproject_dawarich_public.service"
-      "podman-volume-myproject_dawarich_storage.service"
-      "podman-volume-myproject_dawarich_watched.service"
+      "podman-network-dawarich_dawarich.service"
+      "podman-volume-dawarich_dawarich_public.service"
+      "podman-volume-dawarich_dawarich_storage.service"
+      "podman-volume-dawarich_dawarich_watched.service"
     ];
     partOf = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
     wantedBy = [
-      "podman-compose-myproject-root.target"
+      "podman-compose-dawarich-root.target"
     ];
   };
 
   # Networks
-  systemd.services."podman-network-myproject_dawarich" = {
+  systemd.services."podman-network-dawarich_dawarich" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "podman network rm -f myproject_dawarich";
+      ExecStop = "podman network rm -f dawarich_dawarich";
     };
     script = ''
-      podman network inspect myproject_dawarich || podman network create myproject_dawarich
+      podman network inspect dawarich_dawarich || podman network create dawarich_dawarich
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "podman-compose-dawarich-root.target" ];
+    wantedBy = [ "podman-compose-dawarich-root.target" ];
   };
 
   # Volumes
-  systemd.services."podman-volume-myproject_dawarich_db_data" = {
+  systemd.services."podman-volume-dawarich_dawarich_db_data" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect myproject_dawarich_db_data || podman volume create myproject_dawarich_db_data
+      podman volume inspect dawarich_dawarich_db_data || podman volume create dawarich_dawarich_db_data
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "podman-compose-dawarich-root.target" ];
+    wantedBy = [ "podman-compose-dawarich-root.target" ];
   };
-  systemd.services."podman-volume-myproject_dawarich_public" = {
+  systemd.services."podman-volume-dawarich_dawarich_public" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect myproject_dawarich_public || podman volume create myproject_dawarich_public
+      podman volume inspect dawarich_dawarich_public || podman volume create dawarich_dawarich_public
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "podman-compose-dawarich-root.target" ];
+    wantedBy = [ "podman-compose-dawarich-root.target" ];
   };
-  systemd.services."podman-volume-myproject_dawarich_shared" = {
+  systemd.services."podman-volume-dawarich_dawarich_shared" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect myproject_dawarich_shared || podman volume create myproject_dawarich_shared
+      podman volume inspect dawarich_dawarich_shared || podman volume create dawarich_dawarich_shared
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "podman-compose-dawarich-root.target" ];
+    wantedBy = [ "podman-compose-dawarich-root.target" ];
   };
-  systemd.services."podman-volume-myproject_dawarich_storage" = {
+  systemd.services."podman-volume-dawarich_dawarich_storage" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect myproject_dawarich_storage || podman volume create myproject_dawarich_storage
+      podman volume inspect dawarich_dawarich_storage || podman volume create dawarich_dawarich_storage
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "podman-compose-dawarich-root.target" ];
+    wantedBy = [ "podman-compose-dawarich-root.target" ];
   };
-  systemd.services."podman-volume-myproject_dawarich_watched" = {
+  systemd.services."podman-volume-dawarich_dawarich_watched" = {
     path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-      podman volume inspect myproject_dawarich_watched || podman volume create myproject_dawarich_watched
+      podman volume inspect dawarich_dawarich_watched || podman volume create dawarich_dawarich_watched
     '';
-    partOf = [ "podman-compose-myproject-root.target" ];
-    wantedBy = [ "podman-compose-myproject-root.target" ];
+    partOf = [ "podman-compose-dawarich-root.target" ];
+    wantedBy = [ "podman-compose-dawarich-root.target" ];
   };
 
   # Root service
   # When started, this will automatically create all resources and start
   # the containers. When stopped, this will teardown all resources.
-  systemd.targets."podman-compose-myproject-root" = {
+  systemd.targets."podman-compose-dawarich-root" = {
     unitConfig = {
       Description = "Root target generated by compose2nix.";
     };
