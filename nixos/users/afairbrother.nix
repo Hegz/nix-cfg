@@ -24,6 +24,7 @@
       kdePackages.yakuake
       pkgs.cura
       orca-slicer
+      lldpd
       playonlinux
       quickemu
       tenacity

@@ -44,6 +44,8 @@ in
 
   services.opensnitch.enable = true;
 
+  services.lldpd.enable = true;
+
   services.udev.extraRules = ''
     # Allow users in the plugdev group to access the USB devices
     #SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE="0664", GROUP="plugdev"

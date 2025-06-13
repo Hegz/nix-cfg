@@ -30,6 +30,8 @@ in
 
   programs.kdeconnect.enable = true;
 
+  services.lldpd.enable = true; # Enable LLDP to discover network devices.
+
   # Steam settings.
   programs.steam = {
     enable = true;
