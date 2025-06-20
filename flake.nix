@@ -18,10 +18,10 @@
     # Nix User Repository
     nur.url = "github:nix-community/NUR";
 
-#    valheim-server = {
-#      url = "github:aidalgol/valheim-server-flake";
-#      inputs.nixpkgs.follows = "nixpkgs";
-#    };
+    valheim-server = {
+      url = "github:aidalgol/valheim-server-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
