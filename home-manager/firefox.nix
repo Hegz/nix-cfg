@@ -23,7 +23,7 @@
         ublock-origin
         privacy-badger
         darkreader
-#        tree-style-tab
+        tree-style-tab
       ];
       settings = {
         "extensions.autoDisableScopes" = 0;
