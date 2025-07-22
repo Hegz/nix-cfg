@@ -147,10 +147,13 @@
     kdePackages.bluedevil
     keybase
     keybase-gui
+    godot
+    heroic
     libusb1
     micronucleus            # For digispark
     nmap
     outils
+    orca-slicer
     pkgs.cifs-utils
     pkgs.itd
     pkgs.unstable.freecad
