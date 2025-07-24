@@ -22,6 +22,7 @@ in
       (import ../containers/tt-rss.nix {serverName = "${hostName}";})
       (import ../containers/minecraft.nix {serverName = "${hostName}";})
       (import ../containers/budget.nix {serverName = "${hostName}";})
+      (import ../containers/audiobookshelf.nix {serverName = "${hostName}";})
     ];
 
   environment.systemPackages = with pkgs; [
