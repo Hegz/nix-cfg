@@ -36,6 +36,30 @@ in
 
       # Add service definitions here.
 
+      systemd.timers."ssl-refresh" = {
+        wantedBy = ["timers.target"];
+        timerConfig = {
+          OnCalendar = "quarterly";
+          Persistent = true;
+          Unit = "ssl-refresh.service";
+        };
+      };
+
+      systemd.services."ssl-refresh" = {
+        script = ''
+          set -eu
+          cd /var/lib/tt-rss/ssl/
+          ${pkgs.tailscale}/bin/tailscale cert tt-rss.taild7a71.ts.net
+          ${pkgs.coreutils}/bin/chown -R nginx:nginx /var/lib/tt-rss/ssl/
+          ${pkgs.systemd}/bin/systemctl reload nginx.service
+        '';
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      };
+
+
       services.tt-rss = {
         enable = true;
         selfUrlPath = "http://${hostname}.fair";
