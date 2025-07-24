@@ -22,7 +22,7 @@ in
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
-        # networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
           enable = true;                                   
         };                           
@@ -30,17 +30,22 @@ in
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
         useHostResolvConf = lib.mkForce false;             
       };                                                   
-      
+
+      services.resolved.enable = true;
+
+      # Add service definitions here.
+     
       services.audiobookshelf = {
         enable = true;
         host = "0.0.0.0";
         openFirewall = true;
       };
 
-      services.resolved.enable = true;
-
-      # Add service definitions here.
-
+      # Enable tailscale
+      services.tailscale = {
+        enable = true;
+        interfaceName = "userspace-networking";
+      };
     };                                                   
   };
 }
