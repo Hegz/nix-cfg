@@ -47,6 +47,29 @@ in
       };                                                   
       services.resolved.enable = true;
 
+      systemd.timers."ssl-refresh" = {
+        wantedBy = ["timers.target"];
+        timerConfig = {
+          OnCalendar = "quarterly";
+          Persistent = true;
+          Unit = "ssl-refresh.service";
+        };
+      };
+
+      systemd.services."ssl-refresh" = {
+        script = ''
+          set -eu
+          cd /var/lib/private/actual/
+          ${pkgs.tailscale}/bin/tailscale cert budget.taild7a71.ts.net
+          ${pkgs.coreutils}/bin/chown -R actual /var/lib/private/actual/budget.taild7a71.ts.net.*
+          ${pkgs.systemd}/bin/systemctl reload actual.service
+        '';
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      };
+
       # Add service definitions here.
       services.actual = {
         enable = true;
