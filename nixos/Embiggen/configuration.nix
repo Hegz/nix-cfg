@@ -129,6 +129,14 @@
  #     in ["${automount_opts},credentials=/etc/nixos/smb-secrets,uid=1000,gid=100"];
  # };
 
+
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true; # only needed for Wayland -- omit this when using with Xorg
+    openFirewall = true;
+  }; 
+
   # Nvidia graphics options below
   # ==============================
 
