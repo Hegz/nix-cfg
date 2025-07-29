@@ -10,10 +10,13 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/private" = {                               
+      "/var/lib/${hostname}" = {                               
         hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
       };                                                   
+      "/home/books" = {
+        hostPath = "/home/media/Books";
+      };
     };
 
     config = {config, pkgs, lib, ... }: {          
