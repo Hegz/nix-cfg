@@ -130,12 +130,27 @@
  # };
 
 
+ # Potentially causing instability?
   services.sunshine = {
     enable = true;
     autoStart = true;
     capSysAdmin = true; # only needed for Wayland -- omit this when using with Xorg
     openFirewall = true;
   }; 
+
+  # Fixes issue regarding "Failed to gain CAP_SYS_ADMIN"
+  #security.wrappers.sunshine = {
+  #  owner = "root";
+  #	group = "root";
+  #	capabilities = "cap_sys_admin+p";
+  #	source = "${pkgs.sunshine}/bin/sunshine";
+  #};
+
+  # Fixes "avahi::entry_group_new() failed" permission
+  # services.avahi.publish.enable = true;
+  # services.avahi.publish.userServices = true;
+
+
 
   # Nvidia graphics options below
   # ==============================
