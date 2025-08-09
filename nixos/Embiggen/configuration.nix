@@ -131,12 +131,12 @@
 
 
  # Potentially causing instability?
-  services.sunshine = {
-    enable = true;
-    autoStart = true;
-    capSysAdmin = true; # only needed for Wayland -- omit this when using with Xorg
-    openFirewall = true;
-  }; 
+ # services.sunshine = {
+ #   enable = true;
+ #   autoStart = true;
+ #   capSysAdmin = true; # only needed for Wayland -- omit this when using with Xorg
+ #   openFirewall = true;
+ # }; 
 
   # Fixes issue regarding "Failed to gain CAP_SYS_ADMIN"
   #security.wrappers.sunshine = {
