@@ -93,13 +93,13 @@
 
   # keybase Encrypted file sync
   #workaround for an incorrect default.
-  # systemd.user.services.kbfs.serviceConfig.PrivateTmp = lib.mkForce false;
-  # systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
+  systemd.user.services.kbfs.serviceConfig.PrivateTmp = lib.mkForce false;
+  #systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
   services.keybase.enable = true;
   services.kbfs.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -147,10 +147,13 @@
     kdePackages.bluedevil
     keybase
     keybase-gui
+    godot
+    heroic
     libusb1
     micronucleus            # For digispark
     nmap
     outils
+    orca-slicer
     pkgs.cifs-utils
     pkgs.itd
     pkgs.unstable.freecad

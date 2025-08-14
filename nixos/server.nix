@@ -84,7 +84,7 @@
   # keybase Encrypted file sync
   #workaround for an incorrect default.
   systemd.user.services.kbfs.serviceConfig.PrivateTmp = lib.mkForce false;
-  systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
+  #systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
   services.keybase.enable = true;
   services.kbfs.enable = true;
   
@@ -103,25 +103,6 @@
 
    # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    #distrobox
-    #docker
-    #pkgs.cifs-utils
-    #pkgs.unstable.rclone
-    #runc
-    git-crypt
-    iw 
-    keybase
-    nmap
-    outils
-    pciutils 
-    usbutils
-    vim 
-    virt-manager
-    virt-viewer
-    wirelesstools 
-    zfs
-  ];
 
   #zsh settings
   environment.shells = with pkgs; [ zsh ];

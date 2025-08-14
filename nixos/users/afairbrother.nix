@@ -4,7 +4,7 @@
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "Adam Fairbrother";
-    extraGroups = [ "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" ];
+    extraGroups = [ "_lldpd" "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" ];
     packages = with pkgs; [
       chromium
       firefox
@@ -14,7 +14,7 @@
       git
       google-chrome
       inkscape-with-extensions
-      kate
+      kdePackages.kate
       kdePackages.kdeconnect-kde
       libreoffice-fresh
       kdePackages.ark
@@ -23,6 +23,8 @@
       kdePackages.okular
       kdePackages.yakuake
       pkgs.cura
+      orca-slicer
+      lldpd
       playonlinux
       quickemu
       tenacity

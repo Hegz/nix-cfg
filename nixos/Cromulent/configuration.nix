@@ -38,11 +38,19 @@ in
  
   };
 
+  fileSystems."/home/Important" = {
+    device = "mcp:/home/important";
+    fsType = "nfs";
+    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+  };
+
   hardware.bluetooth.enable = true;
 
   programs.kdeconnect.enable = true;
 
   services.opensnitch.enable = true;
+
+  services.lldpd.enable = true;
 
   services.udev.extraRules = ''
     # Allow users in the plugdev group to access the USB devices

@@ -1,6 +1,6 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
-  hostname = "tt-rss";
+  hostname = "budget";
 in
 {
   containers."${hostname}" = {                                                                                              
@@ -10,7 +10,7 @@ in
 
     # Filesystem mount points
     bindMounts = {                                         
-      "/var/lib/tt-rss" = {                               
+      "/var/lib/private" = {                               
         hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
       };                                                   
@@ -18,23 +18,34 @@ in
 
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
+		
+      # Enable access for actual to bind to port 80
+      boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
+
+	  # Bring actual in from unstable
+      #imports =
+      #  [ # Importing Actual budget server from unstable
+      #  "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/actual.nix"
+      #  ];
+
+      #nixpkgs.overlays = [
+      #  outputs.overlays.unstable-packages
+      #  (new: prev: { mtr-exporter = pkgs.unstable.pkgs.actual; })
+      #];
 
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
+          allowedTCPPorts = [ 80 443 ];
           enable = true;                                   
-          allowedTCPPorts = [ 80 ];
-          # allowedUDPPorts = [ 53 ];
         };                           
         # Use systemd-resolved inside the container 
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
         useHostResolvConf = lib.mkForce false;             
       };                                                   
       services.resolved.enable = true;
-
-      # Add service definitions here.
 
       systemd.timers."ssl-refresh" = {
         wantedBy = ["timers.target"];
@@ -48,10 +59,10 @@ in
       systemd.services."ssl-refresh" = {
         script = ''
           set -eu
-          cd /var/lib/tt-rss/ssl/
-          ${pkgs.tailscale}/bin/tailscale cert tt-rss.taild7a71.ts.net
-          ${pkgs.coreutils}/bin/chown -R nginx:nginx /var/lib/tt-rss/ssl/
-          ${pkgs.systemd}/bin/systemctl reload nginx.service
+          cd /var/lib/private/actual/
+          ${pkgs.tailscale}/bin/tailscale cert budget.taild7a71.ts.net
+          ${pkgs.coreutils}/bin/chown -R actual /var/lib/private/actual/budget.taild7a71.ts.net.*
+          ${pkgs.systemd}/bin/systemctl reload actual.service
         '';
         serviceConfig = {
           Type = "oneshot";
@@ -59,18 +70,20 @@ in
         };
       };
 
-
-      services.tt-rss = {
+      # Add service definitions here.
+      services.actual = {
         enable = true;
-        selfUrlPath = "http://${hostname}.fair";
+        openFirewall = true;
+        settings = {
+          port = 443;
+          https = {
+            key = "/var/lib/private/actual/budget.taild7a71.ts.net.key";
+            cert = "/var/lib/private/actual/budget.taild7a71.ts.net.crt";
+          };
+        };
+
       };
 
-      services.nginx.virtualHosts."${config.services.tt-rss.virtualHost}" = {
-        forceSSL = true;
-        sslCertificate = "/var/lib/tt-rss/ssl/tt-rss.taild7a71.ts.net.crt";
-        sslCertificateKey = "/var/lib/tt-rss/ssl/tt-rss.taild7a71.ts.net.key";
-      };
-      
       # Enable tailscale
       services.tailscale = {
         enable = true;

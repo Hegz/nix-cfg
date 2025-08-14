@@ -21,8 +21,17 @@ in
       ( import ./dnsmasq.nix { ip = accessPointIP; interface = apInterface; })
       ( import ./wifi.nix {interface = apInterface; })
       ( import ./frigate.nix {hostName = hostName; })
-
     ];
+
+  environment.systemPackages = with pkgs; [
+    git-crypt
+    iw 
+    keybase
+    nmap
+    usbutils
+    vim 
+    wirelesstools 
+  ];
 
   # Netdata for Debug
   services.netdata.enable = true;

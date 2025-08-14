@@ -14,12 +14,26 @@ in
       ../server.nix
       ../users/adam-blank.nix
       ../virt/virt.nix
+      ../docker/dawarich.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
       (import ../containers/smokeping.nix {serverName = "${hostName}";})
       (import ../containers/tt-rss.nix {serverName = "${hostName}";})
+      (import ../containers/minecraft.nix {serverName = "${hostName}";})
+      (import ../containers/budget.nix {serverName = "${hostName}";})
+      (import ../containers/audiobookshelf.nix {serverName = "${hostName}";})
     ];
+
+  environment.systemPackages = with pkgs; [
+    git-crypt
+    keybase
+    nmap
+    vim 
+    virt-manager
+    zfs
+    compose2nix
+  ];
 
   hardware.cpu.intel.updateMicrocode = true;
 
