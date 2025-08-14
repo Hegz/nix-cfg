@@ -36,6 +36,9 @@
         password = "${secrets.secunit.mqtt.password}";
         host = "${secrets.secunit.mqtt.host}";
       };
+      snapshots = {
+        enabled = true;
+      };
       ffmpeg = {
         hwaccel_args = "preset-vaapi";		# For Intel video acceleration
         input_args = "preset-rtsp-udp";     # For UDP cameras
