@@ -111,7 +111,7 @@
         specialArgs = {inherit inputs outputs secrets;};
         modules = [
           # > Our main nixos configuration file <
-          ./nixos/GioDude/configuration.nix
+          ./nixos/GeoDude/configuration.nix
           home-manager.nixosModules.home-manager
         ];
       };
