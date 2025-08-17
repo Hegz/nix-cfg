@@ -1,4 +1,4 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 {
   users.users.gio = {
     shell = pkgs.zsh;
@@ -30,7 +30,6 @@
       wine
       xclip
       prismlauncher
-      heroiclauncher
     ];
   };
 }

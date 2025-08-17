@@ -4,7 +4,7 @@
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "${secrets.users.adam.fullname}";
-    hashedpassword = "${secrets.users.adam.passhash}";
+    hashedPassword = "${secrets.users.adam.passhash}";
     extraGroups = [ 
                     "distrobox" 
                     "docker" 
