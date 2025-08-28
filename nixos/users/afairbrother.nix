@@ -1,14 +1,14 @@
-{ inputs, outputs, config, pkgs, lib, ... }:
+{ inputs, outputs, config, pkgs, lib, secrets, ... }:
 {
   users.users.afairbrother = {
     shell = pkgs.zsh;
     isNormalUser = true;
-    description = "Adam Fairbrother";
+    description = "${secrets.users.adam.fullname}";
+    hashedPassword = "${secrets.users.afairbrother.passhash}";
     extraGroups = [ "_lldpd" "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" ];
     packages = with pkgs; [
       chromium
       firefox
-      #freecad
       gam
       gimp-with-plugins
       git
