@@ -19,7 +19,7 @@
     nur.url = "github:nix-community/NUR";
 
     valheim-server = {
-      url = "github:aidalgol/valheim-server-flake";
+      url = "github:hamburger1984/valheim-server-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -107,6 +107,15 @@
           home-manager.nixosModules.home-manager
         ];
       };
+      GeoDude = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/GeoDude/configuration.nix
+          home-manager.nixosModules.home-manager
+        ];
+      };
+
     };
 
     # Standalone home-manager configuration entrypoint

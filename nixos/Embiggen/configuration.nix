@@ -53,18 +53,22 @@
   # ...
 
   # Don't auto start valheim service
-  #systemd.services.valheim.wantedBy = lib.mkForce [];
-  #services.valheim = {
-  #  enable = true;
-  #  serverName = "Worldland";
-  #  worldName = "Worldland";
-  #  openFirewall = true;
-  #  password = "12345";
-  #  adminList = [ "76561197990259028" ];
-  #  permittedList = [ "76561197990259028" "76561199314455669" "76561199221428738" ]; # Me, Mo, & G
-  #};
+  systemd.services.valheim.wantedBy = lib.mkForce [];
+  services.valheim = {
+    enable = true;
+    serverName = "Worldland";
+    worldName = "Worldland";
+    openFirewall = true;
+    password = "12345";
+    adminList = [ "76561197990259028" ];
+    permittedList = [ "76561197990259028" "76561199314455669" "76561199221428738" ]; # Me, Mo, & G
+  };
 
   programs.kdeconnect.enable = true;
+
+
+  # Enable wake on lan
+  networking.interfaces.enp25s0.wakeOnLan.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -97,21 +101,24 @@
     
   #};
 
+  hardware.bluetooth.enable = true;
+
+
   fileSystems."/home/steam" =
   { device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
   };
   
- # fileSystems."/home/Important" = {
- #   device = "freenas.fair:/mnt/S1/Important";
- #   fsType = "nfs";
- #   options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
- # };
- # 
- # fileSystems."/home/Torrents" = {
- #   device = "freenas.fair:/mnt/S1/Torrents";
- #   fsType = "nfs";
- #   options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
- # };
+  fileSystems."/home/important" = {
+    device = "mcp:/home/important";
+    fsType = "nfs";
+    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+  };
+  #
+  #fileSystems."/home/Torrents" = {
+  #  device = "freenas.fair:/mnt/S1/Torrents";
+  #  fsType = "nfs";
+  #  options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+  #};
 
  # fileSystems."/home/esphome" = {
  #   device = "//freenas.fair/esphome";
@@ -122,8 +129,33 @@
  #     in ["${automount_opts},credentials=/etc/nixos/smb-secrets,uid=1000,gid=100"];
  # };
 
+
+ # Potentially causing instability?
+ # services.sunshine = {
+ #   enable = true;
+ #   autoStart = true;
+ #   capSysAdmin = true; # only needed for Wayland -- omit this when using with Xorg
+ #   openFirewall = true;
+ # }; 
+
+  # Fixes issue regarding "Failed to gain CAP_SYS_ADMIN"
+  #security.wrappers.sunshine = {
+  #  owner = "root";
+  #	group = "root";
+  #	capabilities = "cap_sys_admin+p";
+  #	source = "${pkgs.sunshine}/bin/sunshine";
+  #};
+
+  # Fixes "avahi::entry_group_new() failed" permission
+  # services.avahi.publish.enable = true;
+  # services.avahi.publish.userServices = true;
+
+
+
   # Nvidia graphics options below
   # ==============================
+
+  programs.gamescope.enable = true;
 
   # Enable OpenGL
   hardware.graphics = {
@@ -179,7 +211,7 @@
     nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    # package = config.boot.kernelPackages.nvidiaPackages.stable;  # stable runs latest version 545
-    package = config.boot.kernelPackages.nvidiaPackages.production;  # Production lags a bit 535
+    package = config.boot.kernelPackages.nvidiaPackages.stable;  # stable runs latest version 545
+    # package = config.boot.kernelPackages.nvidiaPackages.production;  # Production lags a bit 535
   };
 }

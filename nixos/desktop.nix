@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ inputs, outputs, config, pkgs, lib, ... }:
+{ inputs, outputs, config, pkgs, lib, secrets, ... }:
 
 {
 
@@ -147,10 +147,13 @@
     kdePackages.bluedevil
     keybase
     keybase-gui
+    godot
+    heroic
     libusb1
     micronucleus            # For digispark
     nmap
     outils
+    orca-slicer
     pkgs.cifs-utils
     pkgs.itd
     pkgs.unstable.freecad
