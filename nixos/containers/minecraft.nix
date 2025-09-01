@@ -35,11 +35,31 @@ in
       };                                                   
       services.resolved.enable = true;
 
+      environment.systemPackages = with pkgs; [
+        rcon
+      ];
+
       # Add service definitions here.
       services.minecraft-server = {
         enable = true;
         eula = true;
         openFirewall = true;
+        serverProperties = {
+          server-port = 43000;
+          difficulty = "normal";
+          gamemode = "survival";
+          max-players = 5;
+          motd = "Home Minecraft server!\n Play nice";
+          white-list = false;
+          allow-cheats = true;
+          level-name = "fairly_good";
+          level-seed = "good seed"; 
+          pvp = false;
+          enable-rcon = true;
+          rcon.password = "hunter2";
+          rcon.port = 25575;
+        };
+        jvmOpts = "-Xms4092M -Xmx4092M -Djava.net.preferIPv4Stack=true";
       };
     };                                                   
   };

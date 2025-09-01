@@ -14,11 +14,11 @@ in
       ../server.nix
       ../users/adam-blank.nix
       ../virt/virt.nix
-      ../docker/dawarich.nix
+      #../docker/dawarich.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
-      (import ../containers/smokeping.nix {serverName = "${hostName}";})
+      #(import ../containers/smokeping.nix {serverName = "${hostName}";})
       (import ../containers/tt-rss.nix {serverName = "${hostName}";})
       (import ../containers/minecraft.nix {serverName = "${hostName}";})
       (import ../containers/budget.nix {serverName = "${hostName}";})
