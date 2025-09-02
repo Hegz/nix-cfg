@@ -38,11 +38,16 @@ in
  
   };
 
+  users.mutableUsers = false;
+
   fileSystems."/home/Important" = {
     device = "mcp:/home/important";
     fsType = "nfs";
     options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
   };
+
+  # enable the zen kernel
+  boot.kernelPackages = pkgs.linuxPackages_zen;
 
   hardware.bluetooth.enable = true;
 
