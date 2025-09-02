@@ -38,6 +38,8 @@ in
  
   };
 
+  users.mutableUsers = false;
+
   fileSystems."/home/Important" = {
     device = "mcp:/home/important";
     fsType = "nfs";
