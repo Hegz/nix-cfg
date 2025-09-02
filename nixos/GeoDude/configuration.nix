@@ -2,8 +2,10 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, secrets, ... }:
+{ inputs, outputs, lib, config, pkgs, secrets, ... }:
+
 let
+  hostName = "Geodude";
   # Sops secret management
   sops-nix = builtins.fetchTarball {
     # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
@@ -17,22 +19,18 @@ in
     [ # Include the results of the hardware scan.
       (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
-      ../users/afairbrother.nix
       ../desktop.nix
-      #../syncthing.nix
-      #../suspend2Hibernate.nix
-      #../dokuwiki.nix
+      ../users/adam.nix
+      ../users/gio.nix
     ];
 
-  networking.hostName = "HePhaestus"; # Define your hostname.
-
-  boot.kernelPackages = pkgs.linuxPackages_zen; # Use the Zen kernel.
+  networking = {
+    hostName = "${hostName}";
+  };
 
   hardware.bluetooth.enable = true;
 
-  programs.kdeconnect.enable = true;
-
-  services.lldpd.enable = true; # Enable LLDP to discover network devices.
+  services.lldpd.enable = true;
 
   # Steam settings.
   programs.steam = {

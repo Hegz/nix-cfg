@@ -1,9 +1,10 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 {
   users.users.adam = {
     shell = pkgs.zsh;
     isNormalUser = true;
-    description = "Adam Fairbrother";
+    description = "${secrets.users.adam.fullname}";
+    hashedPassword = "${secrets.users.adam.passhash}";
     extraGroups = [ 
                     "distrobox" 
                     "docker" 
