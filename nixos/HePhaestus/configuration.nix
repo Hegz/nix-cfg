@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, secrets, ... }:
 let
   # Sops secret management
   sops-nix = builtins.fetchTarball {
@@ -25,6 +25,8 @@ in
     ];
 
   networking.hostName = "HePhaestus"; # Define your hostname.
+
+  boot.kernelPackages = pkgs.linuxPackages_zen; # Use the Zen kernel.
 
   hardware.bluetooth.enable = true;
 
