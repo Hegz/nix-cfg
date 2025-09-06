@@ -13,7 +13,7 @@
   users.groups.plugdev = {}; 
 
   #Enable frigate+
-  environment.variables = { PLUS_API_KEY = "${secrets.secunit.frigate+}"; };
+  environment.variables = { PLUS_API_KEY = "${secrets.secunit.frigate}"; };
 
   # Grant extra access to frigate 
   systemd.services.frigate = {
@@ -32,9 +32,12 @@
       };
       mqtt = {
         enabled = true;
-        user = "mosquitto";
-        password = "BuzzBuzz";
-        host = "192.168.1.100";
+        user = "${secrets.secunit.mqtt.user}";
+        password = "${secrets.secunit.mqtt.password}";
+        host = "${secrets.secunit.mqtt.host}";
+      };
+      snapshots = {
+        enabled = true;
       };
       ffmpeg = {
         hwaccel_args = "preset-vaapi";		# For Intel video acceleration
@@ -74,7 +77,8 @@
             path = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
             roles = [ "detect" ];
           } ];
-          objects.filters.person.mask = if builtins.hasAttr "mask" cam then cam.mask else null;
+          objects.filters.person.mask = if builtins.hasAttr "person" cam then cam.person else null;
+          motion.mask = if builtins.hasAttr "motion" cam then cam.motion else null;
         } )
         (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       go2rtc = {
