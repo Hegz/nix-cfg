@@ -22,16 +22,10 @@ in
       # Enable access for actual to bind to port 80
       boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
 
-	  # Bring actual in from unstable
-      #imports =
-      #  [ # Importing Actual budget server from unstable
-      #  "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/actual.nix"
-      #  ];
-
-      #nixpkgs.overlays = [
-      #  outputs.overlays.unstable-packages
-      #  (new: prev: { mtr-exporter = pkgs.unstable.pkgs.actual; })
-      #];
+      # Enable unstable packages
+      nixpkgs.overlays = [
+        outputs.overlays.unstable-packages
+      ];
 
       networking = {                                   
         hostName = "${hostname}";
@@ -62,7 +56,7 @@ in
           cd /var/lib/private/actual/
           ${pkgs.tailscale}/bin/tailscale cert budget.taild7a71.ts.net
           ${pkgs.coreutils}/bin/chown -R actual /var/lib/private/actual/budget.taild7a71.ts.net.*
-          ${pkgs.systemd}/bin/systemctl reload actual.service
+          ${pkgs.systemd}/bin/systemctl restart actual.service
         '';
         serviceConfig = {
           Type = "oneshot";
@@ -74,6 +68,7 @@ in
       services.actual = {
         enable = true;
         openFirewall = true;
+        package = pkgs.unstable.actual-server;
         settings = {
           port = 443;
           https = {
@@ -81,7 +76,6 @@ in
             cert = "/var/lib/private/actual/budget.taild7a71.ts.net.crt";
           };
         };
-
       };
 
       # Enable tailscale
