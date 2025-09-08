@@ -1,7 +1,7 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "mealie";
-  private = "/var/lib/private/${hostname}";
+  servicePort = "9000";
 in
 {
   containers."${hostname}" = {                                                                                              
@@ -24,11 +24,9 @@ in
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
 		
-      # Enable access for actual to bind to port 80
-      boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
-
       imports = [
-        ../../modules/container-ssl.nix
+        ../../modules/container-tailscale.nix
+        (import ../../modules/container-ssl.nix {port = "${servicePort}";})
       ];
 
       networking = {                                   
@@ -50,11 +48,6 @@ in
         port = 9000;
       };
 
-      # Enable tailscale
-      services.tailscale = {
-        enable = true;
-        interfaceName = "userspace-networking";
-      };
     };                                                   
   };
 }
