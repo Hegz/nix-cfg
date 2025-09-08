@@ -1,6 +1,7 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "mealie";
+  private = "/var/lib/private/${hostname}";
 in
 {
   containers."${hostname}" = {                                                                                              
@@ -13,7 +14,11 @@ in
       "/var/lib/private" = {                               
         hostPath = "/home/container/${hostname}";
         isReadOnly = false;                                
-      };                                                   
+      };
+      "/var/lib/caddy" = {
+        hostPath = "/home/container/${hostname}/ssl";
+        isReadOnly = false;
+      };      
     };
 
     config = {config, pkgs, lib, ... }: {          
@@ -22,17 +27,16 @@ in
       # Enable access for actual to bind to port 80
       boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
 
-      # Enable unstable packages
-      # nixpkgs.overlays = [
-      #   outputs.overlays.unstable-packages
-      # ];
+      imports = [
+        ../../modules/container-ssl.nix
+      ];
 
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
-          allowedTCPPorts = [ 80 ];
+          allowedTCPPorts = [ 80 443 ];
           enable = true;                                   
         };                           
         # Use systemd-resolved inside the container 
@@ -41,44 +45,16 @@ in
       };                                                   
       services.resolved.enable = true;
 
-      #systemd.timers."ssl-refresh" = {
-      #  wantedBy = ["timers.target"];
-      #  timerConfig = {
-      #    OnCalendar = "quarterly";
-      #    Persistent = true;
-      #    Unit = "ssl-refresh.service";
-      #  };
-      #};
-
-      #systemd.services."ssl-refresh" = {
-      #  script = ''
-      #    set -eu
-      #    cd /var/lib/private/actual/
-      #    ${pkgs.tailscale}/bin/tailscale cert budget.taild7a71.ts.net
-      #    ${pkgs.coreutils}/bin/chown -R actual /var/lib/private/actual/budget.taild7a71.ts.net.*
-      #    ${pkgs.systemd}/bin/systemctl restart actual.service
-      #  '';
-      #  serviceConfig = {
-      #    Type = "oneshot";
-      #    User = "root";
-      #  };
-      #};
-
-      # Add service definitions here.
       services.mealie = {
         enable = true;
-        port = 80;
-        #database.createLocally = true;
-        #openFirewall = true;
-        
+        port = 9000;
       };
 
       # Enable tailscale
-      # services.tailscale = {
-      #  enable = true;
-      #  interfaceName = "userspace-networking";
-      # };
-
+      services.tailscale = {
+        enable = true;
+        interfaceName = "userspace-networking";
+      };
     };                                                   
   };
 }
