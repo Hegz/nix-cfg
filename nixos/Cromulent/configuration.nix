@@ -22,6 +22,7 @@ in
       ../desktop.nix
       ../dokuwiki.nix
       ../users/afairbrother.nix
+      "${inputs.nixpkgs-unstable}/nixos/modules/services/security/timekpr.nix" # Timekpr from unstable channel
       #../containers/adGuard.nix
       #./suspend2Hibernate.nix
       #./unstable.nix
@@ -31,14 +32,14 @@ in
 
   networking = {
     hostName = "${hostName}";
-#    bridges.br0.interfaces = [ "enp3s0" ];
-
-#    useDHCP = false;
-#    interfaces."br0".useDHCP = true;
- 
   };
 
   users.mutableUsers = false;
+
+  services.timekpr = {
+    package = pkgs.unstable.timekpr;
+    enable = true;
+  };
 
   fileSystems."/home/Important" = {
     device = "mcp:/home/important";

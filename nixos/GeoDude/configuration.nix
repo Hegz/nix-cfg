@@ -18,6 +18,7 @@ in
   imports =
     [ # Include the results of the hardware scan.
       (import "${sops-nix}/modules/sops")
+      "${inputs.nixpkgs-unstable}/nixos/modules/services/security/timekpr.nix" # Timekpr from unstable channel
       ./hardware-configuration.nix
       ../desktop.nix
       ../users/adam.nix
@@ -26,6 +27,11 @@ in
 
   networking = {
     hostName = "${hostName}";
+  };
+
+  services.timekpr = {
+    package = pkgs.unstable.timekpr;
+    enable = true;
   };
 
   hardware.bluetooth.enable = true;
