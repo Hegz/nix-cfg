@@ -21,11 +21,20 @@ in
       ./hardware-configuration.nix
       ../desktop.nix
       ../users/afairbrother.nix
-      #./suspend2Hibernate.nix
+      ../suspend2Hibernate.nix
     ];
 
   networking = {
     hostName = "${hostName}";
+  };
+
+  # Bootloader.
+  boot.loader = lib.mkForce { 
+    grub = {
+      enable = true;
+      device = "/dev/sda";
+      useOSProber = true;
+    };
   };
 
   users.mutableUsers = false;
