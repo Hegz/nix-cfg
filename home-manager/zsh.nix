@@ -16,12 +16,9 @@
     initContent = lib.mkOrder 1200 ''
 	  ssh() {
 		if [ -n "$TMUX" ]; then # Check if inside a tmux session
-		  # Save current window name and automatic-rename setting
-		  local old_name=$(tmux display-message -p '#W')
-          local old_automatic_rename=$(tmux show-options -w automatic-rename | awk '{print $2}')
 
 		  # Temporarily disable automatic-rename to prevent it from overriding the custom name
-		  tmux set-option -w automatic-rename off
+		  tmux set-window-option automatic-rename off
 
 		  # Extract the hostname from the SSH arguments
 		  local hostname=$(echo "$*" | sed -E 's/.*@([^ ]+).*/\1/' | cut -d' ' -f1)
@@ -35,14 +32,9 @@
 		  # Execute the SSH command
 		  command ssh "$@"
 
-		  # Restore previous window name or re-enable automatic-rename
-		  if [ "$old_automatic_rename" = "on" ]; then
-			tmux set-window-option -w automatic-rename on
-			# If the original name was not automatically generated, restore it
-			if [[ "$old_name" != "bash" && "$old_name" != "zsh" ]]; then # Adjust based on default shell names
-			  tmux rename-window "$old_name"
-			fi
-		  fi
+		  # re-enable automatic-rename
+          tmux set-window-option automatic-rename on
+
 		else
 		  # If not in tmux, just execute ssh normally
 		  command ssh "$@"

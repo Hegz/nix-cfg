@@ -17,9 +17,10 @@
       bind-key a send-prefix
 
       # Auto rename windows
-      set-window-option -g status-interval 5
-      set-window-option -g automatic-rename on
-      set-window-option -g automatic-rename-format '#{b:pane_current_path}'
+      set-option -g allow-rename on
+      set-option -g automatic-rename on
+      set-option -g automatic-rename-format '#{b:pane_current_path}'
+      set-option -g status-interval 1
 
     '';
   };
