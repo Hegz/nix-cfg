@@ -5,7 +5,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 
 let
-  hostName = "cromulent";
+  hostName = "Lenny";
   # Sops secret management
   sops-nix = builtins.fetchTarball {
     # url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
@@ -20,41 +20,37 @@ in
       (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
       ../desktop.nix
-      ../dokuwiki.nix
       ../users/afairbrother.nix
-      "${inputs.nixpkgs-unstable}/nixos/modules/services/security/timekpr.nix" # Timekpr from unstable channel
-      #../containers/adGuard.nix
-      #./suspend2Hibernate.nix
-      #./unstable.nix
-      #./unstable-keybase.nix
-      #./dokuwiki.nix
+      ../suspend2Hibernate.nix
     ];
 
   networking = {
     hostName = "${hostName}";
   };
 
+  # Bootloader.
+  boot.loader = lib.mkForce { 
+    grub = {
+      enable = true;
+      device = "/dev/sda";
+      useOSProber = true;
+    };
+  };
+
   users.mutableUsers = false;
-
-  services.timekpr = {
-    package = pkgs.unstable.timekpr;
-    enable = true;
-  };
-
-  fileSystems."/home/Important" = {
-    device = "mcp:/home/important";
-    fsType = "nfs";
-    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
-  };
 
   # enable the zen kernel
   boot.kernelPackages = pkgs.linuxPackages_zen;
 
+  zramSwap =  {
+    enable = true;
+    algorithm = "zstd";
+  };
+
   hardware.bluetooth.enable = true;
 
-  programs.kdeconnect.enable = true;
 
-  services.opensnitch.enable = true;
+  programs.kdeconnect.enable = true;
 
   services.lldpd.enable = true;
 
@@ -67,11 +63,5 @@ in
     KERNEL=="ttyACM*", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666", ENV{ID_MM_DEVICE_IGNORE}="1"
   '';
 
-  # Steam settings.
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
-  };
 }
 

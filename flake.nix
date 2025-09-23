@@ -115,7 +115,14 @@
           home-manager.nixosModules.home-manager
         ];
       };
-
+      Lenny = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/Lenny/configuration.nix
+          home-manager.nixosModules.home-manager
+        ];
+      };
     };
 
     # Standalone home-manager configuration entrypoint
