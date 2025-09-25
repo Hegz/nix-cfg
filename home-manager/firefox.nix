@@ -9,21 +9,16 @@
     enable = true;
     profiles.homeManager = {
       isDefault = true;
-      #userChrome = ''
-      #  #tabbrowser-tabs { visibility: collapse !important; }
-      #  #TabsToolbar-customization-target { visibility: collapse !important; }
-      #'';
-      #extraConfig = ''
-      # user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
-      # user_pref("extensions.autoDisableScopes", 0);
-      #'';
+      extraConfig = ''
+        user_pref("sidebar.verticalTabs", true);
+        user_pref("browser.toolbars.bookmarks.visibility", "newtab");
+      '';
       # https://nur.nix-community.org/repos/rycee/
       extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
         bitwarden
         ublock-origin
         privacy-badger
         darkreader
-      #  tree-style-tab
       ];
       settings = {
         "extensions.autoDisableScopes" = 0;
