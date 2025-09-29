@@ -19,6 +19,7 @@
         ublock-origin
         privacy-badger
         darkreader
+        plasma-integration
       ];
       settings = {
         "extensions.autoDisableScopes" = 0;
