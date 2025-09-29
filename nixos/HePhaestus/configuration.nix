@@ -32,7 +32,17 @@ in
 
   programs.kdeconnect.enable = true;
 
-  services.lldpd.enable = true; # Enable LLDP to discover network devices.
+  services.lldpd.enable = false; # Enable LLDP to discover network devices.
+
+  services.printing = {
+    enable = false; # Enable printing services.
+  #  clientConf = ''
+  #    ServerName 10.173.0.8
+  #  '';
+  };
+  networking.firewall = {
+    enable = true; # Enable the firewall.
+  };
 
   # Steam settings.
   programs.steam = {
