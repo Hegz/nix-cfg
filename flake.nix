@@ -35,7 +35,7 @@
     inherit (self) outputs;
     # Supported systems for your flake packages, shell, etc.
     systems = [
-      #"aarch64-linux"
+      "aarch64-linux"
       #"i686-linux"
       "x86_64-linux"
       #"aarch64-darwin"
@@ -123,6 +123,16 @@
           home-manager.nixosModules.home-manager
         ];
       };
+      BackuPi = nixpkgs.lib.nixosSystem {
+        #system = "aarch64-linux";
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/BackuPi/configuration.nix
+          home-manager.nixosModules.home-manager
+        ];
+      };
+
     };
 
     # Standalone home-manager configuration entrypoint
@@ -153,7 +163,15 @@
           ./home-manager/adam.nix
         ];
       };
-      "afairbrother@cromulent" = home-manager.lib.homeManagerConfiguration {
+      "adam@BackuPi" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.aarch64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/adam.nix
+        ];
+      };
+      "afairbrother@Cromulent" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
         extraSpecialArgs = {inherit inputs outputs secrets;};
         modules = [
@@ -169,6 +187,15 @@
           ./home-manager/afairbrother.nix
         ];
       };
+      "afairbrother@Lenny" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/afairbrother.nix
+        ];
+      };
+
     };
   };
 }

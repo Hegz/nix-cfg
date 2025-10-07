@@ -29,13 +29,13 @@ in
   };
 
   # Bootloader.
-  boot.loader = lib.mkForce { 
-    grub = {
-      enable = true;
-      device = "/dev/sda";
-      useOSProber = true;
-    };
-  };
+  #boot.loader = lib.mkForce { 
+  #  grub = {
+  #    enable = true;
+  #    device = "/dev/sda";
+  #    useOSProber = true;
+  #  };
+  #};
 
   users.mutableUsers = false;
 
