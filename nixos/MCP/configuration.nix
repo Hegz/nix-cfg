@@ -13,6 +13,7 @@ in
       ./hardware-configuration.nix
       ../server.nix
       ../users/adam-blank.nix
+      ../users/otto.nix
       ../virt/virt.nix
       #../docker/dawarich.nix
       (import ../containers/adGuard.nix {serverName = "${hostName}";})
@@ -55,6 +56,20 @@ in
       enable = true;
       flags = "-k -p --utc";
     };
+    autoReplication = {
+      enable = true;
+      host = "BackuPi";
+      username = "otto";
+      identityFilePath = "/home/otto/.ssh/BackuPi";
+      localFilesystem = "zpool/ds1/important";
+      remoteFilesystem = "backup1";
+    };
+  };
+
+  # Make our backup server known
+  programs.ssh.knownHosts.BackuPi = {
+    extraHostNames = [ "backupi.taild7a71.ts.net" ];
+    publicKey = "${secrets.BackuPi.publicKey}";
   };
 
   # Enable harware acceleration for video streams
