@@ -55,6 +55,8 @@ in
     wget
     git
     git-crypt
+    zfs
+    lz4
   ];
 
   # List services that you want to enable:
