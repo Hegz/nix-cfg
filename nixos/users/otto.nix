@@ -4,9 +4,9 @@ let
 in
 {
   users.users.${username} = {
-    shell = pkgs.zsh;
-    isSystemUser = true;
+    isNormalUser = true;
     description = "${secrets.users.${username}.fullname}";
-    hashedPassword = "${secrets.users.${username}.passhash}";
+    openssh.authorizedKeys.keys = [
+      ];
   };
 }

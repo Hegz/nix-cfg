@@ -8,6 +8,7 @@ in
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ../users/adam-blank.nix
+      ../users/otto.nix
     ];
 
   boot = { 
@@ -16,7 +17,8 @@ in
       generic-extlinux-compatible.enable = true;
     };
     supportedFilesystems = [ "zfs" "nfs" ];
-    zfs.extraPools = [ "backup1" ];
+    #zfs.extraPools = [ "backup1" ];
+    # Enable this once backups are working
   };
 
   networking = {
@@ -34,7 +36,6 @@ in
   i18n.defaultLocale = "en_CA.UTF-8";
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
 
   # Compensate for lack of ram
   zramSwap.enable = true;
