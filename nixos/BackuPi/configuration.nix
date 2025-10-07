@@ -16,6 +16,7 @@ in
       generic-extlinux-compatible.enable = true;
     };
     supportedFilesystems = [ "zfs" "nfs" ];
+    zfs.extraPools = [ "backup1" ];
   };
 
   networking = {
