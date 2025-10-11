@@ -41,6 +41,7 @@
       x2goclient
       xclip
       prismlauncher
+      vlc
     ];
   };
 }

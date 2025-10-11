@@ -6,7 +6,6 @@ in
   users.users.${username} = {
     isNormalUser = true;
     description = "${secrets.users.${username}.fullname}";
-    openssh.authorizedKeys.keys = [
-      ];
+    openssh.authorizedKeys.keys = secrets.users.${username}.authorizedKeys;
   };
 }
