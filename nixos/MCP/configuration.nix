@@ -35,6 +35,8 @@ in
     virt-manager
     zfs
     compose2nix
+    wiimms-iso-tools 
+    unrar
   ];
 
   hardware.cpu.intel.updateMicrocode = true;
@@ -95,5 +97,4 @@ in
        ];
     };
   };
-
 }
