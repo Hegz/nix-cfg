@@ -25,6 +25,11 @@ in
 
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
+     
+	  imports = [
+		(import ../../modules/container-ssl.nix {port = "${servicePort}";})
+		../../modules/container-tailscale.nix
+	  ]; 
 
       networking = {                                   
         hostName = "${hostname}";
