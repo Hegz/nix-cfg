@@ -1,6 +1,7 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname = "jellyFin";
+  servicePort = "8096";
 in
 {
   containers."${hostname}" = {                                                                                              
@@ -25,12 +26,18 @@ in
 
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
+     
+	  imports = [
+		../../modules/container-tailscale.nix
+		(import ../../modules/container-ssl.nix {port = "${servicePort}";})
+	  ]; 
 
       networking = {                                   
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {                                                                                                  
+          allowedTCPPorts = [ 80 443 ];
           enable = true;                                   
         };                           
         # Use systemd-resolved inside the container 
