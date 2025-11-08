@@ -48,7 +48,7 @@
 
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (lib.getName pkg) [
-  #    "valheim-server"
+      "valheim-server"
       "steamworks-sdk-redist"
     ];
   # ...
