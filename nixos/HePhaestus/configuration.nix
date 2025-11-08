@@ -20,7 +20,7 @@ in
       ../users/afairbrother.nix
       ../desktop.nix
       #../syncthing.nix
-      #../suspend2Hibernate.nix
+      ../../modules/suspend2Hibernate.nix
       #../dokuwiki.nix
     ];
 
@@ -32,7 +32,8 @@ in
 
   programs.kdeconnect.enable = true;
 
-  services.lldpd.enable = false; # Enable LLDP to discover network devices.
+  services.lldpd.enable = true; # Enable LLDP to discover network devices.
+  services.avahi.enable = true; # Enable avahi to discover mdns  devices.
 
   services.printing = {
     enable = false; # Enable printing services.

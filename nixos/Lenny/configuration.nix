@@ -21,7 +21,7 @@ in
       ./hardware-configuration.nix
       ../desktop.nix
       ../users/afairbrother.nix
-      ../suspend2Hibernate.nix
+      ../../modules/suspend2Hibernate.nix
     ];
 
   networking = {

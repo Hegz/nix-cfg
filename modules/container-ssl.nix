@@ -19,8 +19,8 @@ in
 	script = ''
 	  set -eu
 	  cd /var/lib/caddy
-	  ${pkgs.tailscale}/bin/tailscale cert ${hostName}.taild7a71.ts.net
-	  ${pkgs.coreutils}/bin/chown caddy ${hostName}.taild7a71.ts.net.*
+	  ${pkgs.tailscale}/bin/tailscale cert ${lib.toLower hostName}.taild7a71.ts.net
+	  ${pkgs.coreutils}/bin/chown caddy ${lib.toLower hostName}.taild7a71.ts.net.*
 	  ${pkgs.systemd}/bin/systemctl restart caddy.service
 	'';
 	serviceConfig = {
@@ -33,7 +33,7 @@ in
 	enable = true;
 	virtualHosts."${hostName}.taild7a71.ts.net".extraConfig = ''
 	 reverse_proxy http://localhost:${port}
-	 tls /var/lib/caddy/${hostName}.taild7a71.ts.net.crt /var/lib/caddy/${hostName}.taild7a71.ts.net.key {
+	 tls /var/lib/caddy/${lib.toLower hostName}.taild7a71.ts.net.crt /var/lib/caddy/${lib.toLower hostName}.taild7a71.ts.net.key {
 	   protocols tls1.3
 	   }
 	 '';
