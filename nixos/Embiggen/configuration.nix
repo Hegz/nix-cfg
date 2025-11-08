@@ -12,6 +12,7 @@
       ../dokuwiki.nix
       #../syncthing.nix
       ../users/adam.nix
+      ../../modules/nvidia-container-toolkit.nix
     ];
 
   networking.hostName = "Embiggen"; # Define your hostname.
@@ -165,9 +166,6 @@
 
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = ["nvidia"];
-
-  # Enable nvidia Docker 
-  hardware.nvidia-container-toolkit.enable = true;
 
   # Enable game mode support
   programs.gamemode.enable = true;
