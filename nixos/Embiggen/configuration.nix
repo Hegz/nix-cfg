@@ -46,24 +46,28 @@
     gamescopeSession.enable = true;
   };
 
-  nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [
-      "valheim-server"
-      "steamworks-sdk-redist"
-    ];
+  nixpkgs.config.permittedInsecurePackages = [
+    "python3.12-ecdsa-0.19.1"
+  ];
+
+  #nixpkgs.config.allowUnfreePredicate = pkg:
+  #  builtins.elem (lib.getName pkg) [
+  #    "valheim-server"
+  #    "steamworks-sdk-redist"
+  #  ];
   # ...
 
   # Don't auto start valheim service
-  systemd.services.valheim.wantedBy = lib.mkForce [];
-  services.valheim = {
-    enable = true;
-    serverName = "Worldland";
-    worldName = "Worldland";
-    openFirewall = true;
-    password = "12345";
-    adminList = [ "76561197990259028" ];
-    permittedList = [ "76561197990259028" "76561199314455669" "76561199221428738" ]; # Me, Mo, & G
-  };
+  #systemd.services.valheim.wantedBy = lib.mkForce [];
+  #services.valheim = {
+  #  enable = true;
+  #  serverName = "Worldland";
+  #  worldName = "Worldland";
+  #  openFirewall = true;
+  #  password = "12345";
+  #  adminList = [ "76561197990259028" ];
+  #  permittedList = [ "76561197990259028" "76561199314455669" "76561199221428738" ]; # Me, Mo, & G
+  #};
 
   programs.kdeconnect.enable = true;
 
