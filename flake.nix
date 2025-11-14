@@ -19,7 +19,8 @@
     nur.url = "github:nix-community/NUR";
 
     valheim-server = {
-      url = "github:hamburger1984/valheim-server-flake";
+      #url = "github:hamburger1984/valheim-server-flake";
+      url = "github:SoarinFerret/valheim-server-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
