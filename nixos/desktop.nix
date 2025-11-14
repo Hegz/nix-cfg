@@ -86,9 +86,9 @@
   };
 
   # Enable CUPS to print documents.
-  # services.printing.enable = true;
-  # services.avahi.enable = true;
-  # services.avahi.nssmdns4 = true;
+  services.printing.enable = true;
+  services.avahi.enable = true;
+  services.avahi.nssmdns4 = true;
 
   # keybase Encrypted file sync
   #workaround for an incorrect default.
