@@ -36,7 +36,7 @@
       playonlinux
       steam
       tenacity
-      transmission-qt
+      transmission_4-qt
       wine
       x2goclient
       xclip
