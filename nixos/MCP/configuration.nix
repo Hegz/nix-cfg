@@ -20,7 +20,8 @@ in
       (import ../containers/jellyFin.nix {serverName = "${hostName}";})
       (import ../containers/transmission.nix {serverName = "${hostName}";})
       #(import ../containers/smokeping.nix {serverName = "${hostName}";})
-      (import ../containers/tt-rss.nix {serverName = "${hostName}";})
+      #(import ../containers/tt-rss.nix {serverName = "${hostName}";})
+      (import ../containers/freshrss.nix {serverName = "${hostName}";})
       (import ../containers/minecraft.nix {serverName = "${hostName}";})
       (import ../containers/budget.nix {serverName = "${hostName}";})
       (import ../containers/audiobookshelf.nix {serverName = "${hostName}";})
@@ -58,14 +59,14 @@ in
       enable = true;
       flags = "-k -p --utc";
     };
-    autoReplication = {
-      enable = true;
-      host = "BackuPi";
-      username = "otto";
-      identityFilePath = "/home/otto/.ssh/BackuPi";
-      localFilesystem = "zpool/ds1/important";
-      remoteFilesystem = "backup1";
-    };
+   # autoReplication = {
+   #   enable = true;
+   #   host = "BackuPi";
+   #   username = "otto";
+   #   identityFilePath = "/home/otto/.ssh/BackuPi";
+   #   localFilesystem = "zpool/ds1/important";
+   #   remoteFilesystem = "backup1";
+   # };
   };
 
   # Make our backup server known
