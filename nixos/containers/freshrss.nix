@@ -1,4 +1,4 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
+{serverName}: { fetchFromGitHub, inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname    = "freshrss";
   servicePort = "80";
@@ -57,19 +57,18 @@ in
         virtualHost = "freshrss.taild7a71.ts.net";
         baseUrl = "https://freshrss.taild7a71.ts.net";
         passwordFile = "/var/lib/freshrss/password";
-        extensions = with freshrss-extensions; [
+        extensions = with pkgs.freshrss-extensions; [
             youtube
-          ] ++ [
-              (freshrss-extensions.buildFreshRssExtension {
-                FreshRssExtUniqueId = "ReadingTime";
-                pname = "reading-time";
-                version = "1.5";
-                src = pkgs.fetchFromGitLab {
-                  domain = "framagit.org";
-                  owner = "Lapineige";
-                  repo = "FreshRSS_Extension-ReadingTime";
-                  rev = "fb6e9e944ef6c5299fa56ffddbe04c41e5a34ebf";
-                  hash = "sha256-C5cRfaphx4Qz2xg2z+v5qRji8WVSIpvzMbethTdSqsk=";
+           ] ++ [
+              (pkgs.freshrss-extensions.buildFreshRssExtension {
+                FreshRssExtUniqueId = "af-Readability";
+                pname = "af-readability";
+                version = "1.0";
+                src = pkgs.fetchFromGitHub {
+                  owner = "Niehztog";
+                  repo = "freshrss-af-readability";
+                  rev = "d1b8ff0c9ea98c5705b06dd2a6339af89f441193";
+                  hash = "sha256-9/AELLkWwSkYiTBl9t7yVtlsnF+dZRccNbo2nr2ga7w=";
                 };
               })
           ];
