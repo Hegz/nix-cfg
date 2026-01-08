@@ -4,5 +4,6 @@
   services.tailscale = {
     enable = true;
     interfaceName = "userspace-networking";
+    permitCertUid = "caddy";
   };
 }

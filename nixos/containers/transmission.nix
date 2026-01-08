@@ -58,6 +58,7 @@ in
       # Add service definitions here.
       services.transmission = {                                                                                        
         enable = true;                                                                                                 
+        package = pkgs.transmission_4;
         openRPCPort = true;
         openPeerPorts = true;
         settings = { 
