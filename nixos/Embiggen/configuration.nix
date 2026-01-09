@@ -74,6 +74,7 @@
 
   # Enable wake on lan
   networking.interfaces.enp25s0.wakeOnLan.enable = true;
+  networking.firewall.allowedUDPPorts = [ 9 ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -199,7 +200,7 @@
 
     # Enable power management (do not disable this unless you have a reason to).
     # Likely to cause problems on laptops and with screen tearing if disabled.
-    powerManagement.enable = true;
+    powerManagement.enable = false;
 
     # Use the open source version of the kernel module ("nouveau")
     # Note that this offers much lower performance and does not
