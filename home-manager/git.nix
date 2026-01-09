@@ -3,7 +3,11 @@
 { 
   programs.git = {           
     enable = true;   
-    userName = "Adam Fairbrother";
-    userEmail = "adam.fairbrother@gmail.com";
+    settings = {
+      user = { 
+        name = "Adam Fairbrother";
+        email = "adam.fairbrother@gmail.com";
+      };
+    };
   };
 }

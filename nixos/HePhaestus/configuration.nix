@@ -35,12 +35,12 @@ in
   services.lldpd.enable = true; # Enable LLDP to discover network devices.
   services.avahi.enable = true; # Enable avahi to discover mdns  devices.
 
-  services.printing = {
-    enable = false; # Enable printing services.
+  #services.printing = {
+  #  enable = false; # Enable printing services.
   #  clientConf = ''
   #    ServerName 10.173.0.8
   #  '';
-  };
+  #};
   networking.firewall = {
     enable = true; # Enable the firewall.
   };
