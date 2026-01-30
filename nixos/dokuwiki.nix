@@ -14,8 +14,8 @@ let
   dokuwiki-plugin-dw2pdf = pkgs.stdenv.mkDerivation {
     name = "dw2pdf";
     src = pkgs.fetchzip {
-      url = "https://github.com/splitbrain/dokuwiki-plugin-dw2pdf/archive/refs/tags/2023-09-15.zip";
-      sha256 = "sha256-vRX0YuDr2eHjz6+HpFylEaOGee2a/zfenCj/48enyH0=";
+      url = "https://github.com/splitbrain/dokuwiki-plugin-dw2pdf/archive/refs/tags/2026-01-08.zip";
+      sha256 = "sha256-B1KO1bJBSlSTadyO+lhdfbtyJu29Mxh/qiwIuL1k8DE=";
     };
     patches = [ ../patches/dw2pdf_clean.patch ];
     phases = [ "unpackPhase" "patchPhase" "installPhase" ];
@@ -26,8 +26,8 @@ let
   dokuwiki-plugin-diagrams = pkgs.stdenv.mkDerivation {
     name = "diagrams";
     src = pkgs.fetchzip {
-      url = "https://github.com/cosmocode/dokuwiki-plugin-diagrams/archive/refs/tags/2023-08-30.zip";
-      sha256 = "sha256-OQqh7NvhK33U0sv2OjRnLlITAV8bBxKGnc7jBGuXUFI=";
+      url = "https://github.com/cosmocode/dokuwiki-plugin-diagrams/archive/refs/tags/2025-10-15.zip";
+      sha256 = "sha256-K2EIyA0cPDLsqohlPmuvkqyQYn7M7J/BAY+jdLUHLGk=";
     };
     sourceRoot = ".";
     installPhase = "mkdir -p $out; cp -r source/* $out/";
@@ -35,9 +35,16 @@ let
 
   dokuwiki-plugin-drawio = pkgs.stdenv.mkDerivation {
     name = "drawio";
-    src = pkgs.fetchzip {
-      url = "https://github.com/lejmr/dokuwiki-plugin-drawio/archive/refs/tags/0.2.10.zip";
-      sha256 = "sha256-hiAvV5ySZcnPNcWPofq7CFXDR51zA6vEeTuIfi++S8M=";
+    # Moved to patched branch due to inactivity of original repo 2026-01-27
+    #src = pkgs.fetchzip {
+    #  url = "https://github.com/lejmr/dokuwiki-plugin-drawio/archive/refs/tags/0.2.10.zip";
+    #  sha256 = "sha256-hiAvV5ySZcnPNcWPofq7CFXDR51zA6vEeTuIfi++S8M=";
+    #};
+    src = pkgs.fetchFromGitHub {
+      owner = "axelhahn";
+      repo = "dokuwiki-plugin-drawio";
+      rev = "481efa08c0c1e3f8650f78ebee78a9ca969f029b";
+      hash = "sha256-tjp9tJnFmRl1jA7Zd9JhzG68pumoNJ3luLZGpxwaZZI=";
     };
     sourceRoot = ".";
     installPhase = "mkdir -p $out; cp -r source/* $out/";
@@ -66,7 +73,7 @@ in {
       tpl.mindthedark.autoDark = true;
       updatecheck = false;
     };
-    plugins = [ dokuwiki-plugin-drawio dokuwiki-plugin-dw2pdf dokuwiki-plugin-edittable ];
+    plugins = [ dokuwiki-plugin-drawio dokuwiki-plugin-dw2pdf dokuwiki-plugin-edittable dokuwiki-plugin-diagrams ];
     templates = [ dokuwiki-template-mindthedark ];
 
     acl = [
