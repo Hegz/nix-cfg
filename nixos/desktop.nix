@@ -155,7 +155,7 @@
     orca-slicer
     pkgs.cifs-utils
     pkgs.itd
-    pkgs.unstable.freecad
+    freecad
     pkgs.unstable.rclone
     runc
     usbutils
