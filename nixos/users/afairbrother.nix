@@ -5,7 +5,7 @@
     isNormalUser = true;
     description = "${secrets.users.adam.fullname}";
     hashedPassword = "${secrets.users.afairbrother.passhash}";
-    extraGroups = [ "_lldpd" "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" ];
+    extraGroups = [ "kvm" "_lldpd" "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" "adbusers"];
     packages = with pkgs; [
       chromium
       firefox

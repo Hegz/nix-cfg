@@ -155,7 +155,7 @@
     orca-slicer
     pkgs.cifs-utils
     pkgs.itd
-    pkgs.unstable.freecad
+    freecad
     pkgs.unstable.rclone
     runc
     usbutils
@@ -163,7 +163,14 @@
     xorg.xhost
     zoom-us
     virt-viewer
+    pkgs.android-studio
   ];
+
+  # Accept the Android SDK license
+  nixpkgs.config.android_sdk.accept_license = true;
+  
+  # Enable ADB for device connections
+  programs.adb.enable = true;
 
   #zsh settings
   environment.shells = with pkgs; [ zsh ];
