@@ -92,10 +92,10 @@
 
   # keybase Encrypted file sync
   #workaround for an incorrect default.
-  systemd.user.services.kbfs.serviceConfig.PrivateTmp = lib.mkForce false;
+  #systemd.user.services.kbfs.serviceConfig.PrivateTmp = lib.mkForce false;
   #systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
-  services.keybase.enable = true;
-  services.kbfs.enable = true;
+  #services.keybase.enable = true;
+  #services.kbfs.enable = true;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;

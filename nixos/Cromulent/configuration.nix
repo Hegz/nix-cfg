@@ -47,6 +47,8 @@ in
   boot.initrd.kernelModules = [ "amdgpu" ];
   hardware.graphics.enable32Bit = true; # For 32 bit applications
 
+  hardware.cpu.amd.updateMicrocode = true;
+
   services.xserver.enable = true;
   services.xserver.videoDrivers = [ "amdgpu" ];  
 
@@ -54,7 +56,7 @@ in
 
   programs.kdeconnect.enable = true;
 
-  services.opensnitch.enable = true;
+  #services.opensnitch.enable = true;
 
   services.lldpd.enable = true;
 
@@ -70,8 +72,8 @@ in
   # Steam settings.
   programs.steam = {
     enable = true;
-    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
+    #remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    #dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
   };
 }
 
