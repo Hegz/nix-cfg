@@ -26,7 +26,7 @@
       orca-slicer
       lldpd
       playonlinux
-      quickemu
+      pkgs.unstable.quickemu
       tenacity
       tigervnc
       x2goclient
