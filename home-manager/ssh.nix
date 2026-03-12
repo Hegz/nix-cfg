@@ -8,7 +8,7 @@
     matchBlocks = { 
       "*" = {
         addKeysToAgent = "yes";
-        forwardAgent = true;
+        forwardAgent = false;
       };
       "github.com" = {
         identityFile = "~/.ssh/github";

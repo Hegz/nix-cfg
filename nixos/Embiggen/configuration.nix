@@ -3,7 +3,11 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { inputs, outputs, lib, config, pkgs, ... }:
+let 
 
+  hostName      = "Embiggen";
+
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -15,7 +19,7 @@
       ../../modules/nvidia-container-toolkit.nix
     ];
 
-  networking.hostName = "Embiggen"; # Define your hostname.
+  networking.hostName = "${hostName}"; # Define your hostname.
 
   # Extra Kernal Parameters
   boot.kernelParams = [

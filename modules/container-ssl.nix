@@ -3,6 +3,7 @@ let
 
   hostName   = "${config.networking.hostName}";
   private    = "/var/lib/private/${hostName}";
+  domain     = ${specialArgs.secret.tailnet.domain};
 
 in
 {
@@ -19,8 +20,8 @@ in
 	script = ''
 	  set -eu
 	  cd /var/lib/caddy
-	  ${pkgs.tailscale}/bin/tailscale cert ${lib.toLower hostName}.taild7a71.ts.net
-	  ${pkgs.coreutils}/bin/chown caddy ${lib.toLower hostName}.taild7a71.ts.net.*
+	  ${pkgs.tailscale}/bin/tailscale cert ${lib.toLower hostName}.${domain}
+	  ${pkgs.coreutils}/bin/chown caddy ${lib.toLower hostName}.${domain}.*
 	  ${pkgs.systemd}/bin/systemctl restart caddy.service
 	'';
 	serviceConfig = {
@@ -31,9 +32,9 @@ in
 
   services.caddy = {
 	enable = true;
-	virtualHosts."${hostName}.taild7a71.ts.net".extraConfig = ''
+	virtualHosts."${hostName}.${domain}".extraConfig = ''
 	 reverse_proxy http://localhost:${port}
-	 tls /var/lib/caddy/${lib.toLower hostName}.taild7a71.ts.net.crt /var/lib/caddy/${lib.toLower hostName}.taild7a71.ts.net.key {
+	 tls /var/lib/caddy/${lib.toLower hostName}.${domain}.crt /var/lib/caddy/${lib.toLower hostName}.${domain}.key {
 	   protocols tls1.3
 	   }
 	 '';
