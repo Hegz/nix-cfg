@@ -6,13 +6,15 @@
     description = "${secrets.users.adam.fullname}";
     hashedPassword = "${secrets.users.adam.passhash}";
     extraGroups = [ 
+                    "adbusers"
+                    "dialout" 
                     "distrobox" 
                     "docker" 
                     "gamemode"
+                    "kvm" 
                     "networkmanager" 
                     "plugdev" 
                     "video" 
-                    "dialout"
                     "wheel" 
                   ];
     packages = with pkgs; [
@@ -22,10 +24,10 @@
       gimp-with-plugins
       git
       inkscape-with-extensions
-      kdePackages.kate
       kdePackages.ark
       kdePackages.gwenview
       kdePackages.kalk
+      kdePackages.kate
       kdePackages.kdeconnect-kde
       kdePackages.okular
       kdePackages.yakuake
@@ -34,14 +36,15 @@
       openscad
       pkgs.cura
       playonlinux
+      prismlauncher
       steam
       tenacity
       transmission_4-qt
+      vinegar
+      vlc
       wine
       x2goclient
       xclip
-      prismlauncher
-      vlc
     ];
   };
 }

@@ -23,11 +23,11 @@
       };
     freecad = final.symlinkJoin {
       # Create a wrapper for freecad that includes the environment allowing it to work.
-      name = "freecad";
+      name = "FreeCAD";
       paths = [ prev.freecad ];
       buildInputs = [ final.makeWrapper ];
       postBuild = ''
-          wrapProgram $out/bin/freecad \
+          wrapProgram $out/bin/FreeCAD \
             --set __GLX_VENDOR_LIBRARY_NAME mesa \
             --set __EGL_VENDOR_LIBRARY_FILENAMES /run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json \
             --set MESA_LOADER_DRIVER_OVERRIDE zink \
