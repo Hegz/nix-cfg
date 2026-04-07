@@ -26,7 +26,7 @@ in
       system.stateVersion = "24.05";
 
       # imports = [
-      #  (import ../../modules/container-ssl.nix {port = "${servicePort}";})
+      #  (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
       #  ../../modules/container-tailscale.nix
 	  #  ../../modules/wireguard.nix
 	  # ];

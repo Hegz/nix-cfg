@@ -26,7 +26,7 @@ in
 		
       imports = [
         ../../modules/container-tailscale.nix
-        (import ../../modules/container-ssl.nix {port = "${servicePort}";})
+        (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
       ];
 
       networking = {                                   
