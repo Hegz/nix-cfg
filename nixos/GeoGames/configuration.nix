@@ -24,11 +24,11 @@ in
 
   networking.hostName = "${hostName}"; # Define your hostname.
 
-  environment.systemPackages = with pkgs; [
+ # environment.systemPackages = with pkgs; [
  #   (GPUOffloadApp steam "steam")
  #   (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
- steam
-  ];
+ #steam
+ # ];
 
   # Extra Kernal Parameters
   boot.kernelParams = [
@@ -74,22 +74,22 @@ in
       enable = true;
       remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
       dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
-      gamescopeSession.enable = true;
-      package = pkgs.steam.override {
-        extraEnv = { 
-          __NV_PRIME_RENDER_OFFLOAD = "1";
-          __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-          __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-          __VK_LAYER_NV_optimus = "NVIDIA_only";
-        };
-      };
+ #     gamescopeSession.enable = true;
+ #     package = pkgs.steam.override {
+ #       extraEnv = { 
+ #         __NV_PRIME_RENDER_OFFLOAD = "1";
+ #         __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+ #         __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+ #         __VK_LAYER_NV_optimus = "NVIDIA_only";
+ #       };
+ #     };
     };
     kdeconnect = {
       enable = true;
     };
-    gamescope = {
-      enable = true;
-    };
+    #gamescope = {
+    #  enable = true;
+    #};
   };
 
   hardware.bluetooth.enable = true;
@@ -109,7 +109,7 @@ in
   services.xserver.videoDrivers = [  "nvidia" ];
 
   # Enable game mode support
-  programs.gamemode.enable = true;
+  # programs.gamemode.enable = true;
 
 
    hardware.nvidia = {
