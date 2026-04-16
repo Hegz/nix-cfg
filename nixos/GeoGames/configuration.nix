@@ -7,7 +7,7 @@
 with pkgs; let
   hostName = "GeoGames";
   patchDesktop = pkg: appName: from: to: lib.hiPrio (
-    pkgs.runCommand "$patched-desktop-entry-for-${appName}" {} ''
+    pkgs.runCommand "patched-desktop-entry-for-${appName}" {} ''
       ${coreutils}/bin/mkdir -p $out/share/applications
       ${gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
       '');
@@ -44,7 +44,7 @@ in
       enable = true;
     };
     tlp = {
-      enable = true;
+      enable = false;
       settings =  {
         CPU_SCALING_GOVENOR_ON_AC = "performance";
         CPU_SCALING_GOVENOR_ON_BAT = "powersave";
