@@ -35,9 +35,9 @@
       nvtopPackages.full
       openscad
       pkgs.cura
-      playonlinux
-      prismlauncher
-      steam
+      #playonlinux
+      #prismlauncher
+      #steam
       tenacity
       transmission_4-qt
       vinegar
