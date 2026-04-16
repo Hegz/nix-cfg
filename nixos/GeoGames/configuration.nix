@@ -44,7 +44,7 @@ in
       enable = true;
     };
     tlp = {
-      enable = false;
+      enable = true;
       settings =  {
         CPU_SCALING_GOVENOR_ON_AC = "performance";
         CPU_SCALING_GOVENOR_ON_BAT = "powersave";
@@ -63,10 +63,7 @@ in
 
   };
 
-  powerManagement = {
-    enable = true;
-    powertop.enable = true;
-  };
+  #powerManagement.enable = true;
 
   programs = { 
     steam = {
@@ -74,14 +71,6 @@ in
       remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
       dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
       gamescopeSession.enable = true;
-      package = pkgs.steam.override {
-        extraEnv = { 
-          __NV_PRIME_RENDER_OFFLOAD = "1";
-          __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-          __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-          __VK_LAYER_NV_optimus = "NVIDIA_only";
-        };
-      };
     };
     kdeconnect = {
       enable = true;
@@ -128,7 +117,8 @@ in
 
     # Enable power management (do not disable this unless you have a reason to).
     # Likely to cause problems on laptops and with screen tearing if disabled.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
+    powerManagement.finegrained = true;
 
     # Use the open source version of the kernel module ("nouveau")
     # Note that this offers much lower performance and does not
