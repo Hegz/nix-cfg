@@ -5,7 +5,7 @@
 { inputs, outputs, lib, config, pkgs, secrets, ... }:
 
 let
-  hostName = "GeoGamer";
+  hostName = "GeoGames";
 in
 {
   imports =
@@ -32,7 +32,27 @@ in
     openssh = {
       enable = true;
     };
+    tlp = {
+      enable = false;
+      settings =  {
+        CPU_SCALING_GOVENOR_ON_AC = "performance";
+        CPU_SCALING_GOVENOR_ON_BAT = "powersave";
+        ENERGY_PERF_POLICY_ON_AC = "performance";
+        ENERGY_PERF_POLICY_ON_BAT = "power";
+        CPU_BOOST_ON_AC = 1;
+        CPU_BOOST_ON_BAT = 0;
+        PCIE_ASPM_ON_AC = "off";
+        PCIE_ASPM_ON_BAT = "on";
+        WIFI_PWR_ON_AC = "off";
+        WIFI_PWR_ON_BAT = "on";
+        NVIDIA_DRM_MODE_ON_AC = 1;
+        NVIDIA_DRM_MODE_ON_BAT = 0;
+      };
+    };
+
   };
+
+  powerManagement.enable = true;
 
   programs = { 
     steam = {
@@ -62,12 +82,23 @@ in
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "modesetting" "nvidia" ];
 
   # Enable game mode support
   programs.gamemode.enable = true;
 
+
    hardware.nvidia = {
+
+    prime = {
+      offload = { 
+        enable = true;
+        enableOffloadCmd = true;
+      };
+      nvidiaBusId = "PCI:1@0:0:0";
+      intelBusId = "PCI:0@0:2:0";
+    };
+
 
     # Modesetting is needed most of the time
     modesetting.enable = true;
