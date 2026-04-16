@@ -4,8 +4,14 @@
 
 { inputs, outputs, lib, config, pkgs, secrets, ... }:
 
-let
+with pkgs; let
   hostName = "GeoGames";
+  patchDesktop = pkg: appName: from: to: lib.hiPrio (
+    pkgs.runCommand "$patched-desktop-entry-for-${appName}" {} ''
+      ${coreutils}/bin/mkdir -p $out/share/applications
+      ${gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
+      '');
+    GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
 in
 {
   imports =
@@ -18,9 +24,14 @@ in
 
   networking.hostName = "${hostName}"; # Define your hostname.
 
+  environment.systemPackages = with pkgs; [
+    (GPUOffloadApp steam "steam")
+    (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
+  ];
+
   # Extra Kernal Parameters
   boot.kernelParams = [
-    "nvidia-drm.modeset=1"
+    "nvidia-drm.moeset=1"
     "nvidia-drm.fbdev=1"
   ];
   
@@ -33,7 +44,7 @@ in
       enable = true;
     };
     tlp = {
-      enable = false;
+      enable = true;
       settings =  {
         CPU_SCALING_GOVENOR_ON_AC = "performance";
         CPU_SCALING_GOVENOR_ON_BAT = "powersave";
@@ -52,7 +63,7 @@ in
 
   };
 
-  powerManagement.enable = true;
+  #powerManagement.enable = true;
 
   programs = { 
     steam = {
@@ -71,6 +82,7 @@ in
 
   hardware.bluetooth.enable = true;
 
+  hardware.cpu.intel.updateMicrocode = true;
 
   # Nvidia graphics options below
   # ==============================
@@ -105,7 +117,7 @@ in
 
     # Enable power management (do not disable this unless you have a reason to).
     # Likely to cause problems on laptops and with screen tearing if disabled.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
 
     # Use the open source version of the kernel module ("nouveau")
     # Note that this offers much lower performance and does not
