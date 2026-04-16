@@ -6,12 +6,12 @@
 
 with pkgs; let
   hostName = "GeoGames";
-  patchDesktop = pkg: appName: from: to: lib.hiPrio (
-    pkgs.runCommand "$patched-desktop-entry-for-${appName}" {} ''
-      ${coreutils}/bin/mkdir -p $out/share/applications
-      ${gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
-      '');
-    GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
+#  patchDesktop = pkg: appName: from: to: lib.hiPrio (
+#    pkgs.runCommand "$patched-desktop-entry-for-${appName}" {} ''
+#      ${coreutils}/bin/mkdir -p $out/share/applications
+#      ${gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
+#      '');
+#    GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
 in
 {
   imports =
@@ -25,13 +25,14 @@ in
   networking.hostName = "${hostName}"; # Define your hostname.
 
   environment.systemPackages = with pkgs; [
-    (GPUOffloadApp steam "steam")
-    (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
+ #   (GPUOffloadApp steam "steam")
+ #   (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
+ steam
   ];
 
   # Extra Kernal Parameters
   boot.kernelParams = [
-    "nvidia-drm.moeset=1"
+    "nvidia-drm.modeset=1"
     "nvidia-drm.fbdev=1"
   ];
   
@@ -105,7 +106,7 @@ in
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = [ "modesetting" "nvidia" ];
+  services.xserver.videoDrivers = [  "nvidia" ];
 
   # Enable game mode support
   programs.gamemode.enable = true;
@@ -128,7 +129,8 @@ in
 
     # Enable power management (do not disable this unless you have a reason to).
     # Likely to cause problems on laptops and with screen tearing if disabled.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
+    powerManagement.finegrained = true;
 
     # Use the open source version of the kernel module ("nouveau")
     # Note that this offers much lower performance and does not
