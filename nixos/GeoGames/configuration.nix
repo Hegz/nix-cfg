@@ -6,12 +6,12 @@
 
 with pkgs; let
   hostName = "GeoGames";
-#  patchDesktop = pkg: appName: from: to: lib.hiPrio (
-#    pkgs.runCommand "$patched-desktop-entry-for-${appName}" {} ''
-#      ${coreutils}/bin/mkdir -p $out/share/applications
-#      ${gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
-#      '');
-#    GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
+  patchDesktop = pkg: appName: from: to: lib.hiPrio (
+    pkgs.runCommand "$patched-desktop-entry-for-${appName}" {} ''
+      ${coreutils}/bin/mkdir -p $out/share/applications
+      ${gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
+      '');
+    GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
 in
 {
   imports =
@@ -24,15 +24,14 @@ in
 
   networking.hostName = "${hostName}"; # Define your hostname.
 
- # environment.systemPackages = with pkgs; [
- #   (GPUOffloadApp steam "steam")
- #   (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
- #steam
- # ];
+  environment.systemPackages = with pkgs; [
+    (GPUOffloadApp steam "steam")
+    (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
+  ];
 
   # Extra Kernal Parameters
   boot.kernelParams = [
-    "nvidia-drm.modeset=1"
+    "nvidia-drm.moeset=1"
     "nvidia-drm.fbdev=1"
   ];
   
@@ -74,22 +73,22 @@ in
       enable = true;
       remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
       dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
- #     gamescopeSession.enable = true;
- #     package = pkgs.steam.override {
- #       extraEnv = { 
- #         __NV_PRIME_RENDER_OFFLOAD = "1";
- #         __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
- #         __GLX_VENDOR_LIBRARY_NAME = "nvidia";
- #         __VK_LAYER_NV_optimus = "NVIDIA_only";
- #       };
- #     };
+      gamescopeSession.enable = true;
+      package = pkgs.steam.override {
+        extraEnv = { 
+          __NV_PRIME_RENDER_OFFLOAD = "1";
+          __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+          __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+          __VK_LAYER_NV_optimus = "NVIDIA_only";
+        };
+      };
     };
     kdeconnect = {
       enable = true;
     };
-    #gamescope = {
-    #  enable = true;
-    #};
+    gamescope = {
+      enable = true;
+    };
   };
 
   hardware.bluetooth.enable = true;
@@ -106,10 +105,10 @@ in
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = [  "nvidia" ];
+  services.xserver.videoDrivers = [ "modesetting" "nvidia" ];
 
   # Enable game mode support
-  # programs.gamemode.enable = true;
+  programs.gamemode.enable = true;
 
 
    hardware.nvidia = {
@@ -129,8 +128,7 @@ in
 
     # Enable power management (do not disable this unless you have a reason to).
     # Likely to cause problems on laptops and with screen tearing if disabled.
-    powerManagement.enable = true;
-    powerManagement.finegrained = true;
+    powerManagement.enable = false;
 
     # Use the open source version of the kernel module ("nouveau")
     # Note that this offers much lower performance and does not
