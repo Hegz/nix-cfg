@@ -14,11 +14,11 @@ with pkgs; let
     GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
 in
 {
-  nixpkgs.overlays = [
-	  (self: super: {
-		  isw = super.callPackage ./isw.nix { };
-	  })
-  ];
+ # nixpkgs.overlays = [
+ #	  (self: super: {
+ #		  isw = super.callPackage ./isw.nix { };
+ #	  })
+ #  ];
 
   imports =
     [ # Include the results of the hardware scan.
@@ -26,7 +26,7 @@ in
       ../desktop.nix
       ../users/adam.nix
       ../users/gio.nix
-	  ./isw-module.nix
+    #  ./isw-module.nix
     ];
 
   networking.hostName = "${hostName}"; # Define your hostname.
@@ -34,23 +34,47 @@ in
   environment.systemPackages = with pkgs; [
     (GPUOffloadApp steam "steam")
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
+    mcontrolcenter
   ];
 
   # Extra Kernal Parameters
-  boot.kernelParams = [
-    "nvidia-drm.moeset=1"
-    "nvidia-drm.fbdev=1"
-  ];
+  boot = {
+    kernelParams = [
+      "nvidia-drm.moeset=1"
+      "nvidia-drm.fbdev=1"
+    ];
+    extraModulePackages = [ 
+      config.boot.kernelPackages.msi-ec 
+    ];
+    kernelModules = [
+      "msi-ec"
+    ];
+    plymouth = {
+      enable = true;
+      theme = "bgrt";
+    };
+  };
   
   services = {
+    logind.settings.Login = {
+      HandleSuspendKey = "hibernate";
+      HandleLidSwitch = "hibernate";
+    };
+    undervolt = {
+      enable = true;
+      analogioOffset = -100; 
+      coreOffset = -100;
+      gpuOffset = -50;
+      uncoreOffset = -100;
+    };
     timekpr = {
       package = pkgs.unstable.timekpr;
       enable = true;
     };
-    isw = {
-      enable = true;
-      section = "16Q2EMS1";
-    };
+    #isw = {
+    #  enable = true;
+    #  section = "16Q2EMS1";
+    #};
     openssh = {
       enable = true;
     };
