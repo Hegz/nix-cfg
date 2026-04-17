@@ -14,12 +14,19 @@ with pkgs; let
     GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
 in
 {
+  nixpkgs.overlays = [
+	  (self: super: {
+		  isw = super.callPackage ./isw.nix { };
+	  })
+  ];
+
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ../desktop.nix
       ../users/adam.nix
       ../users/gio.nix
+	  import ./isw-module.nix
     ];
 
   networking.hostName = "${hostName}"; # Define your hostname.
