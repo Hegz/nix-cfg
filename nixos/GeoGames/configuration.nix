@@ -47,7 +47,10 @@ in
       package = pkgs.unstable.timekpr;
       enable = true;
     };
-    isw.enable = true;
+    isw = {
+      enable = true;
+      section = "16Q2EMS1";
+    };
     openssh = {
       enable = true;
     };

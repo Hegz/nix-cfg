@@ -1,3 +1,4 @@
+# File sourced from User Artturin https://github.com/NixOS/nixpkgs/issues/129954
 { lib, stdenv, fetchFromGitHub, python3, coreutils }:
 
 stdenv.mkDerivation rec {
@@ -29,7 +30,7 @@ stdenv.mkDerivation rec {
 
     install -Dm644 etc/isw.conf $out/etc/isw.conf
     install -Dm644 usr/lib/systemd/system/isw@.service $out/lib/systemd/system/isw@.service
-    install -Dm644 isw $out/bin/isw
+    install -Dm555 isw $out/bin/isw
 
     runHook postInstall
   '';
