@@ -17,6 +17,7 @@ in
   nixpkgs.overlays = [
  	  (self: super: {
  		  isw = super.callPackage ./isw.nix { };
+          msi-perkeyrgb = super.callPackage ./msi-perkeyrgb.nix { };
  	  })
    ];
 
@@ -35,7 +36,14 @@ in
     (GPUOffloadApp steam "steam")
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
     mcontrolcenter
+    msi-perkeyrgb
+
   ];
+
+  # udev rule for HID access without root
+  services.udev.extraRules = ''
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1122", MODE="0666"
+    '';
 
   # Extra Kernal Parameters
   boot = {
