@@ -14,11 +14,11 @@ with pkgs; let
     GPUOffloadApp = pkg: desktopName: patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload ";
 in
 {
- # nixpkgs.overlays = [
- #	  (self: super: {
- #		  isw = super.callPackage ./isw.nix { };
- #	  })
- #  ];
+  nixpkgs.overlays = [
+ 	  (self: super: {
+ 		  isw = super.callPackage ./isw.nix { };
+ 	  })
+   ];
 
   imports =
     [ # Include the results of the hardware scan.
@@ -26,7 +26,7 @@ in
       ../desktop.nix
       ../users/adam.nix
       ../users/gio.nix
-    #  ./isw-module.nix
+      ./isw-module.nix
     ];
 
   networking.hostName = "${hostName}"; # Define your hostname.
@@ -54,6 +54,17 @@ in
       theme = "bgrt";
     };
   };
+
+
+  systemd.services."AirplaneKey" = {
+    description = "ISW airplane key enable service";
+    wantedBy = [ "multi-user.target" "sleep.target" ];
+    after = [ "multi-user.target" "sleep.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.isw}/bin/isw -s 0x34 48";
+    };
+  };
   
   services = {
     logind.settings.Login = {
@@ -71,10 +82,10 @@ in
       package = pkgs.unstable.timekpr;
       enable = true;
     };
-    #isw = {
-    #  enable = true;
-    #  section = "16Q2EMS1";
-    #};
+    isw = {
+      enable = true;
+      section = "16Q2EMS1";
+    };
     openssh = {
       enable = true;
     };
