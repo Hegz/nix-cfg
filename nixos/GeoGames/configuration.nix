@@ -26,7 +26,7 @@ in
       ../desktop.nix
       ../users/adam.nix
       ../users/gio.nix
-	  import ./isw-module.nix
+	  ./isw-module.nix
     ];
 
   networking.hostName = "${hostName}"; # Define your hostname.
@@ -47,6 +47,7 @@ in
       package = pkgs.unstable.timekpr;
       enable = true;
     };
+    isw.enable = true;
     openssh = {
       enable = true;
     };
