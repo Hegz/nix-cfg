@@ -34,16 +34,6 @@ in
 
   networking.hostName = "${hostName}"; # Define your hostname.
 
-
-  networking.wireless.iwd = {
-	enable = true;
-	settings = {
-	  Settings.AutoConnect = true;
-	  IPv6.Enabled = true;
-	};
-  };
-  networking.networkmanager.wifi.backend = "iwd";
-
   environment.systemPackages = with pkgs; [
     (GPUOffloadApp steam "steam")
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
@@ -122,6 +112,7 @@ in
   # udev rule for HID access without root
   services.udev.extraRules = ''
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1122", MODE="0666"
+	ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="auto"
     '';
 
   # Extra Kernal Parameters
@@ -181,19 +172,6 @@ in
 	thermald = { 
       enable = true;
 	};
-	auto-cpufreq = {
-	  enable = true;
-	  settings = {
-		battery = {
-		  governor = "powersave";
-		  turbo = "never";
-		};
-		charger = {
-		  governor = "performance";
-		  turbo = "auto";
-		};
-	  };
-	};
 	libinput = {
 	  enable = true;
 	  touchpad = {
@@ -233,13 +211,6 @@ in
 
 
   powerManagement.powertop.enable = true;
-
-  # USB autosuspend
-  services.udev.extraRules = ''
-	# existing rules...
-	ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="auto"
-  '';
-
 
   programs = { 
     steam = {
