@@ -24,12 +24,9 @@
       libreoffice-fresh
       openscad
       pkgs.cura
-      playonlinux
-      steam
       tenacity
       wine
       xclip
-      prismlauncher
     ];
   };
 }

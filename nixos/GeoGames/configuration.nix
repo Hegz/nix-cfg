@@ -17,7 +17,9 @@ in
   nixpkgs.overlays = [
  	  (self: super: {
  		  isw = super.callPackage ./isw.nix { };
-          msi-perkeyrgb = super.callPackage ./msi-perkeyrgb.nix { };
+          msi-perkeyrgb = super.callPackage ./msi-perkeyrgb.nix {
+            inherit (super) hidapi;  # passes the C library 
+          };
  	  })
    ];
 
@@ -35,10 +37,71 @@ in
   environment.systemPackages = with pkgs; [
     (GPUOffloadApp steam "steam")
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
-    mcontrolcenter
-    msi-perkeyrgb
+    (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
+    (GPUOffloadApp playonlinux "playonlinux")
+    (GPUOffloadApp freecad "org.freecad.FreeCAD")
 
+    mcontrolcenter
+    actkbd
+    msi-perkeyrgb
+	(pkgs.writeShellScriptBin "msi-rgb-cycle" ''
+      export PATH="${pkgs.usbutils}/bin:${pkgs.coreutils}/bin:$PATH"
+	  PRESETS=("aqua" "chakra" "default" "disco" "drain" "freeway" "plain" "rainbow-split" "roulette")
+	  STATE_FILE="/var/lib/actkbd/msi-rgb-preset"
+	  mkdir -p "$(dirname "$STATE_FILE")"
+	  CURRENT=0
+	  if [[ -f "$STATE_FILE" ]]; then
+		CURRENT=$(cat "$STATE_FILE")
+	  fi
+	  NEXT=$(( (CURRENT + 1) % ''${#PRESETS[@]} ))
+	  echo "$NEXT" > "$STATE_FILE"
+	  exec ${pkgs.msi-perkeyrgb}/bin/msi-perkeyrgb --model GS65 -p "''${PRESETS[$NEXT]}"
+	'')
   ];
+
+  boot.extraModprobeConfig = ''
+	options atkbd set2keycodes=1
+  '';
+
+  systemd.services.fn-f7-keymap = {
+	description = "Map Fn+F7 scancode to keycode";
+	wantedBy = [ "multi-user.target" ];
+	after = [ "systemd-udev-settle.service" ];
+	serviceConfig = {
+	  Type = "oneshot";
+	  RemainAfterExit = true;
+	  ExecStart = "${pkgs.kbd}/bin/setkeycodes e00a 184";
+	};
+  };
+
+  # Create a config file
+  environment.etc."actkbd.conf".text = ''
+	184::exec:/run/current-system/sw/bin/msi-rgb-cycle
+  '';
+
+  users.users.actkbd = {
+	isSystemUser = true;
+	group = "actkbd";
+	extraGroups = [ "input" ];  # read /dev/input/*
+    home = "/var/lib/actkbd";
+	description = "actkbd keyboard daemon user";
+  };
+
+  users.groups.actkbd = {};
+
+  systemd.services.actkbd = {
+	description = "actkbd keyboard shortcut daemon";
+	wantedBy = [ "multi-user.target" ];
+	after = [ "systemd-udev-settle.service" ];
+	serviceConfig = {
+	  Type = "forking";
+	  User = "actkbd";
+      StateDirectory = "actkbd";      # creates /var/lib/actkbd owned by actkbd user
+      StateDirectoryMode = "0755";
+	  ExecStart = "${pkgs.actkbd}/bin/actkbd -c /etc/actkbd.conf -d /dev/input/by-path/platform-i8042-serio-0-event-kbd";
+	  Restart = "on-failure";
+	};
+  };
 
   # udev rule for HID access without root
   services.udev.extraRules = ''

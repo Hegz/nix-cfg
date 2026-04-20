@@ -2,7 +2,8 @@
 # Cycles through msi-perkeyrgb presets for GS65
 # State is stored in ~/.local/state/msi-rgb-preset
 
-PRESETS=("msi1" "msi2" "msi3" "msi4" "msi5" "msi6")
+PRESETS=("aqua" "chakra" "default" "disco" "drain" "freeway" "plain" "rainbow-split" "roulette")
+
 STATE_FILE="$HOME/.local/state/msi-rgb-preset"
 
 mkdir -p "$(dirname "$STATE_FILE")"
