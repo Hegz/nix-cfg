@@ -34,6 +34,16 @@ in
 
   networking.hostName = "${hostName}"; # Define your hostname.
 
+
+  networking.wireless.iwd = {
+	enable = true;
+	settings = {
+	  Settings.AutoConnect = true;
+	  IPv6.Enabled = true;
+	};
+  };
+  networking.networkmanager.wifi.backend = "iwd";
+
   environment.systemPackages = with pkgs; [
     (GPUOffloadApp steam "steam")
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
@@ -62,6 +72,12 @@ in
   boot.extraModprobeConfig = ''
 	options atkbd set2keycodes=1
   '';
+
+  # Increase vm.max_map_count - required for some games (esp. Star Citizen, etc.)
+  boot.kernel.sysctl = {
+	"vm.max_map_count" = 2147483642;
+	"vm.swappiness" = 10;  # reduce swap usage during gaming
+  };
 
   systemd.services.fn-f7-keymap = {
 	description = "Map Fn+F7 scancode to keycode";
@@ -113,6 +129,7 @@ in
     kernelParams = [
       "nvidia-drm.moeset=1"
       "nvidia-drm.fbdev=1"
+	  "transparent_hugepage=madvise"
     ];
     extraModulePackages = [ 
       config.boot.kernelPackages.msi-ec 
@@ -124,6 +141,7 @@ in
       enable = true;
       theme = "bgrt";
     };
+	kernelPackages = pkgs.linuxPackages_zen;
   };
 
 
@@ -160,27 +178,68 @@ in
     openssh = {
       enable = true;
     };
-    tlp = {
-      enable = false;
-      settings =  {
-        CPU_SCALING_GOVENOR_ON_AC = "performance";
-        CPU_SCALING_GOVENOR_ON_BAT = "powersave";
-        ENERGY_PERF_POLICY_ON_AC = "performance";
-        ENERGY_PERF_POLICY_ON_BAT = "power";
-        CPU_BOOST_ON_AC = 1;
-        CPU_BOOST_ON_BAT = 0;
-        PCIE_ASPM_ON_AC = "off";
-        PCIE_ASPM_ON_BAT = "on";
-        WIFI_PWR_ON_AC = "off";
-        WIFI_PWR_ON_BAT = "on";
-        NVIDIA_DRM_MODE_ON_AC = 1;
-        NVIDIA_DRM_MODE_ON_BAT = 0;
-      };
-    };
-
+	thermald = { 
+      enable = true;
+	};
+	auto-cpufreq = {
+	  enable = true;
+	  settings = {
+		battery = {
+		  governor = "powersave";
+		  turbo = "never";
+		};
+		charger = {
+		  governor = "performance";
+		  turbo = "auto";
+		};
+	  };
+	};
+	libinput = {
+	  enable = true;
+	  touchpad = {
+		tapping = true;
+		naturalScrolling = true;
+		disableWhileTyping = true;
+	  };
+	};
+	earlyoom = {
+	  enable = true;
+	  freeMemThreshold = 5;
+	  freeSwapThreshold = 10;
+	};
+	fstrim = {
+	  enable = true;
+	  interval = "weekly";
+	};
   };
 
-  #powerManagement.enable = true;
+  zramSwap = {
+	enable = true;
+	algorithm = "zstd";
+	memoryPercent = 25;
+  };
+
+
+  location.provider = "geoclue2";
+
+  # Font rendering improvements
+  fonts.fontconfig = {
+	enable = true;
+	antialias = true;
+	hinting.enable = true;
+	hinting.style = "slight";
+	subpixel.rgba = "rgb";  # for typical LCD panels
+  };
+
+
+  powerManagement.powertop.enable = true;
+
+  # USB autosuspend
+  services.udev.extraRules = ''
+	# existing rules...
+	ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="auto"
+  '';
+
 
   programs = { 
     steam = {
@@ -188,6 +247,9 @@ in
       remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
       dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
       gamescopeSession.enable = true;
+	  extraCompatPackages = with pkgs; [
+		proton-ge-bin  # community Proton with extra patches
+	  ];
     };
     kdeconnect = {
       enable = true;
