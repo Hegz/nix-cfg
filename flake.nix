@@ -116,6 +116,15 @@
           home-manager.nixosModules.home-manager
         ];
       };
+      GeoGames = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/GeoGames/configuration.nix
+          home-manager.nixosModules.home-manager
+        ];
+      };
+ 
       Lenny = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};
         modules = [
@@ -147,6 +156,15 @@
           ./home-manager/adam.nix
         ];
       };
+      "adam@GeoGames" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/adam.nix
+        ];
+      };
+
       "adam@MCP" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
         extraSpecialArgs = {inherit inputs outputs secrets;};

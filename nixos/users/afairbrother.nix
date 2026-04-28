@@ -23,6 +23,7 @@
       kdePackages.okular
       kdePackages.yakuake
       pkgs.cura
+      pkgs.unstable.opencode
       orca-slicer
       lldpd
       playonlinux

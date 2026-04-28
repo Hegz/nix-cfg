@@ -8,6 +8,7 @@
       ./vim.nix
       ./zsh.nix
       ./home.nix
+      ./opencode.nix
   ];
 
   home = {

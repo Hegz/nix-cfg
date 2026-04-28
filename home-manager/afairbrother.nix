@@ -10,6 +10,7 @@
       ./zsh.nix
       ./home.nix
       ./firefox.nix
+      ./opencode.nix
       #inputs.nur.hmModules.nur
   ];
 
