@@ -7,6 +7,27 @@ let
 
   hostName      = "Embiggen";
 
+  # Define the llama-cpp package once, reused across all model commands
+  llama-cpp = pkgs.unstable.llama-cpp.override { cudaSupport = true; };
+  llama-server = "${llama-cpp}/bin/llama-server";
+
+  # Fetch models into the Nix store at build time
+  models = {
+    qwen35-uncensored = pkgs.fetchurl {
+      url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
+      hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY="; # replace with real hash
+    };
+    qwen25-coder = pkgs.fetchurl {
+      url = "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct-GGUF/resolve/main/qwen2.5-coder-14b-instruct-q4_k_m.gguf";
+      hash = "sha256-weZZc22JrBBl+0lTMPuCTZQAGXSkv6eOcnDkNHao2UA="; # replace with real hash
+    };
+    qwen3-8b = pkgs.fetchurl {
+      url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf";
+      hash = "sha256-2YzcvQPhfOR2gUNbUVDjTBQX9QtcABndVg5IgsV0V4U="; # replace with real hash
+    };
+  };
+
+
 in
 {
   imports = [
@@ -44,42 +65,46 @@ in
   # Switch to zen kernel 
   # boot.kernelPackages = pkgs.linuxPackages_zen;
 
-  services.ollama = {
-	enable = true;
-	acceleration = "cuda";
-    loadModels = ["qwen2.5-coder:14b" "qwen3:8b" "gemma3:12b"];
-    syncModels = true;
-    package = pkgs.unstable.ollama-cuda.override {
-      cudaArches = [ "86" ];
+  services.llama-swap = {
+    enable = true;
+    package = pkgs.unstable.llama-swap;
+    port = 8012;
+    settings = {
+      # How long in seconds to wait for a model to load before giving up
+      healthCheckTimeout = 120;
+
+      # How long an idle model stays loaded before being swapped out (seconds)
+      # This is the key feature of llama-swap — only one model in VRAM at a time
+      models = {
+        "qwen35-uncensored" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui";
+          ttl = 300; # unload after 5 minutes of inactivity
+          aliases = [ "qwen35" "uncensored" ];
+        };
+        "qwen25-coder-14b" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen25-coder} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui";
+          ttl = 300;
+          aliases = [ "coder" ];
+        };
+        "qwen3-8b" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen3-8b} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui";
+          ttl = 300;
+          aliases = [ "qwen3" "fast" ];
+        };
+      };
     };
   };
 
+  # Point Open WebUI at llama-swap instead of (or alongside) Ollama
   services.open-webui = {
     enable = true;
     port = 8080;
     host = "0.0.0.0";
     openFirewall = true;
     environment = {
-      OPENAI_API_BASE_URLS = "http://localhost:11434/v1;http://localhost:8081/v1";
-      OPENAI_API_KEYS = "ollama;none";
+      OPENAI_API_BASE_URLS = "http://localhost:8012/v1";
+      OPENAI_API_KEYS = "none";
     };
-  };
-
-  services.llama-cpp = {
-	enable = true;
-	port = 8081;
-	host = "127.0.0.1";
-	package = pkgs.unstable.llama-cpp.override { cudaSupport = true; };
-	model = pkgs.fetchurl {
-	  url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
-	  hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY="; 
-	};
-  };
-
-  systemd.services.llama-cpp.environment = {
-    LLAMA_ARG_N_GPU_LAYERS = "99";
-    LLAMA_ARG_CTX_SIZE = "16384";
-    LLAMA_ARG_THREADS = "8";
   };
 
   # Enable CUPS to print documents.
