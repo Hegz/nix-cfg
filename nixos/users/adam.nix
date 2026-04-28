@@ -35,6 +35,7 @@
       nvtopPackages.full
       openscad
       pkgs.cura
+      pkgs.unstable.opencode
       #playonlinux
       #prismlauncher
       #steam
