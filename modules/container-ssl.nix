@@ -1,9 +1,9 @@
-{port}: { inputs, outputs, config, pkgs, lib, specialArgs, ... }:
+{port, secrets}: { inputs, outputs, config, pkgs, lib, specialArgs, ... }:
 let
 
   hostName   = "${config.networking.hostName}";
   private    = "/var/lib/private/${hostName}";
-  domain     = ${specialArgs.secret.tailnet.domain};
+  domain     = secrets.tailnet.domain;
 
 in
 {

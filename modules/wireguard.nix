@@ -6,6 +6,7 @@ let
   addressIP  = "${specialArgs.secret.${hostName}.wireguard.addressIP}";
   addressDNS = "${specialArgs.secret.${hostName}.wireguard.addressDNS}";
   publicKey  = "${specialArgs.secret.${hostName}.wireguard.publicKey}";
+  allowedIPs = "${specialArgs.secret.${hostName}.wireguard.allowedIPs}";
   serverIP   = "${specialArgs.secret.${hostName}.wireguard.serverIP}";
   port       = "${specialArgs.secret.${hostName}.wireguard.port}";
 
@@ -29,7 +30,7 @@ in
 
       peers = [{
         publicKey = "${publicKey}";
-        allowedIPs = [ "0.0.0.0/0" ];
+        allowedIPs = [ "${allowedIPs}" ];
         endpoint = "${serverIP}:${port}";
         persistentKeepalive = 25;
       }];

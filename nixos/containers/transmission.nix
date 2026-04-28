@@ -54,6 +54,10 @@ in
         RootDirectoryStartOnly = lib.mkForce false;
         RootDirectory = lib.mkForce "";
       };
+      
+      environment.systemPackages = with pkgs; [
+        libnatpmp   #used to find the assigned port
+      ];
 
       # Add service definitions here.
       services.transmission = {                                                                                        
