@@ -9,7 +9,6 @@ in
 {
   imports =
     [ # Include the results of the hardware scan.
-      (import "${sops-nix}/modules/sops")
       ./hardware-configuration.nix
       ../users/afairbrother.nix
       ../desktop.nix
