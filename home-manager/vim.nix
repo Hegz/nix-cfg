@@ -22,8 +22,22 @@
       let g:syntastic_auto_loc_list = 1
       let g:syntastic_check_on_open = 1
       let g:syntastic_check_on_wq = 0
-                  '';
-    plugins = [ pkgs.vimPlugins.cmp-copilot pkgs.vimPlugins.syntastic pkgs.vimPlugins.fugitive ];
+
+      let g:llama_config.endpoint = 'http://embiggen.taild7a71.ts.net:8012/infill'
+      let g:llama_config.model = 'coder'
+      let g:llama_config.ssl_verify = 0  " Tailscale often uses HTTP, disable SSL check if unsure
+      let g:llama_config.timeout = 30000  " 30 seconds timeout (Tailscale can have latency)
+      " Enable LSP/Plugin logging
+      let g:llama_config.log_level = "debug"
+      " Or enable specific file logging
+      let g:llama_config.log_file = "/tmp/lama_vim.log"
+    '';
+    plugins = with pkgs.vimPlugins; [ 
+      #cmp-copilot 
+      syntastic 
+      fugitive 
+      llama-vim
+    ];
     settings = {
       background = "dark";
       copyindent = true;

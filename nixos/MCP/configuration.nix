@@ -87,6 +87,7 @@ in
   # Enable bridge mode networking for containers.
   networking = {
      hostName = "${hostName}";
+     #nameservers = [ "192.168.1.1" "192.168.1.9" ];
      bridges.br0.interfaces = [ "enp1s0" ];
 
      useDHCP = false;

@@ -13,8 +13,8 @@
 		  baseURL = "http://embiggen.taild7a71.ts.net:8012/v1";
 		};
 		models = {
-		  "qwen25-coder-14b" = {
-			name = "Qwen 2.5 Coder 14B";
+		  "gemma4-e4b" = {
+			name = "Gemma 4";
 		  };
 		  "qwen3-8b" = {
 			name = "Qwen3 8B (fast)";
