@@ -17,9 +17,9 @@ let
       url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
       hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY="; # replace with real hash
     };
-    qwen25-coder = pkgs.fetchurl {
-      url = "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct-GGUF/resolve/main/qwen2.5-coder-14b-instruct-q4_k_m.gguf";
-      hash = "sha256-weZZc22JrBBl+0lTMPuCTZQAGXSkv6eOcnDkNHao2UA="; # replace with real hash
+    gemma4 = pkgs.fetchurl {
+      url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
+      hash = "sha256-A75pV0BO8kTB++PQggMGOwjXWf7htYMSm0XgtOMau/k=";
     };
     qwen3-8b = pkgs.fetchurl {
       url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf";
@@ -69,6 +69,7 @@ in
     enable = true;
     package = pkgs.unstable.llama-swap;
     port = 8012;
+    openFirewall = true;
     settings = {
       # How long in seconds to wait for a model to load before giving up
       healthCheckTimeout = 120;
@@ -81,8 +82,8 @@ in
           ttl = 300; # unload after 5 minutes of inactivity
           aliases = [ "qwen35" "uncensored" ];
         };
-        "qwen25-coder-14b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen25-coder} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui";
+        "gemma4-e4b" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma4} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
           ttl = 300;
           aliases = [ "coder" ];
         };
