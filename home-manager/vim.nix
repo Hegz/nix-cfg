@@ -1,4 +1,4 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 # Vim configuration options
 {
   programs.vim = {
@@ -23,14 +23,28 @@
       let g:syntastic_check_on_open = 1
       let g:syntastic_check_on_wq = 0
 
-      let g:llama_config.endpoint = 'http://embiggen.taild7a71.ts.net:8012/infill'
-      let g:llama_config.model = 'coder'
-      let g:llama_config.ssl_verify = 0  " Tailscale often uses HTTP, disable SSL check if unsure
-      let g:llama_config.timeout = 30000  " 30 seconds timeout (Tailscale can have latency)
-      " Enable LSP/Plugin logging
-      let g:llama_config.log_level = "debug"
-      " Or enable specific file logging
-      let g:llama_config.log_file = "/tmp/lama_vim.log"
+	  " llama.vim - initialise after plugins are loaded
+	  function! SetupLlama()
+		if exists('g:llama_config') && type(g:llama_config) == v:t_dict
+		  " already initialised by plugin, just set our values
+		else
+		  let g:llama_config = {}
+		endif
+        let g:llama_config.endpoint_fim  = 'http://${secrets.llama.host}:${secrets.llama.port}/infill'
+        let g:llama_config.endpoint_inst = 'http://${secrets.llama.host}:${secrets.llama.port}/completion' 
+		let g:llama_config.model         = 'fim-coder'
+		let g:llama_config.n_prefix      = 256
+	  	let g:llama_config.n_suffix      = 64
+		let g:llama_config.n_predict     = 128
+		let g:llama_config.auto_fim      = v:true
+		let g:llama_config.show_info     = 1
+		let g:llama_config.t_max_prompt_ms  = 500
+		let g:llama_config.t_max_predict_ms = 3000
+		let g:llama_config.log_level     = 'debug'
+		let g:llama_config.log_file      = '/tmp/llama_vim.log'
+	  endfunction
+
+	  autocmd VimEnter * call SetupLlama()
     '';
     plugins = with pkgs.vimPlugins; [ 
       #cmp-copilot 

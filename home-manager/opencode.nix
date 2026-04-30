@@ -1,4 +1,4 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 # Vim configuration options
 {
    xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
@@ -10,7 +10,7 @@
 		npm = "@ai-sdk/openai-compatible";
 		name = "Local (llama-swap)";
 		options = {
-		  baseURL = "http://embiggen.taild7a71.ts.net:8012/v1";
+		  baseURL = "http://${secrets.llama.host}:${secrets.llama.port}/v1";
 		};
 		models = {
 		  "gemma4-e4b" = {
