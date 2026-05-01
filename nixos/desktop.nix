@@ -62,6 +62,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # copy.fail mitigation, until we're on a kernel that has it patched
+  boot.extraModprobeConfig = "install algif_aead /bin/false";
+
   # Enable networking
   networking.networkmanager.enable = true;
 
