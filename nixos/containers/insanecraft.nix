@@ -1,23 +1,14 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
-  hostname = "minecraft";
+  hostname = "insanecraft";
   # InsaneCraft modpack details:
   #   CurseForge project ID : 527180
   #   Latest version        : v1.3.1.1
   #   Minecraft version     : 1.12.2
   #   Mod loader            : Forge
   #
-  # One-time setup (run on the HOST before first boot):
-  #   1. Download the InsaneCraft server pack from CurseForge:
-  #        https://www.curseforge.com/minecraft/modpacks/insanecraft-modpack/files
-  #      and extract it into /home/container/minecraft
-  #   2. Inside that directory, run the Forge installer:
-  #        java -jar forge-*-installer.jar --installServer
-  #   3. Make sure start.sh is executable:
-  #        chmod +x /home/container/minecraft/start.sh
-  #
   # The systemd service below will call start.sh on every boot.
-  dataDir = "/var/lib/minecraft";
+  dataDir = "/var/lib/insanecraft";
   jvmOpts = "-Xms4092M -Xmx8192M -Djava.net.preferIPv4Stack=true";
 in
 {
@@ -54,7 +45,6 @@ in
 
       environment.systemPackages = with pkgs; [
         rcon
-        # Java 8 is required for Minecraft 1.12.2 / Forge
         jre8_headless
       ];
 
@@ -102,14 +92,14 @@ in
           difficulty=normal
           gamemode=survival
           max-players=5
-          motd=Home Minecraft server!\n Play nice
+          motd=Home insanecraft server!\n Play nice
           white-list=false
           allow-cheats=true
           level-name=fairly_good
           level-seed=good seed
           pvp=false
           enable-rcon=true
-          rcon.password=hunter2
+          rcon.password=${secrets.${serverName}.containers.${hostname}.rcon-pass}
           rcon.port=25575
         '';
       };
