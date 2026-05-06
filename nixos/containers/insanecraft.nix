@@ -37,7 +37,8 @@ in
         firewall = {
           enable = true;
           # Minecraft game port + RCON
-          allowedTCPPorts = [ 43000 25575 ];
+          allowedTCPPorts = [ 25565 25575 ];
+          allowPing = true;
         };
         useHostResolvConf = lib.mkForce false;
       };
@@ -88,7 +89,7 @@ in
       environment.etc."minecraft-server.properties" = {
         target = "${lib.removePrefix "/" dataDir}/server.properties";
         text = ''
-          server-port=43000
+          server-port=25565
           difficulty=normal
           gamemode=survival
           max-players=5
