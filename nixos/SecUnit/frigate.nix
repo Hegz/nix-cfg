@@ -45,13 +45,15 @@
       };
       record = {
         enabled = true;
-        retain = {
-          days = 7;
-          mode = "motion";
-        };
-        events = {
+        alerts = {
           retain = {
-            default = 30;
+            days = 7;
+            mode = "motion";
+          };
+        };
+        detections = {
+          retain = {
+            days = 30;
             mode = "motion";
           };
         };
