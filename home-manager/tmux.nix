@@ -16,6 +16,10 @@
       # C-a a send C-a
       bind-key a send-prefix
 
+      # Bind broadcast key
+      bind-key X set-window-option synchronize-panes\; display-message "synchronize-panes is now #{?pane_synchronized,on,off}"
+
+
       # Auto rename windows
       # set-option -g allow-rename on
       set-option -g automatic-rename on
