@@ -1,54 +1,68 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
-  hostname = "audiobookshelf";
+  hostname    = "audiobookshelf";
+  servicePort = "13378";
+  domain      = secrets.tailnet.domain;
 in
 {
-  containers."${hostname}" = {                                                                                              
-    autoStart = true;                                      
-	privateNetwork = true;
+  containers."${hostname}" = {
+    autoStart = true;
+    privateNetwork = true;
     hostBridge = "br0";
 
-    # Filesystem mount points
-    bindMounts = {                                         
-      "/var/lib/${hostname}" = {                               
-        hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
+    bindMounts = {
+      "/var/lib/${hostname}" = {
+        hostPath   = "/home/container/${hostname}";
+        isReadOnly = false;
+      };
       "/home/books" = {
         hostPath = "/home/media/Books";
       };
+      "/var/lib/caddy" = {
+        hostPath   = "/home/container/${hostname}/ssl";
+        isReadOnly = false;
+      };
     };
 
-    config = {config, pkgs, lib, ... }: {          
+    config = {config, pkgs, lib, ... }: {
       system.stateVersion = "24.05";
 
-      networking = {                                   
+      imports = [
+        ../../modules/container-tailscale.nix
+        (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
+      ];
+
+      networking = {
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
-        firewall = {                                                                                                  
-          enable = true;                                   
-        };                           
-        # Use systemd-resolved inside the container 
-        # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-        useHostResolvConf = lib.mkForce false;             
-      };                                                   
-
+        firewall = {
+          allowedTCPPorts = [ 80 443 ];
+          enable = true;
+        };
+        useHostResolvConf = lib.mkForce false;
+      };
       services.resolved.enable = true;
 
-      # Add service definitions here.
-     
       services.audiobookshelf = {
         enable = true;
-        host = "0.0.0.0";
+        host   = "0.0.0.0";
+        port   = 13378;
         openFirewall = true;
       };
 
-      # Enable tailscale
-      services.tailscale = {
-        enable = true;
-        interfaceName = "userspace-networking";
-      };
-    };                                                   
+      # Audiobookshelf OIDC is configured through its web UI, not via Nix,
+      # because the settings live in the database.  After deploying, go to:
+      #   Settings → Authentication → OpenID Connect (OIDC)
+      # and fill in:
+      #   Issuer URL : https://kanidm.${domain}/oauth2/openid/audiobookshelf
+      #   Client ID  : audiobookshelf
+      #   Client Secret: <kanidm system oauth2 show-basic-secret audiobookshelf>
+      #   Redirect URI: https://audiobookshelf.${domain}/auth/openid/callback
+      #   Button text : Sign in with Kanidm   (or whatever you prefer)
+      #
+      # Tip: enable "Auto-launch" only after you have verified login works,
+      # otherwise you can get locked out.
+    };
   };
 }

@@ -21,6 +21,12 @@ in
       ( import ./dnsmasq.nix { ip = accessPointIP; interface = apInterface; })
       ( import ./wifi.nix {interface = apInterface; })
       ( import ./frigate.nix {hostName = hostName; })
+      (import ../../modules/local-redirects.nix {
+        inherit secrets;
+        redirects = [
+          { local = "secunit"; }
+        ];
+      })
     ];
 
   environment.systemPackages = with pkgs; [
@@ -62,7 +68,8 @@ in
         ];
         "${ethInterface}" = { 
           allowedTCPPorts = [
-            80     # Web interface
+            80     # Web interface (internal only — HTTPS is the public entry)
+            443    # Frigate via nginx + oauth2-proxy (SSO)
             8554   # RTSP
             8555   # WebRTC
             19999  # Netdata
