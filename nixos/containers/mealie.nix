@@ -26,7 +26,7 @@ in
 
       imports = [
         ../../modules/container-tailscale.nix
-        (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
+        (import ../../modules/container-ssl.nix { port = servicePort; inherit secrets; })
       ];
 
       networking = {
@@ -44,27 +44,25 @@ in
       services.mealie = {
         enable = true;
         port   = 9000;
-
-        # OIDC / SSO via Kanidm.
-        # Add to /home/container/mealie/oidc.env on the host:
-        #   OIDC_CLIENT_SECRET=<output of: kanidm system oauth2 show-basic-secret mealie>
-        credentialsFile = "/var/lib/private/mealie/oidc.env";
-
         settings = {
-          ALLOW_SIGNUP            = "false";
-
-          OIDC_AUTH_ENABLED       = "true";
-          OIDC_SIGNUP_ENABLED     = "true";
-          OIDC_CONFIGURATION_URL  = "https://kanidm.${domain}/oauth2/openid/mealie/.well-known/openid-configuration";
-          OIDC_CLIENT_ID          = "mealie";
-          # OIDC_CLIENT_SECRET is injected from credentialsFile
-          OIDC_AUTO_REDIRECT      = "false";
-          OIDC_REMEMBER_ME        = "true";
-          OIDC_USER_CLAIM         = "email";
-          OIDC_GROUPS_CLAIM       = "groups";
-          OIDC_ADMIN_GROUP        = "idm_admins";
+          ALLOW_SIGNUP           = "false";
+          OIDC_AUTH_ENABLED      = "true";
+          OIDC_SIGNUP_ENABLED    = "true";
+          OIDC_CONFIGURATION_URL = "https://kanidm.${domain}/oauth2/openid/mealie/.well-known/openid-configuration";
+          OIDC_CLIENT_ID         = "mealie";
+          OIDC_AUTO_REDIRECT     = "false";
+          OIDC_REMEMBER_ME       = "true";
+          OIDC_USER_CLAIM        = "preferred_username";
+          OIDC_GROUPS_CLAIM      = "groups";
+          OIDC_ADMIN_GROUP       = "idm_admins";
         };
       };
+
+      # Inject the client secret separately so it never enters the Nix store.
+      # Format of /home/container/mealie/oidc.env on the HOST:
+      #   MEALIE_OIDC_CLIENT_SECRET=<kanidm system oauth2 show-basic-secret mealie>
+      systemd.services.mealie.serviceConfig.EnvironmentFile =
+        "/var/lib/private/mealie/oidc.env";
     };
   };
 }
