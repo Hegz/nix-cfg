@@ -32,10 +32,10 @@ in
       (import ../../modules/local-redirects.nix {
         inherit secrets;
         redirects = [
-          { local = "mealie";         }
-          { local = "audiobookshelf"; }
-          { local = "freshrss";       }
-          { local = "kanidm";         }
+			{ local = "mealie";         customDomains = [ "mealie.fair" ];        }
+    		{ local = "audiobookshelf"; customDomains = [ "audiobookshelf.fair" ]; }
+    		{ local = "freshrss";       customDomains = [ "freshrss.fair" ];       }
+    		{ local = "kanidm";         customDomains = [ "kanidm.fair" ];         }
         ];
       })
     ];
