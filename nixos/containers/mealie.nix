@@ -52,7 +52,7 @@ in
           OIDC_CLIENT_ID         = "mealie";
           OIDC_AUTO_REDIRECT     = "false";
           OIDC_REMEMBER_ME       = "true";
-          OIDC_USER_CLAIM        = "preferred_username";
+          OIDC_USER_CLAIM        = "name";
           OIDC_GROUPS_CLAIM      = "groups";
           OIDC_ADMIN_GROUP       = "idm_admins";
         };

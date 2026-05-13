@@ -1,7 +1,8 @@
-{serverName}: { fetchFromGitHub, inputs, outputs, config, pkgs, lib, secrets, ... }:
+{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
   hostname    = "freshrss";
-  servicePort = "80";
+  servicePort = "8080";
+  oauth2Port  = 4180;
   domain      = secrets.tailnet.domain;
 in
 {
@@ -26,6 +27,9 @@ in
 
       imports = [
         ../../modules/container-tailscale.nix
+        # Caddy proxies directly to nginx — oauth2-proxy is used via
+        # nginx auth_request instead of as an upstream proxy.
+        (import ../../modules/container-ssl.nix { port = servicePort; inherit secrets; })
       ];
 
       networking = {
@@ -33,33 +37,20 @@ in
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {
-          enable = false;
+          allowedTCPPorts = [ 80 443 ];
+          enable = true;
         };
         useHostResolvConf = lib.mkForce false;
       };
       services.resolved.enable = true;
 
       services.freshrss = {
-        enable = true;
-        webserver = "caddy";
-        virtualHost = "freshrss.${domain}";
-        baseUrl    = "https://freshrss.${domain}";
+        enable       = true;
+        webserver    = "nginx";
+        virtualHost  = "freshrss.${domain}";
+        baseUrl      = "https://freshrss.${domain}";
         passwordFile = "/var/lib/freshrss/password";
-
-        # OIDC via Kanidm.
-        # FreshRSS reads these at startup; store the secret outside the Nix store.
-        # Add to /home/container/freshrss/oidc.env on the host:
-        #   OIDC_CLIENT_SECRET=<kanidm system oauth2 show-basic-secret freshrss>
-        # then reference it from the FreshRSS environment:
-        config = {
-          OIDC_ENABLED           = "1";
-          OIDC_PROVIDER_METADATA_URL = "https://kanidm.${domain}/oauth2/openid/freshrss/.well-known/openid-configuration";
-          OIDC_CLIENT_ID         = "freshrss";
-          # Client secret is injected via environment — see environmentFile below.
-          OIDC_REMOTE_USER_CLAIM = "preferred_username";
-          OIDC_SCOPES            = "openid email profile";
-          OIDC_X_FORWARDED_HEADERS = "X-Forwarded-Host X-Forwarded-Port X-Forwarded-Proto";
-        };
+        authType     = "http_auth";
 
         extensions = with pkgs.freshrss-extensions; [
           youtube
@@ -78,12 +69,122 @@ in
         ];
       };
 
-      # Inject the OIDC client secret via an environment file kept off the
-      # Nix store.  Create /home/container/freshrss/oidc.env on the host with:
-      #   OIDC_CLIENT_SECRET=<secret>
-      systemd.services.freshrss-config.serviceConfig.EnvironmentFile =
-        lib.mkIf (builtins.pathExists "/var/lib/freshrss/oidc.env")
-          "/var/lib/freshrss/oidc.env";
+      services.nginx = {
+        # Strip @domain suffix from the SPN so FreshRSS gets just "adam"
+        # rather than "adam@kanidm.taild7a71.ts.net".
+        appendHttpConfig = ''
+          map $auth_request_user $auth_user_stripped {
+            "~^(?P<user>[^@]+)@.*$" $user;
+            default                 $auth_request_user;
+          }
+        '';
+        virtualHosts."freshrss.${domain}" = {
+          listen = [ { addr = "127.0.0.1"; port = 8080; } ];
+
+          extraConfig = ''
+            # auth_request sends a subrequest to oauth2-proxy to validate the session.
+            # oauth2-proxy returns X-Auth-Request-User in the response headers which
+            # nginx captures and passes to php-fpm as REMOTE_USER.
+            auth_request /oauth2/auth;
+            error_page 401 = /oauth2/start;
+
+            # Capture the authenticated username from oauth2-proxy's response header
+            auth_request_set $auth_request_user $upstream_http_x_auth_request_preferred_username;
+
+            # Skip auth for API paths so mobile apps keep working
+            location ~ ^/(api|i/api|greader\.php|fever\.php) {
+              auth_request off;
+              fastcgi_pass unix:/run/phpfpm/freshrss.sock;
+              fastcgi_split_path_info ^(.+\.php)(/.*)$;
+              set $path_info $fastcgi_path_info;
+              fastcgi_param PATH_INFO $path_info;
+              include ${pkgs.nginx}/conf/fastcgi_params;
+              include ${pkgs.nginx}/conf/fastcgi.conf;
+            }
+          '';
+
+          # Override the php location block to pass REMOTE_USER from the
+          # auth_request_set variable captured above.
+          locations."~ ^.+?\\.php(/.*)?$" = lib.mkForce {
+            extraConfig = ''
+              fastcgi_pass unix:/run/phpfpm/freshrss.sock;
+              fastcgi_split_path_info ^(.+\.php)(/.*)$;
+              set $path_info $fastcgi_path_info;
+              fastcgi_param PATH_INFO $path_info;
+              fastcgi_param REMOTE_USER $auth_user_stripped;
+              include ${pkgs.nginx}/conf/fastcgi_params;
+              include ${pkgs.nginx}/conf/fastcgi.conf;
+            '';
+          };
+
+          # oauth2-proxy subrequest endpoint
+          locations."/oauth2/" = {
+            proxyPass = "http://127.0.0.1:${toString oauth2Port}";
+            extraConfig = ''
+              auth_request off;
+              proxy_set_header X-Auth-Request-Redirect $request_uri;
+            '';
+          };
+
+          locations."/oauth2/auth" = {
+            proxyPass = "http://127.0.0.1:${toString oauth2Port}";
+            extraConfig = ''
+              auth_request off;
+              proxy_pass_request_body off;
+              proxy_set_header Content-Length "";
+              proxy_set_header X-Original-URI $request_uri;
+            '';
+          };
+        };
+      };
+
+      # oauth2-proxy in auth_request mode — doesn't proxy upstream,
+      # just validates the session and returns user info in headers.
+      services.oauth2-proxy = {
+        enable   = true;
+        provider = "oidc";
+
+        clientID      = "freshrss";
+        keyFile = "/var/lib/${lib.toLower hostname}/oidc.env";
+        cookie.secure = true;
+        cookie.domain = "freshrss.${domain}";
+        httpAddress   = "127.0.0.1:${toString oauth2Port}";
+
+        oidcIssuerUrl = "https://kanidm.${domain}/oauth2/openid/freshrss";
+        redirectURL   = "https://freshrss.${domain}/oauth2/callback";
+
+        setXauthrequest = true;
+        email.domains   = [ "*" ];
+
+        extraConfig = {
+          # No upstream — nginx handles proxying, oauth2-proxy just validates
+          upstream        = "static://202";
+          reverse-proxy   = true;
+          silence-ping-logging = true;
+          client-secret-file  = "/run/oauth2-proxy-secrets-freshrss/client-secret";
+          cookie-secret-file  = "/run/oauth2-proxy-secrets-freshrss/cookie-secret";
+          oidc-email-claim = "preferred_username";
+          # X-Auth-Request-User will contain the preferred_username (SPN).
+          # nginx strips the @domain suffix before passing to FreshRSS.
+        };
+      };
+
+      systemd.services.oauth2-proxy = {
+        serviceConfig.ExecStartPre = [
+          ("+" + toString (pkgs.writeShellScript "oauth2-proxy-secrets" ''
+            set -eu
+            dir=/run/oauth2-proxy-secrets-freshrss
+            mkdir -p "$dir"
+            chmod 700 "$dir"
+            grep '^OAUTH2_PROXY_CLIENT_SECRET=' /var/lib/freshrss/oidc.env | head -1 | cut -d= -f2- \
+              > "$dir/client-secret"
+            grep '^OAUTH2_PROXY_COOKIE_SECRET=' /var/lib/freshrss/oidc.env | head -1 | cut -d= -f2- \
+              > "$dir/cookie-secret"
+            chmod 400 "$dir/client-secret" "$dir/cookie-secret"
+            chown oauth2-proxy "$dir/client-secret" "$dir/cookie-secret"
+          ''))
+        ];
+      };
     };
   };
 }
