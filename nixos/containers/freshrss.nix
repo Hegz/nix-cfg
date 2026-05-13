@@ -92,7 +92,27 @@ in
             auth_request_set $auth_request_user $upstream_http_x_auth_request_preferred_username;
 
             # Skip auth for API paths so mobile apps keep working
-            location ~ ^/(api|i/api|greader\.php|fever\.php) {
+            # API paths bypass oauth2 auth_request so mobile apps work.
+            # ^~ prefix match takes priority over regex locations.
+            location ^~ /api/ {
+              auth_request off;
+              fastcgi_pass unix:/run/phpfpm/freshrss.sock;
+              fastcgi_split_path_info ^(.+\.php)(/.*)$;
+              set $path_info $fastcgi_path_info;
+              fastcgi_param PATH_INFO $path_info;
+              include ${pkgs.nginx}/conf/fastcgi_params;
+              include ${pkgs.nginx}/conf/fastcgi.conf;
+            }
+            location ^~ /greader.php {
+              auth_request off;
+              fastcgi_pass unix:/run/phpfpm/freshrss.sock;
+              fastcgi_split_path_info ^(.+\.php)(/.*)$;
+              set $path_info $fastcgi_path_info;
+              fastcgi_param PATH_INFO $path_info;
+              include ${pkgs.nginx}/conf/fastcgi_params;
+              include ${pkgs.nginx}/conf/fastcgi.conf;
+            }
+            location ^~ /fever.php {
               auth_request off;
               fastcgi_pass unix:/run/phpfpm/freshrss.sock;
               fastcgi_split_path_info ^(.+\.php)(/.*)$;
