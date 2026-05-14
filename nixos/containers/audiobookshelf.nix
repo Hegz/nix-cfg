@@ -29,7 +29,9 @@ in
 
       imports = [
         ../../modules/container-tailscale.nix
-        (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
+        # Caddy proxies directly to Audiobookshelf — OIDC is handled natively
+        # by Audiobookshelf itself, configured via the web UI.
+        (import ../../modules/container-ssl.nix { port = servicePort; inherit secrets; })
       ];
 
       networking = {
@@ -46,23 +48,9 @@ in
 
       services.audiobookshelf = {
         enable = true;
-        host   = "0.0.0.0";
+        host   = "127.0.0.1";
         port   = 13378;
-        openFirewall = true;
       };
-
-      # Audiobookshelf OIDC is configured through its web UI, not via Nix,
-      # because the settings live in the database.  After deploying, go to:
-      #   Settings → Authentication → OpenID Connect (OIDC)
-      # and fill in:
-      #   Issuer URL : https://kanidm.${domain}/oauth2/openid/audiobookshelf
-      #   Client ID  : audiobookshelf
-      #   Client Secret: <kanidm system oauth2 show-basic-secret audiobookshelf>
-      #   Redirect URI: https://audiobookshelf.${domain}/auth/openid/callback
-      #   Button text : Sign in with Kanidm   (or whatever you prefer)
-      #
-      # Tip: enable "Auto-launch" only after you have verified login works,
-      # otherwise you can get locked out.
     };
   };
 }
