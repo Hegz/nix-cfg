@@ -7,27 +7,6 @@ let
 
   hostName      = "Embiggen";
 
-  # Define the llama-cpp package once, reused across all model commands
-  llama-cpp = pkgs.unstable.llama-cpp.override { cudaSupport = true; };
-  llama-server = "${llama-cpp}/bin/llama-server";
-
-  # Fetch models into the Nix store at build time
-  models = {
-    qwen35-uncensored = pkgs.fetchurl {
-      url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
-      hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY="; # replace with real hash
-    };
-    gemma4 = pkgs.fetchurl {
-      url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
-      hash = "sha256-A75pV0BO8kTB++PQggMGOwjXWf7htYMSm0XgtOMau/k=";
-    };
-    qwen3-8b = pkgs.fetchurl {
-      url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf";
-      hash = "sha256-2YzcvQPhfOR2gUNbUVDjTBQX9QtcABndVg5IgsV0V4U="; # replace with real hash
-    };
-  };
-
-
 in
 {
   imports = [
