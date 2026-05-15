@@ -13,7 +13,7 @@
       bogus-priv = true;
       no-resolv = true;
       cache-size = 1000;
-      server = [ "1.1.1.1" "8.8.8.8" ];
+      server = [ "/taild7a71.ts.net/100.100.100.100" "1.1.1.1" "8.8.8.8" ];
       bind-dynamic = true;
 
       # DHCP Settings
