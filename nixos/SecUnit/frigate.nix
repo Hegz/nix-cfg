@@ -5,8 +5,6 @@
 {hostName, ... }: { inputs, outputs, lib, config, pkgs, secrets, ... }:
 let
   domain      = secrets.tailnet.domain;
-  frigatePort = 5000;
-  oauth2Port  = 4180;
   frigateHost = lib.toLower hostName;
 in
 {
@@ -32,15 +30,8 @@ in
     enable   = true;
     hostname = "${hostName}";
     settings = {
-      tls.enabled = false;
-      auth.enabled = false;  # oauth2-proxy handles auth via nginx
-
-      # Proxy auth config — Frigate trusts x-forwarded-user from nginx.
-      # default_role is viewer so unauthenticated fallback isn't admin.
-      proxy = {
-        header_map.user = "x-forwarded-user";
-        default_role    = "viewer";
-      };
+      tls.enabled  = false;
+      auth.enabled = false;
 
       mqtt = {
         enabled  = true;
@@ -53,21 +44,21 @@ in
         hwaccel_args = "preset-vaapi";
         input_args   = "preset-rtsp-udp";
       };
-      record = {
-        enabled = true;
-        alerts = {
-          retain = {
-            days = 7;
-            mode = "motion";
-          };
-        };
-        detections = {
-          retain = {
-            days = 30;
-            mode = "motion";
-          };
-        };
-      };
+	  record = {
+		enabled  = true;
+		alerts   = {
+		  retain = {
+			days = 7;
+			mode = "motion";
+		  };
+		};
+		detections = {
+		  retain = {
+			days = 30;
+			mode = "motion";
+		  };
+		};
+	  };
       objects.track = [ "person" "bird" "bear" "cat" "dog" ];
       detectors.coral = {
         type   = "edgetpu";
@@ -110,141 +101,21 @@ in
     };
   };
 
-  # ---------------------------------------------------------------------------
-  # oauth2-proxy in auth_request mode.
-  #
-  # Create /etc/oauth2-proxy/env on SecUnit (mode 0400):
-  #   OAUTH2_PROXY_CLIENT_SECRET=<kanidm system oauth2 show-basic-secret frigate>
-  #   OAUTH2_PROXY_COOKIE_SECRET=<openssl rand -base64 24 | tr -d '=+/' | head -c 32>
-  #
-  # Register in Kanidm:
-  #   kanidm system oauth2 create frigate "Frigate NVR" \
-  #     https://secunit.${domain} \
-  #     -D idm_admin -H https://kanidm.${domain}
-  #   kanidm system oauth2 add-redirect-url frigate \
-  #     https://secunit.${domain}/oauth2/callback \
-  #     -D idm_admin -H https://kanidm.${domain}
-  #   kanidm system oauth2 update-scope-map frigate idm_all_accounts \
-  #     openid email profile \
-  #     -D idm_admin -H https://kanidm.${domain}
-  #   kanidm system oauth2 warning-insecure-client-disable-pkce frigate \
-  #     -D idm_admin -H https://kanidm.${domain}
-  # ---------------------------------------------------------------------------
-  services.oauth2-proxy = {
-    enable   = true;
-    provider = "oidc";
-
-    clientID      = "frigate";
-    keyFile       = "/etc/oauth2-proxy/env";
-    cookie.secure = true;
-    cookie.domain = "${frigateHost}.${domain}";
-    httpAddress   = "127.0.0.1:${toString oauth2Port}";
-
-    oidcIssuerUrl = "https://kanidm.${domain}/oauth2/openid/frigate";
-    redirectURL   = "https://${frigateHost}.${domain}/oauth2/callback";
-
-    setXauthrequest = true;
-    email.domains   = [ "*" ];
-
-    extraConfig = {
-      upstream             = "static://202";
-      reverse-proxy        = true;
-      silence-ping-logging = true;
-      oidc-email-claim     = "preferred_username";
-      client-secret-file   = "/run/oauth2-proxy-secrets-frigate/client-secret";
-      cookie-secret-file   = "/run/oauth2-proxy-secrets-frigate/cookie-secret";
-    };
-  };
-
-  systemd.services.oauth2-proxy = {
-    serviceConfig.ExecStartPre = [
-      ("+" + toString (pkgs.writeShellScript "oauth2-proxy-secrets-frigate" ''
-        set -eu
-        dir=/run/oauth2-proxy-secrets-frigate
-        mkdir -p "$dir"
-        chmod 700 "$dir"
-        grep '^OAUTH2_PROXY_CLIENT_SECRET=' /etc/oauth2-proxy/env | head -1 | cut -d= -f2- \
-          > "$dir/client-secret"
-        grep '^OAUTH2_PROXY_COOKIE_SECRET=' /etc/oauth2-proxy/env | head -1 | cut -d= -f2- \
-          > "$dir/cookie-secret"
-        chmod 400 "$dir/client-secret" "$dir/cookie-secret"
-        chown oauth2-proxy "$dir/client-secret" "$dir/cookie-secret"
-      ''))
-    ];
-  };
-
-  # ---------------------------------------------------------------------------
-  # nginx — TLS termination + auth_request gate.
-  # The Frigate NixOS module already creates a vhost on port 80.
-  # We add a vhost on 443 using the auth_request pattern.
-  # ---------------------------------------------------------------------------
+  # nginx — TLS termination only, proxying to Frigate's port 5000.
+  # Access is restricted to Tailscale network via firewall.
   services.nginx = {
     enable = true;
     recommendedProxySettings = true;
     recommendedTlsSettings   = true;
-
-    # Strip @domain suffix from preferred_username for display
-    appendHttpConfig = ''
-      map $auth_request_user $auth_user_stripped {
-        "~^(?P<user>[^@]+)@.*$" $user;
-        default                 $auth_request_user;
-      }
-    '';
 
     virtualHosts."${frigateHost}.${domain}" = {
       forceSSL          = true;
       sslCertificate    = "/var/lib/caddy/${frigateHost}.${domain}.crt";
       sslCertificateKey = "/var/lib/caddy/${frigateHost}.${domain}.key";
 
-      extraConfig = ''
-        auth_request /oauth2/auth;
-        error_page 401 = /oauth2/start;
-        auth_request_set $auth_request_user $upstream_http_x_auth_request_preferred_username;
-      '';
-
       locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString frigatePort}";
+        proxyPass = "http://127.0.0.1:5000";
         proxyWebsockets = true;
-        extraConfig = ''
-          proxy_set_header X-Real-IP         $remote_addr;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_set_header X-Forwarded-User  $auth_user_stripped;
-        '';
-      };
-
-      # WebRTC and API paths bypass auth so camera apps keep working
-      locations."^~ /live/webrtc" = {
-        proxyPass = "http://127.0.0.1:${toString frigatePort}";
-        proxyWebsockets = true;
-        extraConfig = ''
-          auth_request off;
-        '';
-      };
-
-      locations."^~ /api/ws" = {
-        proxyPass = "http://127.0.0.1:${toString frigatePort}";
-        proxyWebsockets = true;
-        extraConfig = ''
-          auth_request off;
-        '';
-      };
-
-      locations."/oauth2/" = {
-        proxyPass = "http://127.0.0.1:${toString oauth2Port}";
-        extraConfig = ''
-          auth_request off;
-          proxy_set_header X-Auth-Request-Redirect $request_uri;
-        '';
-      };
-
-      locations."/oauth2/auth" = {
-        proxyPass = "http://127.0.0.1:${toString oauth2Port}";
-        extraConfig = ''
-          auth_request off;
-          proxy_pass_request_body off;
-          proxy_set_header Content-Length "";
-          proxy_set_header X-Original-URI $request_uri;
-        '';
       };
     };
   };
