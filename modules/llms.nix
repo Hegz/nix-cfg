@@ -74,6 +74,7 @@ in
     enable = true;
     port = 8080;
     host = "0.0.0.0";
+    package = pkgs.unstable.open-webui;
     openFirewall = true;
     environment = {
       OPENAI_API_BASE_URLS = "http://localhost:8012/v1";
