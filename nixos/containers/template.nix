@@ -1,59 +1,49 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
-  hostname    = "mealie";
-  servicePort = "9000";
+  hostname    = "servicename";   # ← change this
+  servicePort = "8080";          # ← change this
+  domain      = secrets.tailnet.domain;
 in
 {
-  containers."${hostname}" = {                                                                                              
-    autoStart = true;                                      
-	privateNetwork = true;
+  containers."${hostname}" = {
+    autoStart = true;
+    privateNetwork = true;
     hostBridge = "br0";
 
-    # Filesystem mount points
-    bindMounts = {                                         
-      "/var/lib/private" = {                               
-        hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
-	# required for SSL
-    #  "/var/lib/caddy" = {
-    #    hostPath = "/home/container/${hostname}/ssl";
-    #    isReadOnly = false;
-    #  };  
+    bindMounts = {
+      "/var/lib/private" = {
+        hostPath   = "/home/container/${hostname}";
+        isReadOnly = false;
+      };
+      # Uncomment for TLS via Caddy:
+      # "/var/lib/caddy" = {
+      #   hostPath   = "/home/container/${hostname}/ssl";
+      #   isReadOnly = false;
+      # };
     };
 
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
 
-      # imports = [
-      #  (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
-      #  ../../modules/container-tailscale.nix
-	  #  ../../modules/wireguard.nix
-	  # ];
+      imports = [
+        ../../modules/container-tailscale.nix
+        (import ../../modules/container-ssl.nix { port = servicePort; inherit secrets; })
+      ];
 
-      # Enable unstable packages
-      # nixpkgs.overlays = [
-      #   outputs.overlays.unstable-packages
-      # ];
-
-      networking = {                                   
+      networking = {
         hostName = "${hostname}";
         networkmanager.enable = true;
-      #  networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
-      #  firewall = {                                                                                                  
-      #    allowedTCPPorts = [ 80 443 ];
-      #    enable = true;                                   
-      #  };                           
-        # Use systemd-resolved inside the container 
-        # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-        useHostResolvConf = lib.mkForce false;             
-      };                                                   
+        networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
+        firewall = {
+          allowedTCPPorts = [ 80 443 ];
+          enable = true;
+        };
+        useHostResolvConf = lib.mkForce false;
+      };
       services.resolved.enable = true;
 
       # Add service definitions here.
-      services.actual = {
-      };
 
-    };                                                   
+    };
   };
 }
