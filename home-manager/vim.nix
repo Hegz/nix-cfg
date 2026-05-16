@@ -14,14 +14,14 @@
       if has("autocmd")
         autocmd BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" | endif
       endif
-      set statusline+=%#warningmsg#
-      set statusline+=%{SyntasticStatuslineFlag()}
-      set statusline+=%*
+      "set statusline+=%#warningmsg#
+      "set statusline+=%{SyntasticStatuslineFlag()}
+      "set statusline+=%*
 
-      let g:syntastic_always_populate_loc_list = 1
-      let g:syntastic_auto_loc_list = 1
-      let g:syntastic_check_on_open = 1
-      let g:syntastic_check_on_wq = 0
+      "let g:syntastic_always_populate_loc_list = 1
+      "let g:syntastic_auto_loc_list = 1
+      "let g:syntastic_check_on_open = 1
+      "let g:syntastic_check_on_wq = 0
 
 	  " llama.vim - initialise after plugins are loaded
 	  function! SetupLlama()
@@ -30,7 +30,7 @@
 		else
 		  let g:llama_config = {}
 		endif
-        let g:llama_config.endpoint_fim  = 'http://${secrets.llama.host}:${secrets.llama.port}/infill'
+        let g:llama_config.endpoint      = 'http://${secrets.llama.host}:${secrets.llama.port}/infill'
         let g:llama_config.endpoint_inst = 'http://${secrets.llama.host}:${secrets.llama.port}/completion' 
 		let g:llama_config.model         = 'fim-coder'
 		let g:llama_config.n_prefix      = 256
@@ -45,12 +45,15 @@
 	  endfunction
 
 	  autocmd VimEnter * call SetupLlama()
+      colorscheme dracula
+
     '';
     plugins = with pkgs.vimPlugins; [ 
-      #cmp-copilot 
-      syntastic 
-      fugitive 
+      # syntastic 
+      # fugitive 
       llama-vim
+      dracula-vim
+      gruvbox
     ];
     settings = {
       background = "dark";
