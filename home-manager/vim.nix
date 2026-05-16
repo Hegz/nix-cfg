@@ -46,7 +46,6 @@
 
 	  autocmd VimEnter * call SetupLlama()
       colorscheme dracula
-
     '';
     plugins = with pkgs.vimPlugins; [ 
       # syntastic 
