@@ -3,11 +3,11 @@ let
   hostname = "jellyFin";
   servicePort = "8096";
 in
-{
-  containers."${hostname}" = {                                                                                              
-    autoStart = true;                                      
-	privateNetwork = true;
-    hostBridge = "br0";
+  {
+    containers."${hostname}" = {                                                                                              
+      autoStart = true;                                      
+      privateNetwork = true;
+      hostBridge = "br0";
 
     # Filesystem mount points
     bindMounts = {                                         
@@ -26,11 +26,11 @@ in
 
     config = {config, pkgs, lib, ... }: {          
       system.stateVersion = "24.05";
-     
-	  imports = [
-		../../modules/container-tailscale.nix
-		(import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
-	  ]; 
+
+      imports = [
+        ../../modules/container-tailscale.nix
+        (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
+      ]; 
 
       networking = {                                   
         hostName = "${hostname}";
@@ -51,11 +51,11 @@ in
         enable = true;                                                                                                  
         openFirewall = true;
       };
-        environment.systemPackages = [
-          pkgs.jellyfin
-          pkgs.jellyfin-web
-          pkgs.jellyfin-ffmpeg
-        ];
+      environment.systemPackages = [
+        pkgs.jellyfin
+        pkgs.jellyfin-web
+        pkgs.jellyfin-ffmpeg
+      ];
 
     };                                                   
   };

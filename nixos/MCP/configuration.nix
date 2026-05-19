@@ -1,6 +1,6 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
 { inputs, outputs, lib, config, pkgs, secrets, ... }:
 
@@ -27,6 +27,17 @@ in
       (import ../containers/budget.nix {serverName = "${hostName}";})
       (import ../containers/audiobookshelf.nix {serverName = "${hostName}";})
       (import ../containers/mealie.nix {serverName = "${hostName}";})
+      # SSO provider — add kanidm container
+      (import ../containers/kanidm.nix {serverName = "${hostName}";})
+      (import ../../modules/local-redirects.nix {
+        inherit secrets;
+        redirects = [
+			{ local = "mealie";         customDomains = [ "mealie.fair" ];        }
+    		{ local = "audiobookshelf"; customDomains = [ "audiobookshelf.fair" ]; }
+    		{ local = "freshrss";       customDomains = [ "freshrss.fair" ];       }
+    		{ local = "kanidm";         customDomains = [ "kanidm.fair" ];         }
+        ];
+      })
     ];
 
   environment.systemPackages = with pkgs; [
@@ -60,14 +71,6 @@ in
       enable = true;
       flags = "-k -p --utc";
     };
-   # autoReplication = {
-   #   enable = true;
-   #   host = "BackuPi";
-   #   username = "otto";
-   #   identityFilePath = "/home/otto/.ssh/BackuPi";
-   #   localFilesystem = "zpool/ds1/important";
-   #   remoteFilesystem = "backup1";
-   # };
   };
 
   # Make our backup server known
@@ -76,7 +79,7 @@ in
     publicKey = "${secrets.BackuPi.publicKey}";
   };
 
-  # Enable harware acceleration for video streams
+  # Enable hardware acceleration for video streams
   hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
@@ -88,7 +91,6 @@ in
   # Enable bridge mode networking for containers.
   networking = {
      hostName = "${hostName}";
-     #nameservers = [ "192.168.1.1" "192.168.1.9" ];
      bridges.br0.interfaces = [ "enp1s0" ];
 
      useDHCP = false;

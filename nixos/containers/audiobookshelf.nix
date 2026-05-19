@@ -1,54 +1,56 @@
 {serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
 let
-  hostname = "audiobookshelf";
+  hostname    = "audiobookshelf";
+  servicePort = "13378";
+  domain      = secrets.tailnet.domain;
 in
 {
-  containers."${hostname}" = {                                                                                              
-    autoStart = true;                                      
-	privateNetwork = true;
+  containers."${hostname}" = {
+    autoStart = true;
+    privateNetwork = true;
     hostBridge = "br0";
 
-    # Filesystem mount points
-    bindMounts = {                                         
-      "/var/lib/${hostname}" = {                               
-        hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
+    bindMounts = {
+      "/var/lib/${hostname}" = {
+        hostPath   = "/home/container/${hostname}";
+        isReadOnly = false;
+      };
       "/home/books" = {
         hostPath = "/home/media/Books";
       };
+      "/var/lib/caddy" = {
+        hostPath   = "/home/container/${hostname}/ssl";
+        isReadOnly = false;
+      };
     };
 
-    config = {config, pkgs, lib, ... }: {          
+    config = {config, pkgs, lib, ... }: {
       system.stateVersion = "24.05";
 
-      networking = {                                   
+      imports = [
+        ../../modules/container-tailscale.nix
+        # Caddy proxies directly to Audiobookshelf — OIDC is handled natively
+        # by Audiobookshelf itself, configured via the web UI.
+        (import ../../modules/container-ssl.nix { port = servicePort; inherit secrets; })
+      ];
+
+      networking = {
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
-        firewall = {                                                                                                  
-          enable = true;                                   
-        };                           
-        # Use systemd-resolved inside the container 
-        # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-        useHostResolvConf = lib.mkForce false;             
-      };                                                   
-
+        firewall = {
+          allowedTCPPorts = [ 80 443 ];
+          enable = true;
+        };
+        useHostResolvConf = lib.mkForce false;
+      };
       services.resolved.enable = true;
 
-      # Add service definitions here.
-     
       services.audiobookshelf = {
         enable = true;
-        host = "0.0.0.0";
-        openFirewall = true;
+        host   = "127.0.0.1";
+        port   = 13378;
       };
-
-      # Enable tailscale
-      services.tailscale = {
-        enable = true;
-        interfaceName = "userspace-networking";
-      };
-    };                                                   
+    };
   };
 }

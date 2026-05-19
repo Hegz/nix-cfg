@@ -62,8 +62,20 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # copy.fail mitigation, until we're on a kernel that has it patched
-  boot.extraModprobeConfig = "install algif_aead /bin/false";
+  # copy.fail and dirty Frag mitigation, until we're on a kernel that has it patched
+  boot.extraModprobeConfig =  ''
+    install algif_aead ${pkgs.coreutils}/bin/false
+    install esp4 ${pkgs.coreutils}/bin/false
+    install esp6 ${pkgs.coreutils}/bin/false
+    install rxrpc ${pkgs.coreutils}/bin/false
+    '';
+  boot.blacklistedKernelModules = [
+    "algif_aead"
+    "esp4"
+    "esp6"
+    "rxrpc"
+  ];
+
 
   # Enable networking
   networking.networkmanager.enable = true;
