@@ -18,6 +18,9 @@ in
     ];
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.permittedInsecurePackages = [
+    "broadcom-sta-6.30.223.271-59-6.12.83"
+  ];
 
   boot = {
     initrd.kernelModules = [
@@ -38,7 +41,6 @@ in
 	];
 
     kernelParams = [ "intel_iommu=on" ];
-    kernelPackages = lib.mkIf (lib.versionOlder pkgs.linux.version "6.0") pkgs.linuxPackages_latest;
     kernelModules = [ "wl" ];
     extraModulePackages = [ config.boot.kernelPackages.broadcom_sta ];
   };
@@ -55,12 +57,6 @@ in
 
     [MacBook(Pro) SPI Keyboards]
     MatchName=*Apple SPI Keyboard*
-    AttrKeyboardIntegration=internal
-
-    [MacBookPro Touchbar]
-    MatchBus=usb
-    MatchVendor=0x05AC
-    MatchProduct=0x8600
     AttrKeyboardIntegration=internal
   '';
 
