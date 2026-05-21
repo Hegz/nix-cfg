@@ -143,6 +143,15 @@
         ];
       };
 
+      MoBius = nixpkgs.lib.nixosSystem {
+        #system = "aarch64-linux";
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/MoBius/configuration.nix
+          home-manager.nixosModules.home-manager
+        ];
+      };
     };
 
     # Standalone home-manager configuration entrypoint
@@ -206,6 +215,14 @@
         ];
       };
       "afairbrother@Lenny" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/afairbrother.nix
+        ];
+      };
+      "afairbrother@MoBius" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
         extraSpecialArgs = {inherit inputs outputs secrets;};
         modules = [
