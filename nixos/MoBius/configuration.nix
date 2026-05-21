@@ -37,10 +37,9 @@ in
 	  "i915.enable_guc=2"
 	  "i915.enable_fbc=1"
 	  "i915.enable_psr=2"
-
+          "intel_iommu=on" 
 	];
 
-    kernelParams = [ "intel_iommu=on" ];
     kernelModules = [ "wl" ];
     extraModulePackages = [ config.boot.kernelPackages.broadcom_sta ];
   };
@@ -61,17 +60,12 @@ in
   '';
 
   # Wifi, CPU Microcode FW updates
-  networking.enableB43Firmware = lib.mkDefault true;
+  networking.enableB43Firmware = true;
   hardware = {
-    enableRedistributableFirmware = lib.mkDefault true;
-    cpu.intel.updateMicrocode = lib.mkDefault true;
+    enableRedistributableFirmware = true;
+    cpu.intel.updateMicrocode = true;
   };
 
-  hardware.intelgpu = {
-    computeRuntime = "legacy";
-    vaapiDriver = "intel-media-driver";
-  };
-  
   services.fstrim.enable = true;
 
   networking.hostName = "${hostName}"; # Define your hostname.
