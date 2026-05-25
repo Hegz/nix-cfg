@@ -249,6 +249,24 @@ in
       fi
     '';
   };
+  # Unload and reload the wl driver before hibernate.
+  environment.etc."systemd/system-sleep/broadcom-hibernate.sh" = {
+	mode = "0755";
+	text = ''
+	#!/bin/bash
+	  if [ "$1" = "pre" ]; then
+	  echo "broadcom-hibernate: unloading wl before ${2}..."
+	  modprobe -r wl || true
+	  elif [ "$1" = "post" ]; then
+	  echo "broadcom-hibernate: reloading wl after ${2}..."
+	  modprobe wl
+	  sleep 2
+	  systemctl restart NetworkManager
+	  sleep 1
+	  systemctl restart systemd-resolved
+	  fi
+	'';
+  };
 
   # Ensure the system-sleep hook directory exists
   systemd.tmpfiles.rules = [
