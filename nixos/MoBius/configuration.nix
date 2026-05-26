@@ -20,10 +20,8 @@ in
   # Nixpkgs
   # ============================================================
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.permittedInsecurePackages = [
-    # Broadcom STA driver is marked insecure on newer kernels; required for Wi-Fi
-    "broadcom-sta-6.30.223.271-59-6.12.83"
-  ];
+
+  i18n.defaultLocale = "en_CA.UTF-8";
 
   # ============================================================
   # Boot
@@ -40,14 +38,6 @@ in
       "intel_lpss_pci"
       "applesmc"
       "facetimehd"      # FaceTime webcam — load early for faster availability
-    ];
-
-    kernelModules = [
-      "wl"              # Broadcom proprietary Wi-Fi driver
-    ];
-
-    extraModulePackages = [
-      config.boot.kernelPackages.broadcom_sta
     ];
 
     # Modules that cause problems on this hardware
@@ -117,6 +107,8 @@ in
     resumeDevice = "/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897";
   };
 
+  fileSystems."/boot".options = [ "fmask=0077" "dmask=0077" ];
+
   # ============================================================
   # Swap (used for suspend-then-hibernate)
   # ============================================================
@@ -144,10 +136,6 @@ in
 	  # Allow CPU to boost on battery when needed, just not sustained
 	  CPU_BOOST_ON_AC  = 1;
 	  CPU_BOOST_ON_BAT = 1;
-
-	  # Charge thresholds — keep battery between 20-80% to reduce degradation
-	  START_CHARGE_THRESH_BAT0 = 20;
-	  STOP_CHARGE_THRESH_BAT0  = 80;
 	};
   };
 
@@ -176,6 +164,9 @@ in
   hardware = {
     enableRedistributableFirmware = true;   # Includes Broadcom BT firmware
     enableAllFirmware = true;               # Catches anything redistributable misses
+    firmware = [ 
+      pkgs.linux-firmware 
+    ];
     cpu.intel.updateMicrocode = true;
 
     bluetooth = {
@@ -214,7 +205,7 @@ in
   environment.etc."systemd/system-sleep/xhci-rebind.sh" = {
     mode = "0755";
     text = ''
-      #!/bin/bash
+	  #!/run/current-system/sw/bin/bash
       if [ "$1" = "post" ]; then
         echo "xhci-rebind: rebinding xHCI controller after resume..."
         echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/unbind || true
@@ -229,12 +220,12 @@ in
   environment.etc."systemd/system-sleep/dns-resume.sh" = {
     mode = "0755";
     text = ''
-      #!/bin/bash
+	  #!/run/current-system/sw/bin/bash
       if [ "$1" = "post" ]; then
         echo "dns-resume: restarting systemd-resolved and NetworkManager..."
-        systemctl restart systemd-resolved
+        /run/current-system/sw/bin/systemctl restart systemd-resolved
         sleep 1
-        systemctl restart NetworkManager
+        /run/current-system/sw/bin/systemctl restart NetworkManager
       fi
     '';
   };
@@ -243,27 +234,29 @@ in
   environment.etc."systemd/system-sleep/bluetooth-resume.sh" = {
     mode = "0755";
     text = ''
-      #!/bin/bash
+	  #!/run/current-system/sw/bin/bash
       if [ "$1" = "post" ]; then
-        systemctl restart bluetooth
+        /run/current-system/sw/bin/systemctl restart bluetooth
       fi
     '';
   };
-  # Unload and reload the wl driver before hibernate.
+
+  # Unload and reload the brcm driver before hibernate.
   environment.etc."systemd/system-sleep/broadcom-hibernate.sh" = {
 	mode = "0755";
 	text = ''
-	#!/bin/bash
+	  #!/run/current-system/sw/bin/bash
 	  if [ "$1" = "pre" ]; then
-	  echo "broadcom-hibernate: unloading wl before ${2}..."
-	  modprobe -r wl || true
+	  echo "broadcom-hibernate: unloading brcm before $2..."
+	  /run/current-system/sw/bin/modprobe -r brcmfmac brcmutil || true
 	  elif [ "$1" = "post" ]; then
-	  echo "broadcom-hibernate: reloading wl after ${2}..."
-	  modprobe wl
+	  echo "broadcom-hibernate: reloading brcmc  after $2..."
+	  /run/current-system/sw/bin/modprobe brcmfmac
+	  /run/current-system/sw/bin/modprobe brcmutil
 	  sleep 2
-	  systemctl restart NetworkManager
+	  /run/current-system/sw/bin/systemctl restart NetworkManager
 	  sleep 1
-	  systemctl restart systemd-resolved
+	  /run/current-system/sw/bin/systemctl restart systemd-resolved
 	  fi
 	'';
   };
@@ -278,7 +271,7 @@ in
   # ============================================================
   networking = {
     hostName        = hostName;
-    enableB43Firmware = true;   # B43 firmware blob for Broadcom (fallback; wl is primary)
+    enableB43Firmware = true;   # B43 firmware blob for Broadcom 
     networkmanager.dns = "systemd-resolved";
     firewall.enable = true;
   };
@@ -288,28 +281,6 @@ in
   services.resolved = {
     enable  = true;
     dnssec  = "false";
-  };
-
-  # Reload the Broadcom wl module at boot if the wifi interface fails to appear.
-  # The wl driver occasionally doesn't initialize correctly on first load.
-  systemd.services.broadcom-wifi-fix = {
-    description = "Reload Broadcom wl module if Wi-Fi interface is missing at boot";
-    wantedBy    = [ "network.target" ];
-    before      = [ "network.target" ];
-    serviceConfig = {
-      Type      = "oneshot";
-      ExecStart = "${pkgs.writeShellScript "broadcom-wifi-fix" ''
-        sleep 5
-        if ! ${pkgs.iproute2}/bin/ip link show | grep -q "wlan\|wlp"; then
-          echo "broadcom-wifi-fix: no Wi-Fi interface found, reloading wl..."
-          ${pkgs.kmod}/bin/modprobe -r wl || true
-          sleep 1
-          ${pkgs.kmod}/bin/modprobe wl
-          sleep 2
-          systemctl restart NetworkManager
-        fi
-      ''}";
-    };
   };
 
   # ============================================================
