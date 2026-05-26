@@ -78,11 +78,6 @@ in
       "processor.max_cstate=3"
       "intel_idle.max_cstate=3"
 
-      # ---- NVMe ----
-      # Prevent NVMe from entering ACPI power states that it can't wake from
-      "nvme_core.default_ps_max_latency_us=0"
-      "nvme.noacpi=1"
-
       # ---- Misc ----
       # Suppress noisy but harmless PCIe AER (Advanced Error Reporting) messages
       "pci=noaer"
@@ -91,6 +86,7 @@ in
       # Points the kernel at the swapfile for resume-from-hibernate.
       # The offset was obtained via: sudo filefrag -v /var/lib/swapfile | awk 'NR==4{print $4}'
       "resume_offset=105242624"
+      "resume=/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897"
     ];
 
     # Module parameters applied at load time
@@ -101,6 +97,9 @@ in
       # XHCI_RESET_ON_RESUME quirk — forces the xHCI controller to fully
       # reset on resume, which is required for keyboard/trackpad to come back
       options xhci_hcd quirks=0x80
+      
+      #Possible fix for broadcom network addapter
+      options brcmfmac feature_disable=0x82000
     '';
 
     # Swapfile used for hibernate; must match swapDevices below
@@ -140,9 +139,14 @@ in
   };
 
   # Suspend on lid close, then hibernate after 30 minutes of sleeping
-  services.logind.settings.Login.HandleLidSwitch = "suspend-then-hibernate";
+  services.logind.settings.Login = { 
+    HandleLidSwitch = "suspend-then-hibernate";
+    HandleLidSwitchExternalPower = "suspend-then-hibernate";
+    #LidSwitchIgnoreInhibited = "yes";
+  };
+
   systemd.sleep.extraConfig = ''
-    HibernateDelaySec=30m
+    HibernateDelaySec=2m
     SuspendState=mem
   '';
 
@@ -199,72 +203,52 @@ in
     };
   };
 
-  # xHCI (USB controller) rebind on resume — the keyboard and trackpad hang
-  # off the xHCI controller and don't come back without a full rebind.
-  # This sleep hook runs the rebind only on post-resume (not pre-suspend).
-  environment.etc."systemd/system-sleep/xhci-rebind.sh" = {
-    mode = "0755";
-    text = ''
-	  #!/run/current-system/sw/bin/bash
-      if [ "$1" = "post" ]; then
-        echo "xhci-rebind: rebinding xHCI controller after resume..."
-        echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/unbind || true
-        sleep 0.5
-        echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/bind || true
-      fi
-    '';
+  systemd.services."${hostName}-pre-sleep" = {
+	description = "Pre-Sleep Actions (${hostName})";
+	wantedBy = [ "sleep.target" ];
+	before = [ "sleep.target" ];
+	serviceConfig = {
+	  Type = "oneshot";
+	  ExecStart = "${pkgs.writeShellScript "${hostName}-pre-sleep" ''
+		if ${pkgs.kmod}/bin/lsmod | grep -q "^brcmfmac"; then
+		echo "pre-sleep: brcmfmac loaded, unloading..."
+		${pkgs.kmod}/bin/modprobe --remove-dependencies brcmfmac || true
+		else
+		echo "pre-sleep: brcmfmac not loaded, nothing to do"
+		fi
+	  ''}";
+	};
   };
 
-  # DNS fix on resume — systemd-resolved loses state after suspend.
-  # Restarting it (and NM after a short delay) restores DNS reliably.
-  environment.etc."systemd/system-sleep/dns-resume.sh" = {
-    mode = "0755";
-    text = ''
-	  #!/run/current-system/sw/bin/bash
-      if [ "$1" = "post" ]; then
-        echo "dns-resume: restarting systemd-resolved and NetworkManager..."
-        /run/current-system/sw/bin/systemctl restart systemd-resolved
+  systemd.services."${hostName}-post-resume" = {
+	description = "Post-Resume Actions (${hostName})";
+	wantedBy = [ "hibernate.target" "suspend.target" "hybrid-sleep.target" "suspend-then-hibernate.target" ];
+	after = [ "hibernate.target" "suspend.target" "hybrid-sleep.target" "suspend-then-hibernate.target" ];
+	serviceConfig = {
+	  Type = "oneshot";
+	  ExecStart = "${pkgs.writeShellScript "${hostName}-post-resume" ''
+		echo "${hostName}-post-resume: reloading brcmfmac..."
+		${pkgs.kmod}/bin/modprobe brcmutil
+		${pkgs.kmod}/bin/modprobe brcmfmac
+		sleep 3
+		systemctl restart NetworkManager
+		sleep 1
+		systemctl restart systemd-resolved
+
+		echo "${hostName}-post-resume: rebinding xHCI..."
+		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/unbind || true
+		sleep 0.5
+		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/bind || true
+
+        echo "${hostName}-post-resume: restarting bluetooth..."
+        systemctl restart bluetooth
         sleep 1
-        /run/current-system/sw/bin/systemctl restart NetworkManager
-      fi
-    '';
+        ${pkgs.bluez}/bin/bluetoothctl power off || true
+        sleep 0.5
+        ${pkgs.bluez}/bin/bluetoothctl power on || true
+	  ''}";
+	};
   };
-
-  # Bluetooth resume — the BT controller needs a service restart after wake
-  environment.etc."systemd/system-sleep/bluetooth-resume.sh" = {
-    mode = "0755";
-    text = ''
-	  #!/run/current-system/sw/bin/bash
-      if [ "$1" = "post" ]; then
-        /run/current-system/sw/bin/systemctl restart bluetooth
-      fi
-    '';
-  };
-
-  # Unload and reload the brcm driver before hibernate.
-  environment.etc."systemd/system-sleep/broadcom-hibernate.sh" = {
-	mode = "0755";
-	text = ''
-	  #!/run/current-system/sw/bin/bash
-	  if [ "$1" = "pre" ]; then
-	  echo "broadcom-hibernate: unloading brcm before $2..."
-	  /run/current-system/sw/bin/modprobe -r brcmfmac brcmutil || true
-	  elif [ "$1" = "post" ]; then
-	  echo "broadcom-hibernate: reloading brcmc  after $2..."
-	  /run/current-system/sw/bin/modprobe brcmfmac
-	  /run/current-system/sw/bin/modprobe brcmutil
-	  sleep 2
-	  /run/current-system/sw/bin/systemctl restart NetworkManager
-	  sleep 1
-	  /run/current-system/sw/bin/systemctl restart systemd-resolved
-	  fi
-	'';
-  };
-
-  # Ensure the system-sleep hook directory exists
-  systemd.tmpfiles.rules = [
-    "d /etc/systemd/system-sleep 0755 root root -"
-  ];
 
   # ============================================================
   # Networking
