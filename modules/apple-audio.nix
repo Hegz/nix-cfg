@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  driverVersion = "259cc39e243daef170f145ba87ad134239b5967f";
+  driverVersion = "cb27cc483f4fe98be03a4f4bef466c00aa7d244b";
     snd-hda-cirrus = pkgs.stdenv.mkDerivation {
     pname = "snd-hda-cirrus";
     name = "snd-hda-codec-cirrus-${driverVersion}-module-${config.boot.kernelPackages.kernel.modDirVersion}";
@@ -12,7 +12,7 @@
     src = pkgs.fetchgit {
       url = "https://github.com/davidjo/snd_hda_macbookpro";
       rev = driverVersion;
-      sha256 = "sha256-M1dE4QC7mYFGFU3n4mrkelqU/ZfCA4ycwIcYVsrA4MY=";
+      sha256 = "sha256-I1wueOMaYvdF80LdH8gua1h5sgmiD7oU9flNbutESkk=";
     };
     hardeningDisable = ["pic"];
     nativeBuildInputs = config.boot.kernelPackages.kernel.moduleBuildDependencies;
