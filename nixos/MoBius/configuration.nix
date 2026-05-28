@@ -10,7 +10,7 @@ in
     ./hardware-configuration.nix
     ../users/afairbrother.nix
     ../desktop.nix
-    ../../modules/apple-audio.nix   # Cirrus Logic / CS8409 audio driver for MBP 14,1
+     ../../modules/apple-audio.nix   # Cirrus Logic / CS8409 audio driver for MBP 14,1
     #../syncthing.nix
     #../../modules/suspend2Hibernate.nix
     #../dokuwiki.nix
@@ -22,7 +22,10 @@ in
   nixpkgs.config.allowUnfree = true;
 
   i18n.defaultLocale = "en_CA.UTF-8";
-
+  i18n.extraLocaleSettings = {
+    LC_TIME = "en_CA.UTF-8";
+    LC_MEASUREMENT = "en_CA.UTF-8";
+  };
   # ============================================================
   # Boot
   # ============================================================
@@ -91,22 +94,29 @@ in
 
     # Module parameters applied at load time
     extraModprobeConfig = ''
-      # F1-F12 by default; hold Fn for media keys (fnmode=1 inverts this)
-      options applespi fnmode=2
-
-      # XHCI_RESET_ON_RESUME quirk — forces the xHCI controller to fully
-      # reset on resume, which is required for keyboard/trackpad to come back
-      options xhci_hcd quirks=0x80
-      
-      #Possible fix for broadcom network addapter
-      options brcmfmac feature_disable=0x82000
+    # F1-F12 by default; hold Fn for media keys (fnmode=1 inverts this)
+    options applespi fnmode=2
+    
+    # XHCI_RESET_ON_RESUME quirk — forces the xHCI controller to fully
+    # reset on resume, which is required for keyboard/trackpad to come back
+    options xhci_hcd quirks=0x80
+    
+    #Fix for broadcom network addapter resume failures
+    options brcmfmac feature_disable=0x82000
+    options brcmfmac country_code=CA
+    
+    #Possible fix  audio resume issues
+    options applespi fnmode=2
+    options xhci_hcd quirks=0x80
+    options snd_hda_intel power_save=0
+    options snd_hda_intel power_save_controller=N
     '';
 
     # Swapfile used for hibernate; must match swapDevices below
     resumeDevice = "/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897";
   };
 
-  fileSystems."/boot".options = [ "fmask=0077" "dmask=0077" ];
+  fileSystems."/boot".options = [ "umask=0077" ];
 
   # ============================================================
   # Swap (used for suspend-then-hibernate)
@@ -172,6 +182,7 @@ in
       pkgs.linux-firmware 
     ];
     cpu.intel.updateMicrocode = true;
+    wirelessRegulatoryDatabase = true;
 
     bluetooth = {
       enable       = true;
@@ -211,10 +222,10 @@ in
 	  Type = "oneshot";
 	  ExecStart = "${pkgs.writeShellScript "${hostName}-pre-sleep" ''
 		if ${pkgs.kmod}/bin/lsmod | grep -q "^brcmfmac"; then
-		echo "pre-sleep: brcmfmac loaded, unloading..."
-		${pkgs.kmod}/bin/modprobe --remove-dependencies brcmfmac || true
+		  echo "pre-sleep: brcmfmac loaded, unloading..."
+		  ${pkgs.kmod}/bin/modprobe --remove-dependencies brcmfmac || true
 		else
-		echo "pre-sleep: brcmfmac not loaded, nothing to do"
+		  echo "pre-sleep: brcmfmac not loaded, nothing to do"
 		fi
 	  ''}";
 	};
@@ -240,13 +251,27 @@ in
 		sleep 0.5
 		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/bind || true
 
-        echo "${hostName}-post-resume: restarting bluetooth..."
+		echo "${hostName}-post-resume: restarting audio..."
+		AUDIO_USER=$(${pkgs.systemd}/bin/loginctl list-sessions --no-legend \
+		| ${pkgs.gawk}/bin/awk '{print $3}' \
+		| ${pkgs.coreutils}/bin/head -1)
+		AUDIO_UID=$(${pkgs.coreutils}/bin/id -u "$AUDIO_USER")
+		export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$AUDIO_UID/bus"
+		export XDG_RUNTIME_DIR="/run/user/$AUDIO_UID"
+		# Give pipewire a moment after the HDA reinit
+		sleep 2
+		${pkgs.shadow.su}/bin/su -c "systemctl --user restart wireplumber" "$AUDIO_USER"
+		sleep 1
+		${pkgs.shadow.su}/bin/su -c "systemctl --user restart pipewire pipewire-pulse" "$AUDIO_USER"
+
+		echo "${hostName}-post-resume: restarting bluetooth..."
         systemctl restart bluetooth
         sleep 1
         ${pkgs.bluez}/bin/bluetoothctl power off || true
-        sleep 0.5
-        ${pkgs.bluez}/bin/bluetoothctl power on || true
-	  ''}";
+		sleep 0.5
+		${pkgs.bluez}/bin/bluetoothctl power on || true
+
+  	  ''}";
 	};
   };
 
