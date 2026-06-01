@@ -36,12 +36,15 @@ in
     # Load Apple SPI keyboard/trackpad and SMC drivers early so input
     # is available at the initrd stage (e.g. during LUKS unlock)
     initrd.kernelModules = [
+      "nvme"
       "applespi"
       "spi_pxa2xx_platform"
       "intel_lpss_pci"
       "applesmc"
       "facetimehd"      # FaceTime webcam — load early for faster availability
     ];
+
+    initrd.systemd.enable = true;
 
     # Modules that cause problems on this hardware
     blacklistedKernelModules = [
@@ -88,8 +91,7 @@ in
       # ---- Hibernate resume ----
       # Points the kernel at the swapfile for resume-from-hibernate.
       # The offset was obtained via: sudo filefrag -v /var/lib/swapfile | awk 'NR==4{print $4}'
-      "resume_offset=105242624"
-      "resume=/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897"
+      # "resume=/dev/disk/by-uuid/70b97171-1baf-4e70-9842-e0e42856e016"
     ];
 
     # Module parameters applied at load time
@@ -113,7 +115,7 @@ in
     '';
 
     # Swapfile used for hibernate; must match swapDevices below
-    resumeDevice = "/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897";
+    resumeDevice = "/dev/disk/by-uuid/70b97171-1baf-4e70-9842-e0e42856e016";
   };
 
   fileSystems."/boot".options = [ "umask=0077" ];
@@ -122,8 +124,7 @@ in
   # Swap (used for suspend-then-hibernate)
   # ============================================================
   swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 16 * 1024;   # 16 GB — should be >= RAM for reliable hibernate
+    device = "/dev/disk/by-uuid/70b97171-1baf-4e70-9842-e0e42856e016";
   }];
 
   # ============================================================
@@ -301,6 +302,38 @@ in
     pulse.enable = true;
     # jack.enable = true;
   };
+
+
+  systemd.services.bt-a2dp-fix = {
+	description = "Fix Broadcom Bluetooth A2DP stuttering on connection";
+	wantedBy = [ "bluetooth.target" ];
+	after = [ "bluetooth.target" ];
+	serviceConfig = {
+	  Type = "simple";
+	  Restart = "always";
+	  ExecStart = "${pkgs.writeShellScript "bt-a2dp-fix-monitor" ''
+		${pkgs.dbus}/bin/dbus-monitor --system "type='signal',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path_namespace='/org/bluez'" |
+		while read -r line; do
+		if echo "$line" | grep -q "Connected.*true"; then
+		  sleep 1
+		  handle=$(${pkgs.bluez}/bin/hcitool con | ${pkgs.gawk}/bin/awk '/handle/ {print $NF}' | head -1)
+		  if [ -n "$handle" ]; then
+			echo "bt-a2dp-fix: applying coexistence fix for handle $handle"
+			${pkgs.bluez}/bin/hcitool cmd 0x3f 0x57 $(printf 0x%02X $handle) 0x00 0x01
+		  fi
+		fi
+		done
+	  ''}";
+	};
+  };
+
+
+
+  environment.systemPackages = with pkgs; [
+	bluez
+	gawk
+	dbus
+  ];
 
   # ============================================================
   # Input
