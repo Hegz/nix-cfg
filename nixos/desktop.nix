@@ -187,6 +187,13 @@
   # Enable ADB for device connections
   programs.adb.enable = true;
 
+  # Enable weylus for remote desktop access
+  programs.weylus = {
+    enable = true;
+    openFirewall = true;
+    users = [ "afairbrother" "adam" ];
+  };
+
   #zsh settings
   environment.shells = with pkgs; [ zsh ];
   environment.pathsToLink = [ "/share/zsh" ];
