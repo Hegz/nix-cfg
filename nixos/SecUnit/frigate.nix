@@ -30,8 +30,8 @@ in
     enable   = true;
     hostname = "${hostName}";
     settings = {
-      tls.enabled  = false;
-      auth.enabled = false;
+      tls.enabled  = true;
+      auth.enabled = true;
 
       mqtt = {
         enabled  = true;
@@ -61,6 +61,7 @@ in
 	  };
       objects.track = [ "person" "bird" "bear" "cat" "dog" ];
       detectors.coral = {
+        enabled = "true";
         type   = "edgetpu";
         device = "usb";
       };

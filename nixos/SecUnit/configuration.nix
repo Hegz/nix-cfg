@@ -39,9 +39,6 @@ in
     wirelesstools 
   ];
 
-  # Netdata for Debug
-  services.netdata.enable = true;
-
   hardware.cpu.intel.updateMicrocode = true;
 
   # Enable harware acceleration for video streams
@@ -70,11 +67,13 @@ in
           allowedTCPPorts = [
             80     # Web interface (internal only — HTTPS is the public entry)
             443    # Frigate via nginx + oauth2-proxy (SSO)
+            5000   # Frigate API
             8554   # RTSP
             8555   # WebRTC
             19999  # Netdata
           ];
           allowedUDPPorts = [
+            5000   # Frigate API
             8554   # RTSP
             8555   # WebRTC
           ];
