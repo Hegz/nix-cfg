@@ -1,11 +1,15 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ inputs, outputs, config, pkgs, lib, secrets, ... }:
-
 {
-
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: {
   nixpkgs = {
     # You can add overlays here
     overlays = [
@@ -45,14 +49,14 @@
     };
     # Opinionated: disable channels
     channel.enable = false;
-    
+
     # enable store garbage collect
-     gc = {
+    gc = {
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 7d";
     };
-    
+
     # Opinionated: make flake registry and nix path match flake inputs
     registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
     nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
@@ -63,12 +67,12 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # copy.fail and dirty Frag mitigation, until we're on a kernel that has it patched
-  boot.extraModprobeConfig =  ''
+  boot.extraModprobeConfig = ''
     install algif_aead ${pkgs.coreutils}/bin/false
     install esp4 ${pkgs.coreutils}/bin/false
     install esp6 ${pkgs.coreutils}/bin/false
     install rxrpc ${pkgs.coreutils}/bin/false
-    '';
+  '';
   boot.blacklistedKernelModules = [
     "algif_aead"
     "esp4"
@@ -79,7 +83,6 @@
     enable  = true;
     dnssec  = "false";
   };
-
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -150,7 +153,7 @@
     };
   };
 
-   # Export X11 host to docker
+  # Export X11 host to docker
   environment.shellInit = ''
     [ -n "$DISPLAY" ] && xhost +si:localuser:$USER || true
   '';
@@ -168,7 +171,7 @@
     godot
     heroic
     libusb1
-    micronucleus            # For digispark
+    micronucleus # For digispark
     nmap
     outils
     orca-slicer
@@ -178,26 +181,23 @@
     pkgs.unstable.rclone
     runc
     usbutils
-    vim 
+    vim
     xorg.xhost
     zoom-us
     virt-viewer
     pkgs.android-studio
   ];
 
-  # Accept the Android SDK license
-  nixpkgs.config.android_sdk.accept_license = true;
-  
   # Enable weylus for remote desktop access
   programs.weylus = {
     enable = true;
     openFirewall = true;
-    users = [ "afairbrother" "adam" ];
+    users = ["afairbrother" "adam"];
   };
 
   #zsh settings
-  environment.shells = with pkgs; [ zsh ];
-  environment.pathsToLink = [ "/share/zsh" ];
+  environment.shells = with pkgs; [zsh];
+  environment.pathsToLink = ["/share/zsh"];
   programs.zsh.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -229,6 +229,6 @@
   system.stateVersion = "23.05"; # Did you read the comment?
 
   #home-manager.users.afairbrother = { pkgs, ... }: {
-    
+
   #};
 }
