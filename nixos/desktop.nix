@@ -75,6 +75,10 @@
     "esp6"
     "rxrpc"
   ];
+  services.resolved = {
+    enable  = true;
+    dnssec  = "false";
+  };
 
 
   # Enable networking
@@ -184,9 +188,6 @@
   # Accept the Android SDK license
   nixpkgs.config.android_sdk.accept_license = true;
   
-  # Enable ADB for device connections
-  programs.adb.enable = true;
-
   # Enable weylus for remote desktop access
   programs.weylus = {
     enable = true;
