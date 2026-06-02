@@ -44,6 +44,9 @@
 		let g:llama_config.log_file      = '/tmp/llama_vim.log'
 	  endfunction
 
+      " Automatically format Nix files on save using nixfmt
+      autocmd BufWritePost *.nix silent! execute "!nix fmt %" | edit!
+
 	  autocmd VimEnter * call SetupLlama()
       colorscheme dracula
     '';

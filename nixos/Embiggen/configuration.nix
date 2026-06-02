@@ -28,6 +28,7 @@ in
     hostName = "${hostName}"; # Define your hostname.
     interfaces.enp25s0.wakeOnLan.enable = true;
     firewall.allowedUDPPorts = [ 9 ];
+    firewall.allowedTCPPorts = [ 8012 ];
   };
 
   # Extra Kernal Parameters
@@ -79,6 +80,7 @@ in
 
   fileSystems."/home/steam" =
   { device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
+    fsType = "ext4";
   };
   
   fileSystems."/home/important" = {

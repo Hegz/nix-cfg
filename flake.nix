@@ -1,8 +1,7 @@
 # Flake configuration
-
 {
   description = "Systems configuration flake";
-  
+
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -82,7 +81,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Cromulent/configuration.nix
-    	];
+        ];
       };
       HePhaestus = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};
@@ -96,8 +95,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/SecUnit/configuration.nix
-	      home-manager.nixosModules.home-manager
-
+          home-manager.nixosModules.home-manager
         ];
       };
       MCP = nixpkgs.lib.nixosSystem {
@@ -124,7 +122,7 @@
           home-manager.nixosModules.home-manager
         ];
       };
- 
+
       Lenny = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};
         modules = [
@@ -230,7 +228,6 @@
           ./home-manager/afairbrother.nix
         ];
       };
-
     };
   };
 }
