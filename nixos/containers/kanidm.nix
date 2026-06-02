@@ -1,9 +1,15 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
-let
-  hostname    = "kanidm";
-  domain      = secrets.tailnet.domain;
-in
-{
+{serverName}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: let
+  hostname = "kanidm";
+  domain = secrets.tailnet.domain;
+in {
   containers."${hostname}" = {
     autoStart = true;
     privateNetwork = true;
@@ -11,16 +17,21 @@ in
 
     bindMounts = {
       "/var/lib/kanidm" = {
-        hostPath   = "/home/container/${hostname}";
+        hostPath = "/home/container/${hostname}";
         isReadOnly = false;
       };
       "/var/lib/caddy" = {
-        hostPath   = "/home/container/${hostname}/ssl";
+        hostPath = "/home/container/${hostname}/ssl";
         isReadOnly = false;
       };
     };
 
-    config = {config, pkgs, lib, ... }: {
+    config = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
       system.stateVersion = "24.05";
 
       imports = [
@@ -32,7 +43,7 @@ in
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {
-          allowedTCPPorts = [ 443 3636 ];
+          allowedTCPPorts = [443 3636];
           enable = true;
         };
         useHostResolvConf = lib.mkForce false;
@@ -58,11 +69,11 @@ in
       };
 
       systemd.timers."ssl-refresh" = {
-        wantedBy = [ "timers.target" ];
+        wantedBy = ["timers.target"];
         timerConfig = {
           OnCalendar = "quarterly";
-          Persistent  = true;
-          Unit        = "ssl-refresh.service";
+          Persistent = true;
+          Unit = "ssl-refresh.service";
         };
       };
 
@@ -84,13 +95,13 @@ in
         enableServer = true;
         package = pkgs.kanidm_1_8;
         serverSettings = {
-          bindaddress     = "127.0.0.1:8443";
+          bindaddress = "127.0.0.1:8443";
           ldapbindaddress = "0.0.0.0:3636";
-          origin          = "https://${hostname}.${domain}";
-          domain          = "${hostname}.${domain}";
-          tls_chain       = "/var/lib/kanidm/kanidm.pem";
-          tls_key         = "/var/lib/kanidm/kanidm.key";
-          log_level       = "info";
+          origin = "https://${hostname}.${domain}";
+          domain = "${hostname}.${domain}";
+          tls_chain = "/var/lib/kanidm/kanidm.pem";
+          tls_key = "/var/lib/kanidm/kanidm.key";
+          log_level = "info";
         };
       };
 

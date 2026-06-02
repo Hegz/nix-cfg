@@ -1,14 +1,15 @@
 # File sourced from User Artturin https://github.com/NixOS/nixpkgs/issues/129954
 # Updated with Claude
-
-{ config, lib, pkgs, ... }:
-
-with lib;
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.services.isw;
   defaultConf = "${pkgs.isw}/etc/isw.conf";
-in
-{
+in {
   options = {
     services.isw = {
       enable = mkEnableOption "msi laptop fan profile daemon";
@@ -35,18 +36,20 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [ pkgs.isw ];
+    environment.systemPackages = [pkgs.isw];
 
     environment.etc."isw.conf".source =
-      if cfg.configFile == null then defaultConf else cfg.configFile;
+      if cfg.configFile == null
+      then defaultConf
+      else cfg.configFile;
 
-    boot.kernelModules = [ "ec_sys" ];
+    boot.kernelModules = ["ec_sys"];
     boot.extraModprobeConfig = "options ec_sys write_support=1";
 
-	systemd.services."isw@${cfg.section}" = {
+    systemd.services."isw@${cfg.section}" = {
       description = "ISW fan control service";
-      wantedBy = [ "multi-user.target" "sleep.target" ];
-      after = [ "multi-user.target" "sleep.target" ];
+      wantedBy = ["multi-user.target" "sleep.target"];
+      after = ["multi-user.target" "sleep.target"];
       serviceConfig = {
         Type = "oneshot";
         ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";

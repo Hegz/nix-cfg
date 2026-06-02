@@ -1,6 +1,11 @@
 # File sourced from User Artturin https://github.com/NixOS/nixpkgs/issues/129954
-{ lib, stdenv, fetchFromGitHub, python3, coreutils }:
-
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  python3,
+  coreutils,
+}:
 stdenv.mkDerivation rec {
   pname = "isw";
   # Release is old and missing features such as setting the battery charging limit
@@ -13,7 +18,7 @@ stdenv.mkDerivation rec {
     sha256 = "13ax1npr6mwk8zg725vm4n5x58g4lf87crdw92yj1w7lnn0dxp8w";
   };
 
-  buildInputs = [ python3 coreutils ];
+  buildInputs = [python3 coreutils];
 
   dontBuild = true;
   dontConfigure = true;
@@ -39,7 +44,6 @@ stdenv.mkDerivation rec {
     description = "Fan control tool for MSI gaming series laptops";
     homepage = "https://github.com/YoyPa/isw";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ ];
+    maintainers = with maintainers; [];
   };
 }
-

@@ -1,22 +1,27 @@
-{ inputs, outputs, lib, config, pkgs, secrets, ... }:
-
-let
-  hostName      = "BackuPi";
-in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../users/adam-blank.nix
-      ../users/otto.nix
-    ];
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  secrets,
+  ...
+}: let
+  hostName = "BackuPi";
+in {
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ../users/adam-blank.nix
+    ../users/otto.nix
+  ];
 
-  boot = { 
+  boot = {
     loader = {
       grub.enable = false;
       generic-extlinux-compatible.enable = true;
     };
-    supportedFilesystems = [ "zfs" "nfs" ];
+    supportedFilesystems = ["zfs" "nfs"];
     #zfs.extraPools = [ "backup1" ];
     # Enable this once backups are working
   };
@@ -35,16 +40,18 @@ in
   # Select internationalisation properties.
   i18n.defaultLocale = "en_CA.UTF-8";
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = ["nix-command" "flakes"];
 
   # Compensate for lack of ram
   zramSwap.enable = true;
 
   # add a swapfile to compensate for low ram.
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 8*1024; # 8 GB
-  }];
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8 * 1024; # 8 GB
+    }
+  ];
 
   programs.zsh.enable = true;
 
@@ -65,6 +72,4 @@ in
   services.openssh.enable = true;
 
   system.stateVersion = "25.05"; # Did you read the comment?
-
 }
-

@@ -80,8 +80,8 @@
     "rxrpc"
   ];
   services.resolved = {
-    enable  = true;
-    dnssec  = "false";
+    enable = true;
+    dnssec = "false";
   };
 
   # Enable networking

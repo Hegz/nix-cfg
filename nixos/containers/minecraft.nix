@@ -1,38 +1,49 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
-let
+{serverName}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: let
   hostname = "minecraft";
-in
-{
-  containers."${hostname}" = {                                                                                              
-    autoStart = true;                                      
-	privateNetwork = true;
+in {
+  containers."${hostname}" = {
+    autoStart = true;
+    privateNetwork = true;
     hostBridge = "br0";
 
     # Filesystem mount points
-    bindMounts = {                                         
-      "/var/lib/minecraft" = {                               
+    bindMounts = {
+      "/var/lib/minecraft" = {
         hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
+        isReadOnly = false;
+      };
     };
 
-    config = {config, pkgs, lib, ... }: {          
+    config = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
       system.stateVersion = "24.05";
 
       # allow unfree minecraft
       nixpkgs.config.allowUnfree = true;
 
-      networking = {                                   
+      networking = {
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
-        firewall = {                                                                                                  
-          enable = true;                                   
-        };                           
-        # Use systemd-resolved inside the container 
+        firewall = {
+          enable = true;
+        };
+        # Use systemd-resolved inside the container
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-        useHostResolvConf = lib.mkForce false;             
-      };                                                   
+        useHostResolvConf = lib.mkForce false;
+      };
       services.resolved.enable = true;
 
       environment.systemPackages = with pkgs; [
@@ -53,7 +64,7 @@ in
           white-list = false;
           allow-cheats = true;
           level-name = "fairly_good";
-          level-seed = "good seed"; 
+          level-seed = "good seed";
           pvp = false;
           enable-rcon = true;
           rcon.password = "hunter2";
@@ -61,6 +72,6 @@ in
         };
         jvmOpts = "-Xms4092M -Xmx4092M -Djava.net.preferIPv4Stack=true";
       };
-    };                                                   
+    };
   };
 }

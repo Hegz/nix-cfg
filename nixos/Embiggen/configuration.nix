@@ -1,14 +1,16 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ inputs, outputs, lib, config, pkgs, ... }:
-let 
-
-  hostName      = "Embiggen";
-
-in
 {
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}: let
+  hostName = "Embiggen";
+in {
   imports = [
     ../../modules/nvidia-container-toolkit.nix
     ../../modules/llms.nix
@@ -24,11 +26,11 @@ in
     ];
   };
 
-  networking = { 
+  networking = {
     hostName = "${hostName}"; # Define your hostname.
     interfaces.enp25s0.wakeOnLan.enable = true;
-    firewall.allowedUDPPorts = [ 9 ];
-    firewall.allowedTCPPorts = [ 8012 ];
+    firewall.allowedUDPPorts = [9];
+    firewall.allowedTCPPorts = [8012];
   };
 
   # Extra Kernal Parameters
@@ -36,12 +38,12 @@ in
     "nvidia-drm.modeset=1"
     "nvidia-drm.fbdev=1"
   ];
-  
-  # Switch to zen kernel 
+
+  # Switch to zen kernel
   # boot.kernelPackages = pkgs.linuxPackages_zen;
 
   # Enable CUPS to print documents.
-  services.printing.drivers = [ pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb ];
+  services.printing.drivers = [pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb];
 
   # Steam settings.
   programs.steam = {
@@ -72,21 +74,20 @@ in
 
   programs.kdeconnect.enable = true;
 
-
-    # Don't change the state version.
+  # Don't change the state version.
   system.stateVersion = "23.05"; # Did you read the comment?
 
   hardware.bluetooth.enable = true;
 
-  fileSystems."/home/steam" =
-  { device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
+  fileSystems."/home/steam" = {
+    device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
     fsType = "ext4";
   };
-  
+
   fileSystems."/home/important" = {
     device = "mcp:/home/important";
     fsType = "nfs";
-    options = [ "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
+    options = ["x-systemd.automount" "noauto" "x-systemd.idle-timeout=600"];
   };
 
   # Nvidia graphics options below
@@ -107,7 +108,6 @@ in
   programs.gamemode.enable = true;
 
   hardware.nvidia = {
-
     # Modesetting is needed most of the time
     modesetting.enable = true;
 
@@ -122,6 +122,6 @@ in
     # accessible via `nvidia-settings`.
     nvidiaSettings = true;
 
-    package = config.boot.kernelPackages.nvidiaPackages.stable;  
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 }

@@ -1,23 +1,28 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
-
-{hostName, ... }: { inputs, outputs, lib, config, pkgs, secrets, ... }:
-let
-  domain      = secrets.tailnet.domain;
+{hostName, ...}: {
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  secrets,
+  ...
+}: let
+  domain = secrets.tailnet.domain;
   frigateHost = lib.toLower hostName;
-in
-{
+in {
   # Enable google coral
   boot.extraModulePackages = with config.boot.kernelPackages; [
     gasket
   ];
 
-  services.udev.packages = [ pkgs.unstable.libedgetpu ];
+  services.udev.packages = [pkgs.unstable.libedgetpu];
   users.groups.plugdev = {};
 
   # Enable frigate+
-  environment.variables = { PLUS_API_KEY = "${secrets.secunit.frigate}"; };
+  environment.variables = {PLUS_API_KEY = "${secrets.secunit.frigate}";};
 
   # Grant extra access to frigate
   systemd.services.frigate = {
@@ -27,63 +32,73 @@ in
   };
 
   services.frigate = {
-    enable   = true;
+    enable = true;
     hostname = "${hostName}";
     settings = {
-      tls.enabled  = true;
+      tls.enabled = true;
       auth.enabled = true;
 
       mqtt = {
-        enabled  = true;
-        user     = "${secrets.secunit.mqtt.user}";
+        enabled = true;
+        user = "${secrets.secunit.mqtt.user}";
         password = "${secrets.secunit.mqtt.password}";
-        host     = "${secrets.secunit.mqtt.host}";
+        host = "${secrets.secunit.mqtt.host}";
       };
       snapshots.enabled = true;
       ffmpeg = {
         hwaccel_args = "preset-vaapi";
-        input_args   = "preset-rtsp-udp";
+        input_args = "preset-rtsp-udp";
       };
-	  record = {
-		enabled  = true;
-		alerts   = {
-		  retain = {
-			days = 7;
-			mode = "motion";
-		  };
-		};
-		detections = {
-		  retain = {
-			days = 30;
-			mode = "motion";
-		  };
-		};
-	  };
-      objects.track = [ "person" "bird" "bear" "cat" "dog" ];
+      record = {
+        enabled = true;
+        alerts = {
+          retain = {
+            days = 7;
+            mode = "motion";
+          };
+        };
+        detections = {
+          retain = {
+            days = 30;
+            mode = "motion";
+          };
+        };
+      };
+      objects.track = ["person" "bird" "bear" "cat" "dog"];
       detectors.coral = {
         enabled = "true";
-        type   = "edgetpu";
+        type = "edgetpu";
         device = "usb";
       };
       detect = {
-        height            = 360;
-        width             = 640;
-        fps               = 5;
+        height = 360;
+        width = 640;
+        fps = 5;
         annotation_offset = -1400;
       };
       cameras = lib.listToAttrs (map
-        (cam: lib.nameValuePair "${cam.name}" {
-          ffmpeg.inputs = [ {
-            path       = "rtsp://0.0.0.0:8554/${cam.name}";
-            input_args = "preset-rtsp-restream";
-            roles      = ["record"];
-          } {
-            path  = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
-            roles = ["detect"];
-          } ];
-          objects.filters.person.mask = if builtins.hasAttr "person" cam then cam.person else null;
-          motion.mask                 = if builtins.hasAttr "motion" cam then cam.motion else null;
-        })
+        (cam:
+          lib.nameValuePair "${cam.name}" {
+            ffmpeg.inputs = [
+              {
+                path = "rtsp://0.0.0.0:8554/${cam.name}";
+                input_args = "preset-rtsp-restream";
+                roles = ["record"];
+              }
+              {
+                path = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
+                roles = ["detect"];
+              }
+            ];
+            objects.filters.person.mask =
+              if builtins.hasAttr "person" cam
+              then cam.person
+              else null;
+            motion.mask =
+              if builtins.hasAttr "motion" cam
+              then cam.motion
+              else null;
+          })
         (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       go2rtc.streams = lib.listToAttrs (map
         (stream: lib.nameValuePair "${stream.name}" "rtsp://0.0.0.0:8554/${stream.name}")
@@ -92,12 +107,12 @@ in
   };
 
   services.go2rtc = {
-    enable   = true;
+    enable = true;
     settings = {
       streams = lib.listToAttrs (map
         (stream: lib.nameValuePair "${stream.name}" "rtsp://${stream.rtsp-user}:${stream.rtsp-pass}@${stream.name}:554/ch0")
         (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
-      rtsp.listen   = ":8554";
+      rtsp.listen = ":8554";
       webrtc.listen = ":8555";
     };
   };
@@ -107,11 +122,11 @@ in
   services.nginx = {
     enable = true;
     recommendedProxySettings = true;
-    recommendedTlsSettings   = true;
+    recommendedTlsSettings = true;
 
     virtualHosts."${frigateHost}.${domain}" = {
-      forceSSL          = true;
-      sslCertificate    = "/var/lib/caddy/${frigateHost}.${domain}.crt";
+      forceSSL = true;
+      sslCertificate = "/var/lib/caddy/${frigateHost}.${domain}.crt";
       sslCertificateKey = "/var/lib/caddy/${frigateHost}.${domain}.key";
 
       locations."/" = {
@@ -123,11 +138,11 @@ in
 
   # Tailscale cert refresh
   systemd.timers."ssl-refresh-secunit" = {
-    wantedBy  = ["timers.target"];
+    wantedBy = ["timers.target"];
     timerConfig = {
       OnCalendar = "quarterly";
-      Persistent  = true;
-      Unit        = "ssl-refresh-secunit.service";
+      Persistent = true;
+      Unit = "ssl-refresh-secunit.service";
     };
   };
 
@@ -143,14 +158,14 @@ in
       ${pkgs.systemd}/bin/systemctl restart nginx.service
     '';
     serviceConfig = {
-      Type            = "oneshot";
-      User            = "root";
+      Type = "oneshot";
+      User = "root";
       WorkingDirectory = "/var/lib/caddy";
     };
   };
 
   services.tailscale = {
-    enable        = true;
+    enable = true;
     permitCertUid = "nginx";
   };
 }

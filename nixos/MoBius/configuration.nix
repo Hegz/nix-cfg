@@ -1,8 +1,11 @@
-{ config, pkgs, secrets, ... }:
-let
-  hostName = "MoBius";
-in
 {
+  config,
+  pkgs,
+  secrets,
+  ...
+}: let
+  hostName = "MoBius";
+in {
   # ============================================================
   # Imports
   # ============================================================
@@ -10,7 +13,7 @@ in
     ./hardware-configuration.nix
     ../users/afairbrother.nix
     ../desktop.nix
-     ../../modules/apple-audio.nix   # Cirrus Logic / CS8409 audio driver for MBP 14,1
+    ../../modules/apple-audio.nix # Cirrus Logic / CS8409 audio driver for MBP 14,1
     #../syncthing.nix
     #../../modules/suspend2Hibernate.nix
     #../dokuwiki.nix
@@ -40,12 +43,12 @@ in
       "spi_pxa2xx_platform"
       "intel_lpss_pci"
       "applesmc"
-      "facetimehd"      # FaceTime webcam — load early for faster availability
+      "facetimehd" # FaceTime webcam — load early for faster availability
     ];
 
     # Modules that cause problems on this hardware
     blacklistedKernelModules = [
-      "thunderbolt"     # Causes ACPI errors on RP05; not needed
+      "thunderbolt" # Causes ACPI errors on RP05; not needed
     ];
 
     kernelParams = [
@@ -94,37 +97,39 @@ in
 
     # Module parameters applied at load time
     extraModprobeConfig = ''
-    # F1-F12 by default; hold Fn for media keys (fnmode=1 inverts this)
-    options applespi fnmode=2
-    
-    # XHCI_RESET_ON_RESUME quirk — forces the xHCI controller to fully
-    # reset on resume, which is required for keyboard/trackpad to come back
-    options xhci_hcd quirks=0x80
-    
-    #Fix for broadcom network addapter resume failures
-    options brcmfmac feature_disable=0x82000
-    options brcmfmac country_code=CA
-    
-    #Possible fix  audio resume issues
-    options applespi fnmode=2
-    options xhci_hcd quirks=0x80
-    options snd_hda_intel power_save=0
-    options snd_hda_intel power_save_controller=N
+      # F1-F12 by default; hold Fn for media keys (fnmode=1 inverts this)
+      options applespi fnmode=2
+
+      # XHCI_RESET_ON_RESUME quirk — forces the xHCI controller to fully
+      # reset on resume, which is required for keyboard/trackpad to come back
+      options xhci_hcd quirks=0x80
+
+      #Fix for broadcom network addapter resume failures
+      options brcmfmac feature_disable=0x82000
+      options brcmfmac country_code=CA
+
+      #Possible fix  audio resume issues
+      options applespi fnmode=2
+      options xhci_hcd quirks=0x80
+      options snd_hda_intel power_save=0
+      options snd_hda_intel power_save_controller=N
     '';
 
     # Swapfile used for hibernate; must match swapDevices below
     resumeDevice = "/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897";
   };
 
-  fileSystems."/boot".options = [ "umask=0077" ];
+  fileSystems."/boot".options = ["umask=0077"];
 
   # ============================================================
   # Swap (used for suspend-then-hibernate)
   # ============================================================
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 16 * 1024;   # 16 GB — should be >= RAM for reliable hibernate
-  }];
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 16 * 1024; # 16 GB — should be >= RAM for reliable hibernate
+    }
+  ];
 
   # ============================================================
   # Power Management
@@ -137,19 +142,19 @@ in
   services.tlp = {
     enable = true;
     settings = {
-      CPU_SCALING_GOVERNOR_ON_AC  = "performance";
-	  CPU_SCALING_GOVERNOR_ON_BAT = "schedutil";
-	  CPU_ENERGY_PERF_POLICY_ON_AC  = "performance";
-	  CPU_ENERGY_PERF_POLICY_ON_BAT = "balance_power";
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "schedutil";
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "balance_power";
 
-	  # Allow CPU to boost on battery when needed, just not sustained
-	  CPU_BOOST_ON_AC  = 1;
-	  CPU_BOOST_ON_BAT = 1;
-	};
+      # Allow CPU to boost on battery when needed, just not sustained
+      CPU_BOOST_ON_AC = 1;
+      CPU_BOOST_ON_BAT = 1;
+    };
   };
 
   # Suspend on lid close, then hibernate after 30 minutes of sleeping
-  services.logind.settings.Login = { 
+  services.logind.settings.Login = {
     HandleLidSwitch = "suspend-then-hibernate";
     HandleLidSwitchExternalPower = "suspend-then-hibernate";
     #LidSwitchIgnoreInhibited = "yes";
@@ -166,9 +171,9 @@ in
   services.mbpfan = {
     enable = true;
     settings.general = {
-      low_temp  = 55;   # °C — fan stays off below this
-      high_temp = 65;   # °C — fan ramps up above this
-      max_temp  = 85;   # °C — fan at maximum above this
+      low_temp = 55; # °C — fan stays off below this
+      high_temp = 65; # °C — fan ramps up above this
+      max_temp = 85; # °C — fan at maximum above this
     };
   };
 
@@ -176,27 +181,27 @@ in
   # Hardware
   # ============================================================
   hardware = {
-    enableRedistributableFirmware = true;   # Includes Broadcom BT firmware
-    enableAllFirmware = true;               # Catches anything redistributable misses
-    firmware = [ 
-      pkgs.linux-firmware 
+    enableRedistributableFirmware = true; # Includes Broadcom BT firmware
+    enableAllFirmware = true; # Catches anything redistributable misses
+    firmware = [
+      pkgs.linux-firmware
     ];
     cpu.intel.updateMicrocode = true;
     wirelessRegulatoryDatabase = true;
 
     bluetooth = {
-      enable       = true;
-      powerOnBoot  = true;
+      enable = true;
+      powerOnBoot = true;
       settings.General = {
-        Experimental    = true;
+        Experimental = true;
         FastConnectable = true;
       };
       settings.Policy = {
-        AutoEnable      = true;
+        AutoEnable = true;
       };
     };
 
-    facetimehd.enable = true;   # FaceTime HD webcam (Broadcom BCM2763)
+    facetimehd.enable = true; # FaceTime HD webcam (Broadcom BCM2763)
   };
 
   # ============================================================
@@ -207,80 +212,80 @@ in
   # wake from d3cold, causing a hard hang on resume
   systemd.services.disable-nvme-d3cold = {
     description = "Disable d3cold for Apple NVMe to prevent suspend hang";
-    wantedBy    = [ "multi-user.target" ];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
-      Type      = "oneshot";
+      Type = "oneshot";
       ExecStart = "${pkgs.bash}/bin/bash -c 'echo 0 > /sys/bus/pci/devices/0000:01:00.0/d3cold_allowed'";
     };
   };
 
   systemd.services."${hostName}-pre-sleep" = {
-	description = "Pre-Sleep Actions (${hostName})";
-	wantedBy = [ "sleep.target" ];
-	before = [ "sleep.target" ];
-	serviceConfig = {
-	  Type = "oneshot";
-	  ExecStart = "${pkgs.writeShellScript "${hostName}-pre-sleep" ''
-		if ${pkgs.kmod}/bin/lsmod | grep -q "^brcmfmac"; then
-		  echo "pre-sleep: brcmfmac loaded, unloading..."
-		  ${pkgs.kmod}/bin/modprobe --remove-dependencies brcmfmac || true
-		else
-		  echo "pre-sleep: brcmfmac not loaded, nothing to do"
-		fi
-	  ''}";
-	};
+    description = "Pre-Sleep Actions (${hostName})";
+    wantedBy = ["sleep.target"];
+    before = ["sleep.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.writeShellScript "${hostName}-pre-sleep" ''
+        if ${pkgs.kmod}/bin/lsmod | grep -q "^brcmfmac"; then
+          echo "pre-sleep: brcmfmac loaded, unloading..."
+          ${pkgs.kmod}/bin/modprobe --remove-dependencies brcmfmac || true
+        else
+          echo "pre-sleep: brcmfmac not loaded, nothing to do"
+        fi
+      ''}";
+    };
   };
 
   systemd.services."${hostName}-post-resume" = {
-	description = "Post-Resume Actions (${hostName})";
-	wantedBy = [ "hibernate.target" "suspend.target" "hybrid-sleep.target" "suspend-then-hibernate.target" ];
-	after = [ "hibernate.target" "suspend.target" "hybrid-sleep.target" "suspend-then-hibernate.target" ];
-	serviceConfig = {
-	  Type = "oneshot";
-	  ExecStart = "${pkgs.writeShellScript "${hostName}-post-resume" ''
-		echo "${hostName}-post-resume: reloading brcmfmac..."
-		${pkgs.kmod}/bin/modprobe brcmutil
-		${pkgs.kmod}/bin/modprobe brcmfmac
-		sleep 3
-		systemctl restart NetworkManager
-		sleep 1
-		systemctl restart systemd-resolved
-
-		echo "${hostName}-post-resume: rebinding xHCI..."
-		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/unbind || true
-		sleep 0.5
-		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/bind || true
-
-		echo "${hostName}-post-resume: restarting audio..."
-		AUDIO_USER=$(${pkgs.systemd}/bin/loginctl list-sessions --no-legend \
-		| ${pkgs.gawk}/bin/awk '{print $3}' \
-		| ${pkgs.coreutils}/bin/head -1)
-		AUDIO_UID=$(${pkgs.coreutils}/bin/id -u "$AUDIO_USER")
-		export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$AUDIO_UID/bus"
-		export XDG_RUNTIME_DIR="/run/user/$AUDIO_UID"
-		# Give pipewire a moment after the HDA reinit
-		sleep 2
-		${pkgs.shadow.su}/bin/su -c "systemctl --user restart wireplumber" "$AUDIO_USER"
-		sleep 1
-		${pkgs.shadow.su}/bin/su -c "systemctl --user restart pipewire pipewire-pulse" "$AUDIO_USER"
-
-		echo "${hostName}-post-resume: restarting bluetooth..."
-        systemctl restart bluetooth
+    description = "Post-Resume Actions (${hostName})";
+    wantedBy = ["hibernate.target" "suspend.target" "hybrid-sleep.target" "suspend-then-hibernate.target"];
+    after = ["hibernate.target" "suspend.target" "hybrid-sleep.target" "suspend-then-hibernate.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.writeShellScript "${hostName}-post-resume" ''
+        echo "${hostName}-post-resume: reloading brcmfmac..."
+        ${pkgs.kmod}/bin/modprobe brcmutil
+        ${pkgs.kmod}/bin/modprobe brcmfmac
+        sleep 3
+        systemctl restart NetworkManager
         sleep 1
-        ${pkgs.bluez}/bin/bluetoothctl power off || true
-		sleep 0.5
-		${pkgs.bluez}/bin/bluetoothctl power on || true
+        systemctl restart systemd-resolved
 
-  	  ''}";
-	};
+        echo "${hostName}-post-resume: rebinding xHCI..."
+        echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/unbind || true
+        sleep 0.5
+        echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/bind || true
+
+        echo "${hostName}-post-resume: restarting audio..."
+        AUDIO_USER=$(${pkgs.systemd}/bin/loginctl list-sessions --no-legend \
+        | ${pkgs.gawk}/bin/awk '{print $3}' \
+        | ${pkgs.coreutils}/bin/head -1)
+        AUDIO_UID=$(${pkgs.coreutils}/bin/id -u "$AUDIO_USER")
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$AUDIO_UID/bus"
+        export XDG_RUNTIME_DIR="/run/user/$AUDIO_UID"
+        # Give pipewire a moment after the HDA reinit
+        sleep 2
+        ${pkgs.shadow.su}/bin/su -c "systemctl --user restart wireplumber" "$AUDIO_USER"
+        sleep 1
+        ${pkgs.shadow.su}/bin/su -c "systemctl --user restart pipewire pipewire-pulse" "$AUDIO_USER"
+
+        echo "${hostName}-post-resume: restarting bluetooth..."
+              systemctl restart bluetooth
+              sleep 1
+              ${pkgs.bluez}/bin/bluetoothctl power off || true
+        sleep 0.5
+        ${pkgs.bluez}/bin/bluetoothctl power on || true
+
+      ''}";
+    };
   };
 
   # ============================================================
   # Networking
   # ============================================================
   networking = {
-    hostName        = hostName;
-    enableB43Firmware = true;   # B43 firmware blob for Broadcom 
+    hostName = hostName;
+    enableB43Firmware = true; # B43 firmware blob for Broadcom
     networkmanager.dns = "systemd-resolved";
     firewall.enable = true;
   };
@@ -288,15 +293,15 @@ in
   # Use systemd-resolved for DNS; disable DNSSEC as consumer routers often
   # don't support it and it causes spurious resolution failures
   services.resolved = {
-    enable  = true;
-    dnssec  = "false";
+    enable = true;
+    dnssec = "false";
   };
 
   # ============================================================
   # Audio
   # ============================================================
   services.pipewire = {
-    enable      = true;
+    enable = true;
     alsa.enable = true;
     pulse.enable = true;
     # jack.enable = true;
@@ -323,9 +328,9 @@ in
   # ============================================================
   # Services
   # ============================================================
-  services.fstrim.enable  = true;   # Weekly SSD TRIM
-  services.lldpd.enable   = true;   # LLDP neighbour discovery
-  services.avahi.enable   = true;   # mDNS / DNS-SD
+  services.fstrim.enable = true; # Weekly SSD TRIM
+  services.lldpd.enable = true; # LLDP neighbour discovery
+  services.avahi.enable = true; # mDNS / DNS-SD
 
-  programs.kdeconnect.enable = true;   # Phone/desktop integration
+  programs.kdeconnect.enable = true; # Phone/desktop integration
 }
