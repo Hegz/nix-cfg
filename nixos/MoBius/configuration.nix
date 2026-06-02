@@ -155,11 +155,11 @@ in
     HandleLidSwitchExternalPower = "suspend-then-hibernate";
     #LidSwitchIgnoreInhibited = "yes";
   };
-
-  systemd.sleep.extraConfig = ''
-    HibernateDelaySec=2m
-    SuspendState=mem
-  '';
+  
+  systemd.sleep.settings.Sleep = {
+    HibernateDelaySec = "30m";
+    SuspendState = "mem";
+  };
 
   # ============================================================
   # Fan Control
@@ -251,19 +251,6 @@ in
 		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/unbind || true
 		sleep 0.5
 		echo 0000:00:14.0 > /sys/bus/pci/drivers/xhci_hcd/bind || true
-
-		echo "${hostName}-post-resume: restarting audio..."
-		AUDIO_USER=$(${pkgs.systemd}/bin/loginctl list-sessions --no-legend \
-		| ${pkgs.gawk}/bin/awk '{print $3}' \
-		| ${pkgs.coreutils}/bin/head -1)
-		AUDIO_UID=$(${pkgs.coreutils}/bin/id -u "$AUDIO_USER")
-		export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$AUDIO_UID/bus"
-		export XDG_RUNTIME_DIR="/run/user/$AUDIO_UID"
-		# Give pipewire a moment after the HDA reinit
-		sleep 2
-		${pkgs.shadow.su}/bin/su -c "systemctl --user restart wireplumber" "$AUDIO_USER"
-		sleep 1
-		${pkgs.shadow.su}/bin/su -c "systemctl --user restart pipewire pipewire-pulse" "$AUDIO_USER"
 
 		echo "${hostName}-post-resume: restarting bluetooth..."
         systemctl restart bluetooth
