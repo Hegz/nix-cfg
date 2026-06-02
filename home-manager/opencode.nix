@@ -13,15 +13,16 @@
 		  baseURL = "http://${secrets.llama.host}:${secrets.llama.port}/v1";
 		};
 		models = {
-		  "gemma4-e4b" = {
-			name = "Gemma 4";
-		  };
-		  "qwen3-8b" = {
-			name = "Qwen3 8B (fast)";
-		  };
 		  "qwen35-uncensored" = {
 			name = "Qwen3.5 9B Uncensored";
 		  };
+          "gemma4-e4b" = {
+			name = "gemma4 e4b";
+		  };
+          "miniCPM-1B-F16" = {
+			name = "miniCPM 1B F16";
+		  };
+
 		};
 	  };
 

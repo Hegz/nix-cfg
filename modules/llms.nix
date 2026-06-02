@@ -15,14 +15,6 @@ let
       url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
       hash = "sha256-A75pV0BO8kTB++PQggMGOwjXWf7htYMSm0XgtOMau/k=";
     };
-    qwen3-8b = pkgs.fetchurl {
-      url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf";
-      hash = "sha256-2YzcvQPhfOR2gUNbUVDjTBQX9QtcABndVg5IgsV0V4U="; # replace with real hash
-    };
-	fim-coder = pkgs.fetchurl {
-      url = "https://huggingface.co/unsloth/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q8_0.gguf";
-      hash = "sha256-Mi9EkhJgT2NV3PhOrX9CYtEYC7a2REhmlN+BkVMU7sE=";
-    };
   };
 
 in
@@ -31,6 +23,11 @@ in
   nix.settings = { 
     max-jobs = 1;
     cores = 8;
+  };
+
+  systemd.services.llama-swap.serviceConfig = {
+    ProcSubset =  lib.mkForce "all";
+    ProtectProc = lib.mkForce "default";
   };
      
   services.llama-swap = {
@@ -55,16 +52,6 @@ in
           ttl = 300;
           aliases = [ "coder" ];
         };
-        "qwen3-8b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen3-8b} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui";
-          ttl = 300;
-          aliases = [ "qwen3" "fast" ];
-        };
-		"fim-coder" = {
-      	  cmd = "${llama-server} --port $\{PORT} -m ${models.fim-coder} --n-gpu-layers 99 --ctx-size 4096 --threads 8 --no-webui --cache-reuse 256";
-      	  ttl = 600;  # keep loaded longer since vim completion is frequent
-      	  aliases = [ "fim" ];
-    	};
       };
     };
   };
