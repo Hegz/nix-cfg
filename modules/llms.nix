@@ -20,6 +20,10 @@
       url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
       hash = "sha256-A75pV0BO8kTB++PQggMGOwjXWf7htYMSm0XgtOMau/k=";
     };
+    gemma-4-12b-it-Q5_K_M = pkgs.fetchurl {
+      url = "https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/resolve/main/gemma-4-12b-it-Q5_K_M.gguf";
+      hash = "sha256-CeneDekx4jt8jvwl25YXkcp65MFu+cUvBFKLTC++ZoE=";
+    };
     qwen35-deepseek = pkgs.fetchurl {
       url = "https://huggingface.co/Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF/resolve/main/Qwen3.5-9B-DeepSeek-V4-Flash-Q5_K_M.gguf";
       hash = "sha256-pcnsfhq0RkRAHSEbqojxZHVjm2lxej3yBl2GsWiCXFo=";
@@ -60,9 +64,14 @@ in {
           ttl = 300;
           aliases = ["coder"];
         };
+        "gemma4-12b" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b-it-Q5_K_M} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
+          ttl = 300;
+          aliases = ["gemma"];
+        };
         "qwen35-deepseek" = {
           cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui";
-          ttl = 300;
+          ttl = 900;
           aliases = ["fim-coder"];
         };
       };

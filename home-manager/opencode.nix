@@ -27,6 +27,9 @@
           "gemma4-e4b" = {
             name = "gemma4 e4b";
           };
+          "gemma4-12b" = {
+            name = "gemma4 12b";
+          };
           "qwen35-deepseek" = {
             name = "qwen 3.5 Deepseek";
           };
