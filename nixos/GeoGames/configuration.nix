@@ -36,9 +36,13 @@ in
 
   environment.systemPackages = with pkgs; [
     (GPUOffloadApp steam "steam")
+    heroic
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
+    prismlauncher
     (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
+    playonlinux
     (GPUOffloadApp playonlinux "playonlinux")
+    freecad
     (GPUOffloadApp freecad "org.freecad.FreeCAD")
 
     mcontrolcenter
