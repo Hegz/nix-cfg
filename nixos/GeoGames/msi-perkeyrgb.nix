@@ -1,5 +1,9 @@
-{ lib, python3Packages, fetchFromGitHub, hidapi }:
-
+{
+  lib,
+  python3Packages,
+  fetchFromGitHub,
+  hidapi,
+}:
 python3Packages.buildPythonApplication {
   pname = "msi-perkeyrgb";
   version = "2.1";
@@ -17,7 +21,7 @@ python3Packages.buildPythonApplication {
     setuptools
   ];
 
-  buildInputs = [ hidapi ];
+  buildInputs = [hidapi];
 
   # On NixOS, ldconfig doesn't work normally so the library discovery fails.
   # We patch out the ldconfig call and hardcode the nix store path directly.

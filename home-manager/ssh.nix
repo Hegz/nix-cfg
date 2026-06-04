@@ -1,11 +1,18 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 # ssh options
 {
   services.ssh-agent.enable = true;
-  programs.ssh ={
+  programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks = { 
+    settings = {
       "*" = {
         addKeysToAgent = "yes";
         forwardAgent = false;
@@ -14,6 +21,6 @@
         identityFile = "~/.ssh/github";
         user = "git";
       };
-    };  
+    };
   };
 }

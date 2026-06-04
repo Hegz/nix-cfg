@@ -1,46 +1,50 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ inputs, outputs, lib, config, pkgs, secrets, ... }:
-
-let
-  hostName      = "SecUnit";
-  Storage       = "/storage/tank"; 
-  wifiInterface = "wlp2s0";
-  ethInterface  = "eno1";
-  apInterface   = "wlan-ap0";
-  accessPointIP = "192.168.10.1";
-in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../server.nix
-      ../users/adam-blank.nix
-      ( import ./dnsmasq.nix { ip = accessPointIP; interface = apInterface; })
-      ( import ./wifi.nix {interface = apInterface; })
-      ( import ./frigate.nix {hostName = hostName; })
-      (import ../../modules/local-redirects.nix {
-        inherit secrets;
-        redirects = [
-          { local = "secunit"; }
-        ];
-      })
-    ];
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  secrets,
+  ...
+}: let
+  hostName = "SecUnit";
+  Storage = "/storage/tank";
+  wifiInterface = "wlp2s0";
+  ethInterface = "eno1";
+  apInterface = "wlan-ap0";
+  accessPointIP = "192.168.10.1";
+in {
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ../server.nix
+    ../users/adam-blank.nix
+    (import ./dnsmasq.nix {
+      ip = accessPointIP;
+      interface = apInterface;
+    })
+    (import ./wifi.nix {interface = apInterface;})
+    (import ./frigate.nix {hostName = hostName;})
+    (import ../../modules/local-redirects.nix {
+      inherit secrets;
+      redirects = [
+        {local = "secunit";}
+      ];
+    })
+  ];
 
   environment.systemPackages = with pkgs; [
     git-crypt
-    iw 
+    iw
     keybase
     nmap
     usbutils
-    vim 
-    wirelesstools 
+    vim
+    wirelesstools
   ];
-
-  # Netdata for Debug
-  services.netdata.enable = true;
 
   hardware.cpu.intel.updateMicrocode = true;
 
@@ -54,40 +58,44 @@ in
   hardware.intel-gpu-tools.enable = true;
 
   # Mount SSD to the ZM storage location
-  fileSystems.${Storage} = { 
+  fileSystems.${Storage} = {
     device = "/dev/disk/by-uuid/${secrets.secunit.disk-uuid}";
   };
 
-  networking = { 
+  networking = {
     hostName = "${hostName}";
     firewall = {
       interfaces = {
         "${apInterface}".allowedUDPPorts = [
-          67     # DHCP
-          123    # NTP
+          67 # DHCP
+          123 # NTP
         ];
-        "${ethInterface}" = { 
+        "${ethInterface}" = {
           allowedTCPPorts = [
-            80     # Web interface (internal only — HTTPS is the public entry)
-            443    # Frigate via nginx + oauth2-proxy (SSO)
-            8554   # RTSP
-            8555   # WebRTC
-            19999  # Netdata
+            80 # Web interface (internal only — HTTPS is the public entry)
+            443 # Frigate via nginx + oauth2-proxy (SSO)
+            5000 # Frigate API
+            8554 # RTSP
+            8555 # WebRTC
+            19999 # Netdata
           ];
           allowedUDPPorts = [
-            8554   # RTSP
-            8555   # WebRTC
+            5000 # Frigate API
+            8554 # RTSP
+            8555 # WebRTC
           ];
         };
       };
     };
     wlanInterfaces = {
-      "${apInterface}" = { device = "${wifiInterface}"; };
+      "${apInterface}" = {device = "${wifiInterface}";};
     };
-    interfaces."${apInterface}".ipv4.addresses = [ {
+    interfaces."${apInterface}".ipv4.addresses = [
+      {
         address = "${accessPointIP}";
         prefixLength = 24;
-      } ];
+      }
+    ];
   };
 
   #Provide NTP Services
@@ -97,5 +105,4 @@ in
       allow 192.168.10.0/24
     '';
   };
-
 }

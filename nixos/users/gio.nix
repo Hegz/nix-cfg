@@ -1,16 +1,23 @@
-{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 {
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  secrets,
+  ...
+}: {
   users.users.gio = {
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "${secrets.users.gio.fullname}";
     hashedPassword = "${secrets.users.gio.passhash}";
-    extraGroups = [ 
-                    "gamemode"
-                    "networkmanager" 
-                    "plugdev" 
-                    "video" 
-                  ];
+    extraGroups = [
+      "gamemode"
+      "networkmanager"
+      "plugdev"
+      "video"
+    ];
     packages = with pkgs; [
       chromium
       firefox

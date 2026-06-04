@@ -1,18 +1,17 @@
 # Flake configuration
-
 {
   description = "Systems configuration flake";
-  
+
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     # You can access packages and modules from different nixpkgs revs
     # at the same time. Here's an working example:
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     # Also see the 'unstable-packages' overlay at 'overlays/default.nix'.
 
     # Home manager
-    home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     # Nix User Repository
@@ -82,7 +81,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Cromulent/configuration.nix
-    	];
+        ];
       };
       HePhaestus = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};
@@ -96,8 +95,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/SecUnit/configuration.nix
-	      home-manager.nixosModules.home-manager
-
+          home-manager.nixosModules.home-manager
         ];
       };
       MCP = nixpkgs.lib.nixosSystem {
@@ -124,7 +122,7 @@
           home-manager.nixosModules.home-manager
         ];
       };
- 
+
       Lenny = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs secrets;};
         modules = [
@@ -143,6 +141,15 @@
         ];
       };
 
+      MoBius = nixpkgs.lib.nixosSystem {
+        #system = "aarch64-linux";
+        specialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/MoBius/configuration.nix
+          home-manager.nixosModules.home-manager
+        ];
+      };
     };
 
     # Standalone home-manager configuration entrypoint
@@ -213,7 +220,14 @@
           ./home-manager/afairbrother.nix
         ];
       };
-
+      "afairbrother@MoBius" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        extraSpecialArgs = {inherit inputs outputs secrets;};
+        modules = [
+          # > Our main home-manager configuration file <
+          ./home-manager/afairbrother.nix
+        ];
+      };
     };
   };
 }

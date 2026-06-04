@@ -27,5 +27,9 @@
       set-option -g status-interval 1
 
     '';
+    plugins = with pkgs.tmuxPlugins;
+      [
+        dracula
+      ];
   };
 }

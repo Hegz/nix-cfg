@@ -1,63 +1,51 @@
 # modules/local-redirects.nix
 #
-# Listens on port 80 on the host's LAN interface and issues 301 redirects
-# from  http://<service>.local  →  https://<service>.<tailnet-domain>
-#
-# Import this module on any host that serves SSO-protected services locally.
-# Pass in the list of { local, target } redirect pairs for that host.
+# Listens on port 80 and issues 301 redirects to the HTTPS Tailscale URL.
+# Handles both <service>.local and any custom local TLD domains.
 #
 # Example (in MCP/configuration.nix):
 #
 #   (import ../modules/local-redirects.nix {
 #     inherit secrets;
 #     redirects = [
-#       { local = "mealie";          }
-#       { local = "audiobookshelf";  }
-#       { local = "freshrss";        }
-#       { local = "kanidm";          }
+#       { local = "mealie";         customDomains = [ "mealie.fair" ]; }
+#       { local = "audiobookshelf"; }
+#       { local = "freshrss";       customDomains = [ "freshrss.fair" "rss.fair" ]; }
+#       { local = "kanidm";         }
 #     ];
 #   })
-#
-# The `local` name becomes both the .local hostname AND the subdomain of the
-# Tailscale domain, so  http://mealie.local  →  https://mealie.<tailnet>.
-# If a service has a different local name, use the optional `target` key:
-#   { local = "nvr"; target = "secunit"; }  (for Frigate on SecUnit)
 
 { secrets, redirects }:
 { lib, pkgs, ... }:
 
 let
-  domain = secrets.tailnet.domain;
+  tailnetDomain = secrets.tailnet.domain;
 
-  # Build one nginx virtualHost per redirect entry.
-  makeVhost = entry:
+  makeVhost = localName: targetName: {
+    forceSSL = false;
+    addSSL   = false;
+    listen   = [{ addr = "0.0.0.0"; port = 80; }];
+    locations."/".return = "301 https://${targetName}.${tailnetDomain}$request_uri";
+  };
+
+  # Build the full attrset of hostname → vhost config for one redirect entry
+  entryToVhosts = entry:
     let
-      localName  = entry.local;
-      targetHost = if entry ? target then entry.target else entry.local;
-    in {
-      name  = "${localName}.local";
-      value = {
-        # No TLS here — this vhost exists only to redirect to the HTTPS URL.
-        forceSSL   = false;
-        addSSL     = false;
-        listen     = [{ addr = "0.0.0.0"; port = 80; }];
-
-        locations."/" = {
-          return = "301 https://${targetHost}.${domain}$request_uri";
-        };
-      };
-    };
+      target = if entry ? target then entry.target else entry.local;
+      localVhost  = { "${entry.local}.local" = makeVhost entry.local target; };
+      customVhosts = if entry ? customDomains
+        then builtins.listToAttrs (map (d: { name = d; value = makeVhost d target; }) entry.customDomains)
+        else {};
+    in
+      localVhost // customVhosts;
 
 in
 {
   services.nginx = {
     enable                   = true;
     recommendedProxySettings = true;
-
-    virtualHosts = builtins.listToAttrs (map makeVhost redirects);
+    virtualHosts = lib.foldl' (acc: entry: acc // entryToVhosts entry) {} redirects;
   };
 
-  # Open port 80 on the host firewall so LAN clients can reach this.
-  # (Containers handle their own firewall rules separately.)
   networking.firewall.allowedTCPPorts = [ 80 ];
 }

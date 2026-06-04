@@ -1,22 +1,29 @@
-{ inputs, outputs, lib, config, pkgs, secrets, ... }:
 {
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  secrets,
+  ...
+}: {
   users.users.adam = {
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "${secrets.users.adam.fullname}";
     hashedPassword = "${secrets.users.adam.passhash}";
-    extraGroups = [ 
-                    "adbusers"
-                    "dialout" 
-                    "distrobox" 
-                    "docker" 
-                    "gamemode"
-                    "kvm" 
-                    "networkmanager" 
-                    "plugdev" 
-                    "video" 
-                    "wheel" 
-                  ];
+    extraGroups = [
+      "adbusers"
+      "dialout"
+      "distrobox"
+      "docker"
+      "gamemode"
+      "kvm"
+      "networkmanager"
+      "plugdev"
+      "video"
+      "wheel"
+    ];
     packages = with pkgs; [
       chromium
       esphome

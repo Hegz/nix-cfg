@@ -9,6 +9,7 @@
   ...
 }: {
   imports = [
+    (modulesPath + "/hardware/network/broadcom-43xx.nix")
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
@@ -18,19 +19,17 @@
   boot.extraModulePackages = [];
 
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/b611c965-bf9c-447a-b16b-3e72a95a9c5d";
+    device = "/dev/disk/by-uuid/32b41089-cf45-43e2-8002-7b0bb757d897";
     fsType = "ext4";
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/1C30-EE97";
+    device = "/dev/disk/by-uuid/3B9C-3FAE";
     fsType = "vfat";
-    options = ["fmask=0077" "dmask=0077"];
+    options = ["fmask=0022" "dmask=0022"];
   };
 
-  swapDevices = [
-    {device = "/dev/disk/by-uuid/1f7eb226-8410-4092-a36d-139e333acc4b";}
-  ];
+  swapDevices = [];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

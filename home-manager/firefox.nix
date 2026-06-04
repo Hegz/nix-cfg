@@ -1,12 +1,20 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 # Vim configuration options
 {
   nixpkgs.overlays = [
     inputs.nur.overlays.default
   ];
-  
+
   programs.firefox = {
     enable = true;
+    configPath = "${config.xdg.configHome}/mozilla/firefox";
     profiles.homeManager = {
       isDefault = true;
       extraConfig = ''
@@ -35,7 +43,7 @@
             bookmarks = [
               {
                 name = "My wiki";
-                tags = [ "wiki" ];
+                tags = ["wiki"];
                 keyword = "wiki";
                 url = "http://cromulent/";
               }
