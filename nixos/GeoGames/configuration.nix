@@ -47,7 +47,11 @@ in {
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
     prismlauncher
     (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
-    playonlinux
+    (unstable.playonlinux.override {
+      python3 = pkgs.python3.withPackages (ps: [
+        ps.standard-pipes
+      ]);
+    })
     (GPUOffloadApp playonlinux "playonlinux")
     freecad
     (GPUOffloadApp freecad "org.freecad.FreeCAD")
