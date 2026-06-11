@@ -1,54 +1,68 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
-let
+{serverName}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: let
   hostname = "jellyFin";
   servicePort = "8096";
-in
-  {
-    containers."${hostname}" = {                                                                                              
-      autoStart = true;                                      
-      privateNetwork = true;
-      hostBridge = "br0";
+in {
+  containers."${hostname}" = {
+    autoStart = true;
+    privateNetwork = true;
+    hostBridge = "br0";
 
     # Filesystem mount points
-    bindMounts = {                                         
-      "/var/lib/jellyfin" = {                               
+    bindMounts = {
+      "/var/lib/jellyfin" = {
         hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
+        isReadOnly = false;
+      };
     };
 
-    bindMounts = {                                         
-      "/media" = {                               
+    bindMounts = {
+      "/media" = {
         hostPath = "/home/media";
-        isReadOnly = false;                                
-      };                                                   
+        isReadOnly = false;
+      };
     };
 
-    config = {config, pkgs, lib, ... }: {          
+    config = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
       system.stateVersion = "24.05";
 
       imports = [
         ../../modules/container-tailscale.nix
-        (import ../../modules/container-ssl.nix {port = "${servicePort}"; inherit secrets;})
-      ]; 
+        (import ../../modules/container-ssl.nix {
+          port = "${servicePort}";
+          inherit secrets;
+        })
+      ];
 
-      networking = {                                   
+      networking = {
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
-        firewall = {                                                                                                  
-          allowedTCPPorts = [ 80 443 ];
-          enable = true;                                   
-        };                           
-        # Use systemd-resolved inside the container 
+        firewall = {
+          allowedTCPPorts = [80 443];
+          enable = true;
+        };
+        # Use systemd-resolved inside the container
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-        useHostResolvConf = lib.mkForce false;             
-      };                                                   
+        useHostResolvConf = lib.mkForce false;
+      };
       services.resolved.enable = true;
 
       # Add service definitions here.
-      services.jellyfin = {                                                                                             
-        enable = true;                                                                                                  
+      services.jellyfin = {
+        enable = true;
         openFirewall = true;
       };
       environment.systemPackages = [
@@ -56,7 +70,6 @@ in
         pkgs.jellyfin-web
         pkgs.jellyfin-ffmpeg
       ];
-
-    };                                                   
+    };
   };
 }

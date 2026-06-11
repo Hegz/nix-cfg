@@ -1,6 +1,11 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
-
-let
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}: let
   dokuwiki-plugin-edittable = pkgs.stdenv.mkDerivation {
     name = "edittable";
     src = pkgs.fetchzip {
@@ -17,8 +22,8 @@ let
       url = "https://github.com/splitbrain/dokuwiki-plugin-dw2pdf/archive/refs/tags/2026-01-08.zip";
       sha256 = "sha256-B1KO1bJBSlSTadyO+lhdfbtyJu29Mxh/qiwIuL1k8DE=";
     };
-    patches = [ ../patches/dw2pdf_clean.patch ];
-    phases = [ "unpackPhase" "patchPhase" "installPhase" ];
+    patches = [../patches/dw2pdf_clean.patch];
+    phases = ["unpackPhase" "patchPhase" "installPhase"];
     sourceRoot = ".";
     installPhase = "mkdir -p $out; cp -r source/* $out/";
   };
@@ -59,7 +64,6 @@ let
     sourceRoot = ".";
     installPhase = "mkdir -p $out; cp -r source/* $out/";
   };
-
 in {
   services.dokuwiki.sites."localhost" = {
     settings = {
@@ -73,8 +77,8 @@ in {
       tpl.mindthedark.autoDark = true;
       updatecheck = false;
     };
-    plugins = [ dokuwiki-plugin-drawio dokuwiki-plugin-dw2pdf dokuwiki-plugin-edittable dokuwiki-plugin-diagrams ];
-    templates = [ dokuwiki-template-mindthedark ];
+    plugins = [dokuwiki-plugin-drawio dokuwiki-plugin-dw2pdf dokuwiki-plugin-edittable dokuwiki-plugin-diagrams];
+    templates = [dokuwiki-template-mindthedark];
 
     acl = [
       {

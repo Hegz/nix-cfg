@@ -1,21 +1,23 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ config, pkgs, secrets, ... }:
-let
-  hostName    = "HePhaestus";
-in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../users/afairbrother.nix
-      ../desktop.nix
-      #../syncthing.nix
-      ../../modules/suspend2Hibernate.nix
-      #../dokuwiki.nix
-    ];
+  config,
+  pkgs,
+  secrets,
+  ...
+}: let
+  hostName = "HePhaestus";
+in {
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ../users/afairbrother.nix
+    ../desktop.nix
+    #../syncthing.nix
+    ../../modules/suspend2Hibernate.nix
+    #../dokuwiki.nix
+  ];
 
   networking.hostName = "${hostName}"; # Define your hostname.
 
@@ -45,4 +47,3 @@ in
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
   };
 }
-

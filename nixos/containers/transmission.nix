@@ -1,79 +1,89 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
-let
+{serverName}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: let
   hostname = "transmission";
   mac = "${secrets.${serverName}.containers.${hostname}.mac}";
-in
-{
-  containers."${hostname}" = {                                                                                              
-    autoStart = true;                                      
-	privateNetwork = true;
+in {
+  containers."${hostname}" = {
+    autoStart = true;
+    privateNetwork = true;
     hostBridge = "br0";
-    specialArgs =  {secret = secrets; };
+    specialArgs = {secret = secrets;};
 
     # Filesystem mount points
-    bindMounts = {                                         
-      "/var/lib/transmission" = {                               
+    bindMounts = {
+      "/var/lib/transmission" = {
         hostPath = "/home/container/${hostname}";
-        isReadOnly = false;                                
-      };                                                   
-      "/var/lib/transmission/Downloads" = {                               
+        isReadOnly = false;
+      };
+      "/var/lib/transmission/Downloads" = {
         hostPath = "/home/media/Downloads";
-        isReadOnly = false;                                
+        isReadOnly = false;
       };
-      "/var/lib/transmission/.incomplete" = {                               
+      "/var/lib/transmission/.incomplete" = {
         hostPath = "/home/media/Downloads/.incomplete";
-        isReadOnly = false;                                
+        isReadOnly = false;
       };
-
     };
 
-    config = { config, pkgs, lib, ... }: {          
+    config = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
       system.stateVersion = "24.05";
 
       imports = [
-         ../../modules/wireguard.nix
+        ../../modules/wireguard.nix
       ];
 
-      networking = {                                   
+      networking = {
         hostName = "${hostname}";
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${mac}";
-        firewall = {                                                                                                  
-          enable = true;                                   
-        };                           
-        # Use systemd-resolved inside the container 
+        firewall = {
+          enable = true;
+        };
+        # Use systemd-resolved inside the container
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-        useHostResolvConf = lib.mkForce false;             
-      };                                                   
+        useHostResolvConf = lib.mkForce false;
+      };
       services.resolved.enable = true;
 
-      # Fix for transmission failing to start 
+      # Fix for transmission failing to start
       # https://github.com/NixOS/nixpkgs/issues/258793
-	  systemd.services.transmission.serviceConfig = {
-	    BindReadOnlyPaths = lib.mkForce [ builtins.storeDir "/etc" ];
+      systemd.services.transmission.serviceConfig = {
+        BindReadOnlyPaths = lib.mkForce [builtins.storeDir "/etc"];
         RootDirectoryStartOnly = lib.mkForce false;
         RootDirectory = lib.mkForce "";
       };
-      
+
       environment.systemPackages = with pkgs; [
-        libnatpmp   #used to find the assigned port
+        libnatpmp #used to find the assigned port
       ];
 
       # Add service definitions here.
-      services.transmission = {                                                                                        
-        enable = true;                                                                                                 
+      services.transmission = {
+        enable = true;
         package = pkgs.transmission_4;
         openRPCPort = true;
         openPeerPorts = true;
-        settings = { 
+        settings = {
           rpc-host-whitelist = "${hostname}.fair";
           rpc-bind-address = "0.0.0.0";
           rpc-whitelist-enabled = false;
-          download-dir = "/var/lib/transmission/Downloads";                                                                     
-          incomplete-dir = "/var/lib/transmission/.incomplete"; 
+          download-dir = "/var/lib/transmission/Downloads";
+          incomplete-dir = "/var/lib/transmission/.incomplete";
           umask = 2;
-        };          
+        };
       };
-    };                                                   
+    };
   };
 }

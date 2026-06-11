@@ -79,6 +79,10 @@
     "esp6"
     "rxrpc"
   ];
+  services.resolved = {
+    enable = true;
+    dnssec = "false";
+  };
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -183,9 +187,6 @@
     virt-viewer
     pkgs.android-studio
   ];
-
-  # Accept the Android SDK license
-  nixpkgs.config.android_sdk.accept_license = true;
 
   # Enable weylus for remote desktop access
   programs.weylus = {

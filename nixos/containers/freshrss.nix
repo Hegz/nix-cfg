@@ -1,11 +1,17 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
-let
-  hostname    = "freshrss";
+{serverName}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: let
+  hostname = "freshrss";
   servicePort = "8080";
-  oauth2Port  = 4180;
-  domain      = secrets.tailnet.domain;
-in
-{
+  oauth2Port = 4180;
+  domain = secrets.tailnet.domain;
+in {
   containers."${hostname}" = {
     autoStart = true;
     privateNetwork = true;
@@ -13,23 +19,31 @@ in
 
     bindMounts = {
       "/var/lib/freshrss" = {
-        hostPath   = "/home/container/${hostname}";
+        hostPath = "/home/container/${hostname}";
         isReadOnly = false;
       };
       "/var/lib/caddy" = {
-        hostPath   = "/home/container/${hostname}/ssl";
+        hostPath = "/home/container/${hostname}/ssl";
         isReadOnly = false;
       };
     };
 
-    config = {config, pkgs, lib, ... }: {
+    config = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
       system.stateVersion = "24.05";
 
       imports = [
         ../../modules/container-tailscale.nix
         # Caddy proxies directly to nginx — oauth2-proxy is used via
         # nginx auth_request instead of as an upstream proxy.
-        (import ../../modules/container-ssl.nix { port = servicePort; inherit secrets; })
+        (import ../../modules/container-ssl.nix {
+          port = servicePort;
+          inherit secrets;
+        })
       ];
 
       networking = {
@@ -37,7 +51,7 @@ in
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {
-          allowedTCPPorts = [ 80 443 ];
+          allowedTCPPorts = [80 443];
           enable = true;
         };
         useHostResolvConf = lib.mkForce false;
@@ -45,28 +59,30 @@ in
       services.resolved.enable = true;
 
       services.freshrss = {
-        enable       = true;
-        webserver    = "nginx";
-        virtualHost  = "freshrss.${domain}";
-        baseUrl      = "https://freshrss.${domain}";
+        enable = true;
+        webserver = "nginx";
+        virtualHost = "freshrss.${domain}";
+        baseUrl = "https://freshrss.${domain}";
         passwordFile = "/var/lib/freshrss/password";
-        authType     = "http_auth";
+        authType = "http_auth";
 
-        extensions = with pkgs.freshrss-extensions; [
-          youtube
-        ] ++ [
-          (pkgs.freshrss-extensions.buildFreshRssExtension {
-            FreshRssExtUniqueId = "af-Readability";
-            pname   = "af-readability";
-            version = "1.0";
-            src = pkgs.fetchFromGitHub {
-              owner = "Niehztog";
-              repo  = "freshrss-af-readability";
-              rev   = "d1b8ff0c9ea98c5705b06dd2a6339af89f441193";
-              hash  = "sha256-9/AELLkWwSkYiTBl9t7yVtlsnF+dZRccNbo2nr2ga7w=";
-            };
-          })
-        ];
+        extensions = with pkgs.freshrss-extensions;
+          [
+            youtube
+          ]
+          ++ [
+            (pkgs.freshrss-extensions.buildFreshRssExtension {
+              FreshRssExtUniqueId = "af-Readability";
+              pname = "af-readability";
+              version = "1.0";
+              src = pkgs.fetchFromGitHub {
+                owner = "Niehztog";
+                repo = "freshrss-af-readability";
+                rev = "d1b8ff0c9ea98c5705b06dd2a6339af89f441193";
+                hash = "sha256-9/AELLkWwSkYiTBl9t7yVtlsnF+dZRccNbo2nr2ga7w=";
+              };
+            })
+          ];
       };
 
       services.nginx = {
@@ -79,7 +95,12 @@ in
           }
         '';
         virtualHosts."freshrss.${domain}" = {
-          listen = [ { addr = "127.0.0.1"; port = 8080; } ];
+          listen = [
+            {
+              addr = "127.0.0.1";
+              port = 8080;
+            }
+          ];
 
           extraConfig = ''
             # auth_request sends a subrequest to oauth2-proxy to validate the session.
@@ -161,28 +182,28 @@ in
       # oauth2-proxy in auth_request mode — doesn't proxy upstream,
       # just validates the session and returns user info in headers.
       services.oauth2-proxy = {
-        enable   = true;
+        enable = true;
         provider = "oidc";
 
-        clientID      = "freshrss";
+        clientID = "freshrss";
         keyFile = "/var/lib/${lib.toLower hostname}/oidc.env";
         cookie.secure = true;
         cookie.domain = "freshrss.${domain}";
-        httpAddress   = "127.0.0.1:${toString oauth2Port}";
+        httpAddress = "127.0.0.1:${toString oauth2Port}";
 
         oidcIssuerUrl = "https://kanidm.${domain}/oauth2/openid/freshrss";
-        redirectURL   = "https://freshrss.${domain}/oauth2/callback";
+        redirectURL = "https://freshrss.${domain}/oauth2/callback";
 
         setXauthrequest = true;
-        email.domains   = [ "*" ];
+        email.domains = ["*"];
 
         extraConfig = {
           # No upstream — nginx handles proxying, oauth2-proxy just validates
-          upstream        = "static://202";
-          reverse-proxy   = true;
+          upstream = "static://202";
+          reverse-proxy = true;
           silence-ping-logging = true;
-          client-secret-file  = "/run/oauth2-proxy-secrets-freshrss/client-secret";
-          cookie-secret-file  = "/run/oauth2-proxy-secrets-freshrss/cookie-secret";
+          client-secret-file = "/run/oauth2-proxy-secrets-freshrss/client-secret";
+          cookie-secret-file = "/run/oauth2-proxy-secrets-freshrss/cookie-secret";
           oidc-email-claim = "preferred_username";
           # X-Auth-Request-User will contain the preferred_username (SPN).
           # nginx strips the @domain suffix before passing to FreshRSS.
@@ -191,18 +212,19 @@ in
 
       systemd.services.oauth2-proxy = {
         serviceConfig.ExecStartPre = [
-          ("+" + toString (pkgs.writeShellScript "oauth2-proxy-secrets" ''
-            set -eu
-            dir=/run/oauth2-proxy-secrets-freshrss
-            mkdir -p "$dir"
-            chmod 700 "$dir"
-            grep '^OAUTH2_PROXY_CLIENT_SECRET=' /var/lib/freshrss/oidc.env | head -1 | cut -d= -f2- \
-              > "$dir/client-secret"
-            grep '^OAUTH2_PROXY_COOKIE_SECRET=' /var/lib/freshrss/oidc.env | head -1 | cut -d= -f2- \
-              > "$dir/cookie-secret"
-            chmod 400 "$dir/client-secret" "$dir/cookie-secret"
-            chown oauth2-proxy "$dir/client-secret" "$dir/cookie-secret"
-          ''))
+          ("+"
+            + toString (pkgs.writeShellScript "oauth2-proxy-secrets" ''
+              set -eu
+              dir=/run/oauth2-proxy-secrets-freshrss
+              mkdir -p "$dir"
+              chmod 700 "$dir"
+              grep '^OAUTH2_PROXY_CLIENT_SECRET=' /var/lib/freshrss/oidc.env | head -1 | cut -d= -f2- \
+                > "$dir/client-secret"
+              grep '^OAUTH2_PROXY_COOKIE_SECRET=' /var/lib/freshrss/oidc.env | head -1 | cut -d= -f2- \
+                > "$dir/cookie-secret"
+              chmod 400 "$dir/client-secret" "$dir/cookie-secret"
+              chown oauth2-proxy "$dir/client-secret" "$dir/cookie-secret"
+            ''))
         ];
       };
     };

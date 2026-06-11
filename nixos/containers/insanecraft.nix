@@ -1,5 +1,12 @@
-{serverName}: { inputs, outputs, config, pkgs, lib, secrets, ... }:
-let
+{serverName}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: let
   hostname = "insanecraft";
   # InsaneCraft modpack details:
   #   CurseForge project ID : 527180
@@ -10,8 +17,7 @@ let
   # The systemd service below will call start.sh on every boot.
   dataDir = "/var/lib/insanecraft";
   jvmOpts = "-Xms4092M -Xmx8192M -Djava.net.preferIPv4Stack=true";
-in
-{
+in {
   containers."${hostname}" = {
     autoStart = true;
     privateNetwork = true;
@@ -25,7 +31,12 @@ in
       };
     };
 
-    config = {config, pkgs, lib, ... }: {
+    config = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
       system.stateVersion = "24.05";
 
       nixpkgs.config.allowUnfree = true;
@@ -37,7 +48,7 @@ in
         firewall = {
           enable = true;
           # Minecraft game port + RCON
-          allowedTCPPorts = [ 25565 25575 ];
+          allowedTCPPorts = [25565 25575];
           allowPing = true;
         };
         useHostResolvConf = lib.mkForce false;
@@ -53,34 +64,34 @@ in
       # systemd service instead of using services.minecraft-server.
       systemd.services.insanecraft = {
         description = "InsaneCraft Modpack Server (CurseForge #527180, v1.3.1.1)";
-        wantedBy    = [ "multi-user.target" ];
-        after       = [ "network.target" ];
+        wantedBy = ["multi-user.target"];
+        after = ["network.target"];
 
         serviceConfig = {
-          Type             = "simple";
+          Type = "simple";
           WorkingDirectory = dataDir;
-          ExecStart        = "${dataDir}/start.sh";
+          ExecStart = "${dataDir}/start.sh";
           # Pass JVM flags the same way services.minecraft-server does
-          Environment      = "JVMOPTS=${jvmOpts}";
+          Environment = "JVMOPTS=${jvmOpts}";
 
           # Run as a dedicated user for safety
-          User             = "minecraft";
-          Group            = "minecraft";
+          User = "minecraft";
+          Group = "minecraft";
 
-          Restart          = "on-failure";
-          RestartSec       = "30s";
+          Restart = "on-failure";
+          RestartSec = "30s";
 
           # Give the JVM enough time to flush world data on shutdown
-          TimeoutStopSec   = "60";
-          KillSignal       = "SIGTERM";
+          TimeoutStopSec = "60";
+          KillSignal = "SIGTERM";
         };
       };
 
       # Create the minecraft user/group inside the container
       users.users.minecraft = {
         isSystemUser = true;
-        group        = "minecraft";
-        home         = dataDir;
+        group = "minecraft";
+        home = dataDir;
       };
       users.groups.minecraft = {};
 

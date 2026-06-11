@@ -1,8 +1,13 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
-let 
-
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}: let
   # Define the llama-cpp package once, reused across all model commands
-  llama-cpp = pkgs.unstable.llama-cpp.override { cudaSupport = true; };
+  llama-cpp = pkgs.unstable.llama-cpp.override {cudaSupport = true;};
   llama-server = "${llama-cpp}/bin/llama-server";
 
   # Fetch models into the Nix store at build time
@@ -15,28 +20,32 @@ let
       url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
       hash = "sha256-A75pV0BO8kTB++PQggMGOwjXWf7htYMSm0XgtOMau/k=";
     };
-    qwen3-8b = pkgs.fetchurl {
-      url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf";
-      hash = "sha256-2YzcvQPhfOR2gUNbUVDjTBQX9QtcABndVg5IgsV0V4U="; # replace with real hash
+    gemma-4-12b-it-Q5_K_M = pkgs.fetchurl {
+      url = "https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/resolve/main/gemma-4-12b-it-Q5_K_M.gguf";
+      hash = "sha256-CeneDekx4jt8jvwl25YXkcp65MFu+cUvBFKLTC++ZoE=";
     };
-	fim-coder = pkgs.fetchurl {
-      url = "https://huggingface.co/unsloth/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q8_0.gguf";
-      hash = "sha256-Mi9EkhJgT2NV3PhOrX9CYtEYC7a2REhmlN+BkVMU7sE=";
+    qwen35-deepseek = pkgs.fetchurl {
+      url = "https://huggingface.co/Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF/resolve/main/Qwen3.5-9B-DeepSeek-V4-Flash-Q5_K_M.gguf";
+      hash = "sha256-pcnsfhq0RkRAHSEbqojxZHVjm2lxej3yBl2GsWiCXFo=";
     };
   };
-
-in
-{
+in {
   # Building more then 1 big thing at a time causes problems.
-  nix.settings = { 
+  nix.settings = {
     max-jobs = 1;
     cores = 8;
   };
-     
+
+  systemd.services.llama-swap.serviceConfig = {
+    ProcSubset = lib.mkForce "all";
+    ProtectProc = lib.mkForce "default";
+  };
+
   services.llama-swap = {
     enable = true;
     package = pkgs.unstable.llama-swap;
     port = 8012;
+    listenAddress = "0.0.0.0";
     openFirewall = true;
     settings = {
       # How long in seconds to wait for a model to load before giving up
@@ -48,23 +57,23 @@ in
         "qwen35-uncensored" = {
           cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui";
           ttl = 300; # unload after 5 minutes of inactivity
-          aliases = [ "qwen35" "uncensored" ];
+          aliases = ["qwen35" "uncensored"];
         };
         "gemma4-e4b" = {
           cmd = "${llama-server} --port $\{PORT} -m ${models.gemma4} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
           ttl = 300;
-          aliases = [ "coder" ];
+          aliases = ["coder"];
         };
-        "qwen3-8b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen3-8b} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui";
+        "gemma4-12b" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b-it-Q5_K_M} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
           ttl = 300;
-          aliases = [ "qwen3" "fast" ];
+          aliases = ["gemma"];
         };
-		"fim-coder" = {
-      	  cmd = "${llama-server} --port $\{PORT} -m ${models.fim-coder} --n-gpu-layers 99 --ctx-size 4096 --threads 8 --no-webui --cache-reuse 256";
-      	  ttl = 600;  # keep loaded longer since vim completion is frequent
-      	  aliases = [ "fim" ];
-    	};
+        "qwen35-deepseek" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui";
+          ttl = 900;
+          aliases = ["fim-coder"];
+        };
       };
     };
   };
@@ -81,5 +90,4 @@ in
       OPENAI_API_KEYS = "none";
     };
   };
-
 }

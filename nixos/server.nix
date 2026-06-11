@@ -1,11 +1,14 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ inputs, outputs, config, pkgs, lib, ... }:
-
 {
-
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   nixpkgs = {
     # You can add overlays here
     overlays = [
@@ -45,14 +48,14 @@
     };
     # Opinionated: disable channels
     channel.enable = false;
-    
+
     # enable store garbage collect
-     gc = {
+    gc = {
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 7d";
     };
-    
+
     # Opinionated: make flake registry and nix path match flake inputs
     registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
     nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
@@ -64,24 +67,24 @@
 
   # Filter 'Martian' Packets
   boot.kernel = {
-	sysctl = {
-	  "net.ipv4.conf.default.rp_filter" = 1;
-	  "net.ipv4.conf.wan.rp_filter" = 1;
-	  "net.ipv4.conf.br-lan.rp_filter" = 0;
-	};
+    sysctl = {
+      "net.ipv4.conf.default.rp_filter" = 1;
+      "net.ipv4.conf.wan.rp_filter" = 1;
+      "net.ipv4.conf.br-lan.rp_filter" = 0;
+    };
   };
 
-  boot.extraModprobeConfig =  ''
-	install algif_aead ${pkgs.coreutils}/bin/false
-	install esp4 ${pkgs.coreutils}/bin/false
-	install esp6 ${pkgs.coreutils}/bin/false
-	install rxrpc ${pkgs.coreutils}/bin/false
+  boot.extraModprobeConfig = ''
+    install algif_aead ${pkgs.coreutils}/bin/false
+    install esp4 ${pkgs.coreutils}/bin/false
+    install esp6 ${pkgs.coreutils}/bin/false
+    install rxrpc ${pkgs.coreutils}/bin/false
   '';
   boot.blacklistedKernelModules = [
-	"algif_aead"
-	"esp4"
-	"esp6"
-	"rxrpc"
+    "algif_aead"
+    "esp4"
+    "esp6"
+    "rxrpc"
   ];
 
   # Enable networking
@@ -99,7 +102,7 @@
   #systemd.user.services.keybase.serviceConfig.PrivateTmp = lib.mkForce false;
   services.keybase.enable = true;
   services.kbfs.enable = true;
-  
+
   # Enable tailscale
   services.tailscale.enable = true;
 
@@ -113,12 +116,12 @@
   #  };
   #};
 
-   # List packages installed in system profile. To search, run:
+  # List packages installed in system profile. To search, run:
   # $ nix search wget
 
   #zsh settings
-  environment.shells = with pkgs; [ zsh ];
-  environment.pathsToLink = [ "/share/zsh" ];
+  environment.shells = with pkgs; [zsh];
+  environment.pathsToLink = ["/share/zsh"];
   programs.zsh.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -150,6 +153,6 @@
   system.stateVersion = "23.05"; # Did you read the comment?
 
   #home-manager.users.afairbrother = { pkgs, ... }: {
-    
+
   #};
 }

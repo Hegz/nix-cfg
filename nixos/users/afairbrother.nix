@@ -1,11 +1,18 @@
-{ inputs, outputs, config, pkgs, lib, secrets, ... }:
 {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  secrets,
+  ...
+}: {
   users.users.afairbrother = {
     shell = pkgs.zsh;
     isNormalUser = true;
     description = "${secrets.users.adam.fullname}";
     hashedPassword = "${secrets.users.afairbrother.passhash}";
-    extraGroups = [ "kvm" "_lldpd" "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" "adbusers"];
+    extraGroups = ["kvm" "_lldpd" "plugdev" "networkmanager" "wheel" "distrobox" "docker" "dialout" "adbusers"];
     packages = with pkgs; [
       chromium
       firefox
@@ -36,7 +43,7 @@
       teams-for-linux
       scrcpy
       steam
-      uni2ascii 
+      uni2ascii
       file
       vlc
     ];
