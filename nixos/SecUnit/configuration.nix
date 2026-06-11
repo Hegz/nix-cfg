@@ -60,6 +60,7 @@ in {
   # Mount SSD to the ZM storage location
   fileSystems.${Storage} = {
     device = "/dev/disk/by-uuid/${secrets.secunit.disk-uuid}";
+    fsType = "xfs";
   };
 
   networking = {
