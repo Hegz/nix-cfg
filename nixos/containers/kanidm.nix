@@ -2,6 +2,7 @@
 let
   hostname    = "kanidm";
   domain      = secrets.tailnet.domain;
+  kanidmPkg   = pkgs.kanidm_1_10;
 in
 {
   containers."${hostname}" = {
@@ -25,6 +26,10 @@ in
 
       imports = [
         ../../modules/container-tailscale.nix
+      ];
+      
+      environment.systemPackages = with pkgs; [
+        kanidmPkg
       ];
 
       networking = {
@@ -82,7 +87,7 @@ in
 
       services.kanidm = {
         enableServer = true;
-        package = pkgs.kanidm_1_8;
+        package = kanidmPkg;
         serverSettings = {
           bindaddress     = "127.0.0.1:8443";
           ldapbindaddress = "0.0.0.0:3636";

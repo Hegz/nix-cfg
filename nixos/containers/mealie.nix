@@ -45,6 +45,7 @@ in
         enable = true;
         port   = 9000;
         settings = {
+          BASE_URL               = "https://mealie.${domain}";
           ALLOW_SIGNUP           = "false";
           OIDC_AUTH_ENABLED      = "true";
           OIDC_SIGNUP_ENABLED    = "true";
