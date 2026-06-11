@@ -47,7 +47,6 @@ in {
       snapshots.enabled = true;
       ffmpeg = {
         hwaccel_args = "preset-vaapi";
-        input_args = "preset-rtsp-tcp";
       };
       record = {
         enabled = true;
@@ -87,6 +86,7 @@ in {
               }
               {
                 path = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
+                input_args = "-rtsp_transport tcp -timeout 15000000";
                 roles = ["detect"];
               }
             ];
