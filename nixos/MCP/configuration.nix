@@ -63,7 +63,15 @@ in
     "net.core.wmem_max" = 1048576;
   };
  
-  services.nfs.server.enable = true;
+  services.nfs = {
+    settings = {
+     nfsd.vers4 = true; 
+     nfsd.vers4_0 = true; 
+     nfsd.vers4_1 = false; 
+     nfsd.vers4_2 = false;
+    }; 
+    server.enable = true;
+  };
 
   services.zfs = {
     autoScrub.enable = true;
@@ -97,9 +105,19 @@ in
      interfaces."br0".useDHCP = true;
      firewall = {
        enable = true;
-       allowedTCPPorts = [ 
+       allowedTCPPorts = [
+         111   # portmapper 
+         2049  # nfs v4 
+         4000  # Additional ports for NFSv3
+         4001
+         4002
+
+       ];
+       allowedUDPPorts = [ 
+         111   # portmapper
          2049  # nfs v4 
        ];
+
     };
   };
 }
