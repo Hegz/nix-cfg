@@ -59,9 +59,10 @@ in {
         enable = true;
         port = 9000;
         settings = {
-          ALLOW_SIGNUP = "false";
-          OIDC_AUTH_ENABLED = "true";
-          OIDC_SIGNUP_ENABLED = "true";
+          BASE_URL               = "https://mealie.${domain}";
+          ALLOW_SIGNUP           = "false";
+          OIDC_AUTH_ENABLED      = "true";
+          OIDC_SIGNUP_ENABLED    = "true";
           OIDC_CONFIGURATION_URL = "https://kanidm.${domain}/oauth2/openid/mealie/.well-known/openid-configuration";
           OIDC_CLIENT_ID = "mealie";
           OIDC_AUTO_REDIRECT = "false";

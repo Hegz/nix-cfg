@@ -47,7 +47,6 @@ in {
       snapshots.enabled = true;
       ffmpeg = {
         hwaccel_args = "preset-vaapi";
-        input_args = "preset-rtsp-udp";
       };
       record = {
         enabled = true;
@@ -87,6 +86,7 @@ in {
               }
               {
                 path = "rtsp://${cam.rtsp-user}:${cam.rtsp-pass}@${cam.name}:554/ch1";
+                input_args = "-rtsp_transport tcp -timeout 15000000";
                 roles = ["detect"];
               }
             ];
@@ -110,7 +110,7 @@ in {
     enable = true;
     settings = {
       streams = lib.listToAttrs (map
-        (stream: lib.nameValuePair "${stream.name}" "rtsp://${stream.rtsp-user}:${stream.rtsp-pass}@${stream.name}:554/ch0")
+        (stream: lib.nameValuePair "${stream.name}" "rtsp://${stream.rtsp-user}:${stream.rtsp-pass}@${stream.name}:554/ch0#transport=tcp")
         (builtins.filter (x: builtins.hasAttr "rtsp-user" x) secrets.secunit.hosts));
       rtsp.listen = ":8554";
       webrtc.listen = ":8555";
