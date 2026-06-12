@@ -78,10 +78,6 @@ in {
     };
   };
 
-  services.sillytavern = {
-    enable = true;
-  };
-
   # Point Open WebUI at llama-swap instead of (or alongside) Ollama
   services.open-webui = {
     enable = true;
