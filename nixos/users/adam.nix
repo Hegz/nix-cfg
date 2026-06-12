@@ -39,6 +39,8 @@
       kdePackages.okular
       kdePackages.yakuake
       libreoffice-fresh
+      llm
+      gorilla-cli
       nvtopPackages.full
       openscad
       pkgs.cura
