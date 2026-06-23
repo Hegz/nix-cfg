@@ -70,7 +70,7 @@ in {
           aliases = ["gemma"];
         };
         "qwen35-deepseek" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui";
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
           ttl = 900;
           aliases = ["fim-coder"];
         };
