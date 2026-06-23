@@ -28,6 +28,14 @@
       url = "https://huggingface.co/Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF/resolve/main/Qwen3.5-9B-DeepSeek-V4-Flash-Q5_K_M.gguf";
       hash = "sha256-pcnsfhq0RkRAHSEbqojxZHVjm2lxej3yBl2GsWiCXFo=";
     };
+
+    # Small, dedicated embedding model — kept separate from the chat models above
+    # because it runs in its own always-on llama-server instance (see below),
+    # not inside llama-swap's single-model rotation.
+    nomic-embed-text = pkgs.fetchurl {
+      url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # replace with real hash
+    };
   };
 in {
   # Building more then 1 big thing at a time causes problems.
@@ -53,9 +61,14 @@ in {
 
       # How long an idle model stays loaded before being swapped out (seconds)
       # This is the key feature of llama-swap — only one model in VRAM at a time
+      #
+      # NOTE: --jinja is required on every model below for Open WebUI's "Native"
+      # function calling (web search, tools, knowledge-base exec) to work at all.
+      # Without it, llama-server never parses tool_calls out of the chat template,
+      # and Open WebUI's Native Mode tool calls will silently fail for that model.
       models = {
         "qwen35-uncensored" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui";
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui --jinja";
           ttl = 300; # unload after 5 minutes of inactivity
           aliases = ["qwen35" "uncensored"];
         };
@@ -78,6 +91,109 @@ in {
     };
   };
 
+  # ---------------------------------------------------------------------------
+  # Dedicated, always-on embedding server.
+  #
+  # Deliberately NOT part of llama-swap: if it were just another entry in the
+  # swap rotation, every RAG-using chat turn would force two extra model
+  # swaps (chat model -> embed query -> swap back to chat model), and each
+  # swap costs several seconds of reload time. A second tiny llama-server
+  # process avoids that thrashing entirely, at the cost of a small fixed
+  # amount of RAM/VRAM held permanently.
+  #
+  # Defaults to CPU (--n-gpu-layers 0) so it never competes with whichever
+  # chat model llama-swap currently has loaded in VRAM. If you have spare
+  # VRAM, raise --n-gpu-layers to speed up bulk document ingestion.
+  # ---------------------------------------------------------------------------
+  systemd.services.llama-embeddings = {
+    description = "Dedicated llama-server instance for embeddings (always-on)";
+    after = ["network.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      ExecStart = "${llama-server} --host 127.0.0.1 --port 8013 -m ${models.nomic-embed-text} --embeddings --n-gpu-layers 0 --ctx-size 2048 --threads 4 --no-webui";
+      Restart = "on-failure";
+      RestartSec = 5;
+      DynamicUser = true;
+    };
+  };
+
+  # ---------------------------------------------------------------------------
+  # SearXNG — self-hosted metasearch backend so Open WebUI's web search tool
+  # doesn't depend on an external/commercial search API. Bound to localhost
+  # only; Open WebUI is the only consumer.
+  #
+  # `search.formats = ["html" "json"]` is required — without "json", SearXNG
+  # returns 403s to Open WebUI's queries.
+  #
+  # secret_key is read from an environment file rather than written here,
+  # so it never ends up world-readable in the Nix store / cache. Create
+  # that file out-of-band (see the setup guide) — it just needs one line:
+  #   SEARXNG_SECRET=<a long random string>
+  # ---------------------------------------------------------------------------
+  services.searx = {
+    enable = true;
+    package = pkgs.searxng;
+    redisCreateLocally = true;
+    environmentFile = "/run/secrets/searxng.env";
+    settings = {
+      server = {
+        bind_address = "127.0.0.1";
+        port = 8081;
+      };
+      search.formats = ["html" "json"];
+    };
+  };
+
+  # ---------------------------------------------------------------------------
+  # mcpo — bridges stdio-based MCP servers into OpenAPI HTTP servers that
+  # Open WebUI can call as Tools. Bound to localhost only.
+  #
+  # CAVEAT: mcpo is not yet packaged in nixpkgs (tracked upstream as
+  # NixOS/nixpkgs#409642), so this isn't fully pinned/reproducible the way
+  # the rest of this file is — `uvx` fetches it from PyPI at service start
+  # and caches it under /var/lib/mcpo. Once you've confirmed your chosen
+  # version works, consider pinning with `uvx mcpo==<version>` for
+  # repeatability.
+  #
+  # The MCP servers listed below (time, fetch) are intentionally low-risk
+  # examples. A filesystem MCP server is commented out — only enable it if
+  # you deliberately want models to read/write a specific directory, and
+  # keep the path scoped tightly.
+  # ---------------------------------------------------------------------------
+  environment.etc."mcpo/config.json".text = builtins.toJSON {
+    mcpServers = {
+      time = {
+        command = "${pkgs.uv}/bin/uvx";
+        args = ["mcp-server-time" "--local-timezone=America/Vancouver"];
+      };
+      fetch = {
+        command = "${pkgs.uv}/bin/uvx";
+        args = ["mcp-server-fetch"];
+      };
+      # filesystem = {
+      #   command = "${pkgs.nodejs}/bin/npx";
+      #   args = ["-y" "@modelcontextprotocol/server-filesystem" "/srv/llm-shared"];
+      # };
+    };
+  };
+
+  systemd.services.mcpo = {
+    description = "mcpo: MCP-to-OpenAPI proxy for Open WebUI tool servers";
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
+    environment = {
+      HOME = "/var/lib/mcpo";
+    };
+    serviceConfig = {
+      ExecStart = "${pkgs.uv}/bin/uvx mcpo --host 127.0.0.1 --port 8009 --config /etc/mcpo/config.json";
+      DynamicUser = true;
+      StateDirectory = "mcpo";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
+
   # Point Open WebUI at llama-swap instead of (or alongside) Ollama
   services.open-webui = {
     enable = true;
@@ -88,6 +204,57 @@ in {
     environment = {
       OPENAI_API_BASE_URLS = "http://localhost:8012/v1";
       OPENAI_API_KEYS = "none";
+
+      # --- Web search --------------------------------------------------
+      ENABLE_WEB_SEARCH = "True";
+      WEB_SEARCH_ENGINE = "searxng";
+      SEARXNG_QUERY_URL = "http://127.0.0.1:8081/search?q=<query>";
+      WEB_SEARCH_RESULT_COUNT = "5";
+      WEB_SEARCH_CONCURRENT_REQUESTS = "5";
+
+      # --- RAG: embeddings ----------------------------------------------
+      # Routed to the dedicated llama-embeddings service above, not the
+      # default in-process CPU SentenceTransformers model.
+      # NOTE: RAG_OPENAI_* does NOT inherit from OPENAI_API_* (open-webui
+      # issue #22084) — both must be set explicitly even though they point
+      # at the same kind of backend as the chat connection above.
+      RAG_EMBEDDING_ENGINE = "openai";
+      RAG_OPENAI_API_BASE_URL = "http://127.0.0.1:8013/v1";
+      RAG_OPENAI_API_KEY = "none";
+      RAG_EMBEDDING_MODEL = "nomic-embed-text-v1.5";
+
+      # nomic-embed-text expects task-prefixed input to hit its benchmarked
+      # quality: text being indexed should read "search_document: <text>",
+      # queries should read "search_query: <text>". llama-server's embeddings
+      # endpoint has no idea this model wants that, so Open WebUI has to add
+      # it instead. Trailing space in both is intentional — it's part of the
+      # prefix format ("search_document: text", not "search_document:text").
+      RAG_EMBEDDING_CONTENT_PREFIX = "search_document: ";
+      RAG_EMBEDDING_QUERY_PREFIX = "search_query: ";
+
+      # --- RAG: hybrid search + reranking ---------------------------------
+      # No RAG_RERANKING_ENGINE set -> defaults to the local CrossEncoder,
+      # which downloads this model from Hugging Face on first use and runs
+      # on CPU inside the open-webui process (no extra service needed).
+      ENABLE_RAG_HYBRID_SEARCH = "True";
+      RAG_RERANKING_MODEL = "BAAI/bge-reranker-v2-m3";
+      RAG_TOP_K = "10";
+      RAG_TOP_K_RERANKER = "5";
+
+      # --- RAG: chunking ---------------------------------------------------
+      RAG_TEXT_SPLITTER = "token";
+      CHUNK_SIZE = "750";
+      CHUNK_OVERLAP = "100";
+      CHUNK_MIN_SIZE_TARGET = "400"; # merges tiny fragments from header splitting
+
+      # Keeps retrieved context out of the per-turn prompt prefix so
+      # llama-server's KV cache can be reused across turns in a chat.
+      RAG_SYSTEM_CONTEXT = "True";
+
+      # Filesystem-style ls/grep/cat access over knowledge bases.
+      # Only takes effect once a model is on Native function calling
+      # (see the setup guide — that part is UI-only, not an env var).
+      ENABLE_KB_EXEC = "True";
     };
   };
 }
