@@ -257,6 +257,10 @@ in {
       OPENAI_API_BASE_URLS = "http://localhost:8012/v1";
       OPENAI_API_KEYS = "none";
 
+      # --- External Chromadb -------------------------------------------
+      CHROMA_HTTP_HOST = "127.0.0.1";
+      CHROMA_HTTP_PORT = "8014";
+
       # --- Web search --------------------------------------------------
       ENABLE_WEB_SEARCH = "True";
       WEB_SEARCH_ENGINE = "searxng";
