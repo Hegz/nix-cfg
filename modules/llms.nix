@@ -19,6 +19,13 @@
   # https://huggingface.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF
   # https://huggingface.co/prithivMLmods/VibeThinker-3B-GGUF
   # https://huggingface.co/empero-ai/Qwable-9B-Claude-Fable-5-GGUF
+
+  ragBridgePython = pkgs.python3.withPackages (ps:
+    with ps; [
+      chromadb # includes the `chroma` CLI entrypoint
+      httpx # used by owui-rag-mcp.py for embedding calls
+    ]);
+
   models = {
     qwen35-uncensored = pkgs.fetchurl {
       url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
@@ -51,6 +58,8 @@ in {
     max-jobs = 1;
     cores = 8;
   };
+
+  imports = [./rag-bridge.nix];
 
   systemd.services.llama-swap.serviceConfig = {
     ProcSubset = lib.mkForce "all";
@@ -184,6 +193,15 @@ in {
       fetch = {
         command = "${pkgs.uv}/bin/uvx";
         args = ["mcp-server-fetch"];
+      };
+      "owui-rag" = {
+        command = "${ragBridgePython}/bin/python3";
+        args = ["/var/lib/mcpo/owui-rag-mcp.py"];
+        env = {
+          EMBEDDING_BASE_URL = "http://localhost:8013";
+          CHROMA_HOST = "localhost";
+          CHROMA_PORT = "8014";
+        };
       };
       # filesystem = {
       #   command = "${pkgs.nodejs}/bin/npx";
