@@ -4,13 +4,21 @@
   lib,
   config,
   pkgs,
+  secrets,
   ...
 }: let
   # Define the llama-cpp package once, reused across all model commands
   llama-cpp = pkgs.unstable.llama-cpp.override {cudaSupport = true;};
   llama-server = "${llama-cpp}/bin/llama-server";
+  commonFlags = "--n-gpu-layers 99 --threads 8 --no-webui --jinja --parallel 1 --cache-ram 0";
 
   # Fetch models into the Nix store at build time
+  # additional models to try:
+  # https://huggingface.co/squ11z1/Mythos-nano
+  # https://huggingface.co/squ11z1/Mythos-nano
+  # https://huggingface.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF
+  # https://huggingface.co/prithivMLmods/VibeThinker-3B-GGUF
+  # https://huggingface.co/empero-ai/Qwable-9B-Claude-Fable-5-GGUF
   models = {
     qwen35-uncensored = pkgs.fetchurl {
       url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
@@ -34,7 +42,7 @@
     # not inside llama-swap's single-model rotation.
     nomic-embed-text = pkgs.fetchurl {
       url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # replace with real hash
+      hash = "sha256-969vZoAvTfhu2hD+m7z8dcOVYr7Ujvas5xmiUc8cL9s=";
     };
   };
 in {
@@ -68,22 +76,22 @@ in {
       # and Open WebUI's Native Mode tool calls will silently fail for that model.
       models = {
         "qwen35-uncensored" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} --n-gpu-layers 99 --ctx-size 16384 --threads 8 --no-webui --jinja";
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} ${commonFlags} --ctx-size 147456";
           ttl = 300; # unload after 5 minutes of inactivity
           aliases = ["qwen35" "uncensored"];
         };
         "gemma4-e4b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma4} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma4} ${commonFlags} --ctx-size 131072";
           ttl = 300;
           aliases = ["coder"];
         };
         "gemma4-12b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b-it-Q5_K_M} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b-it-Q5_K_M} ${commonFlags} --ctx-size 131072";
           ttl = 300;
           aliases = ["gemma"];
         };
         "qwen35-deepseek" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} --n-gpu-layers 99 --ctx-size 32768 --threads 8 --no-webui --jinja";
+          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} ${commonFlags} --ctx-size 163840";
           ttl = 900;
           aliases = ["fim-coder"];
         };
@@ -125,20 +133,27 @@ in {
   # `search.formats = ["html" "json"]` is required — without "json", SearXNG
   # returns 403s to Open WebUI's queries.
   #
-  # secret_key is read from an environment file rather than written here,
-  # so it never ends up world-readable in the Nix store / cache. Create
-  # that file out-of-band (see the setup guide) — it just needs one line:
-  #   SEARXNG_SECRET=<a long random string>
+  # secret_key is sourced from secrets.json (via the `secrets` specialArg
+  # your flake already wires up) rather than a standalone environment file.
+  #
+  # Worth knowing: because secrets.json is read with builtins.readFile at
+  # *evaluation* time, this value gets baked into the rendered settings.yml
+  # derivation in /nix/store — which is world-readable by default, same as
+  # every other value your flake already pulls from secrets.json. That's a
+  # different trade-off than environmentFile (which keeps a secret on disk,
+  # outside the store, read only at service start) — fine for a single-admin
+  # box, worth knowing if SecUnit or another multi-user host ever imports
+  # this module.
   # ---------------------------------------------------------------------------
   services.searx = {
     enable = true;
     package = pkgs.searxng;
     redisCreateLocally = true;
-    environmentFile = "/run/secrets/searxng.env";
     settings = {
       server = {
         bind_address = "127.0.0.1";
         port = 8081;
+        secret_key = secrets.searxngSecret; # add this key to secrets/secrets.json
       };
       search.formats = ["html" "json"];
     };
@@ -177,6 +192,14 @@ in {
     };
   };
 
+  users.users.mcpo = {
+    isSystemUser = true;
+    group = "mcpo";
+    home = "/var/lib/mcpo";
+    createHome = true;
+  };
+  users.groups.mcpo = {};
+
   systemd.services.mcpo = {
     description = "mcpo: MCP-to-OpenAPI proxy for Open WebUI tool servers";
     after = ["network-online.target"];
@@ -184,10 +207,21 @@ in {
     wantedBy = ["multi-user.target"];
     environment = {
       HOME = "/var/lib/mcpo";
+      # Forcing the Nix-built interpreter fixed the *first* exec failure
+      # (uv's downloaded standalone CPython), but the real problem is
+      # broader: DynamicUser's implied hardening (ProtectSystem=strict
+      # and friends) blocks executing *anything* freshly written under
+      # the service's own StateDirectory — which uv does repeatedly
+      # (the tool venv, the mcpo console-script wrapper inside it, etc).
+      # Kept these two anyway; they're harmless and avoid a redundant
+      # Python download now that we're on a static, unsandboxed user.
+      UV_PYTHON = "${pkgs.python3}/bin/python3";
+      UV_PYTHON_PREFERENCE = "only-system";
     };
     serviceConfig = {
       ExecStart = "${pkgs.uv}/bin/uvx mcpo --host 127.0.0.1 --port 8009 --config /etc/mcpo/config.json";
-      DynamicUser = true;
+      User = "mcpo";
+      Group = "mcpo";
       StateDirectory = "mcpo";
       Restart = "on-failure";
       RestartSec = 5;
