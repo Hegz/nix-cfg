@@ -29,19 +29,27 @@
   models = {
     qwen35-uncensored = pkgs.fetchurl {
       url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
-      hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY="; # replace with real hash
+      hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY=";
     };
     gemma4 = pkgs.fetchurl {
       url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
-      hash = "sha256-A75pV0BO8kTB++PQggMGOwjXWf7htYMSm0XgtOMau/k=";
+      hash = "sha256-Pb9j4ivoM9DmhPJrNtRUSPXyBvDnpsrGtKqeDPTJzOg=";
+    };
+    gemma-4-12b = pkgs.fetchurl {
+      url = "https://huggingface.co/google/gemma-4-12B-it-qat-q4_0-gguf/resolve/main/gemma-4-12b-it-qat-q4_0.gguf";
+      hash = "sha256-HnbkZiPeqk25fU7ycs6rDft2fA80wsdlJIN+3ytXpRA=";
     };
     gemma-4-12b-it-Q5_K_M = pkgs.fetchurl {
       url = "https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/resolve/main/gemma-4-12b-it-Q5_K_M.gguf";
-      hash = "sha256-CeneDekx4jt8jvwl25YXkcp65MFu+cUvBFKLTC++ZoE=";
+      hash = "sha256-MsVUx9EziiODeuObPbSCITpKZC+W3zsmGfUWojddFs0=";
     };
     qwen35-deepseek = pkgs.fetchurl {
       url = "https://huggingface.co/Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF/resolve/main/Qwen3.5-9B-DeepSeek-V4-Flash-Q5_K_M.gguf";
       hash = "sha256-pcnsfhq0RkRAHSEbqojxZHVjm2lxej3yBl2GsWiCXFo=";
+    };
+    ornith-1_0-9B = pkgs.fetchurl {
+      url = "https://huggingface.co/protoLabsAI/Ornith-1.0-9B-MTP-GGUF/resolve/main/Ornith-1.0-9B-MTP-Q4_K_M.gguf";
+      hash = "sha256-k8R6fnbGJwa+cQUs8sxAfA5c5/Z4kmNGT2trrY1Vspc=";
     };
 
     # Small, dedicated embedding model — kept separate from the chat models above
@@ -103,6 +111,11 @@ in {
           cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} ${commonFlags} --ctx-size 163840";
           ttl = 900;
           aliases = ["fim-coder"];
+        };
+        "ornith-1_0-9b" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.ornith-1_0-9B} ${commonFlags} --ctx-size 163840";
+          ttl = 300;
+          aliases = ["ornith" "agentic"];
         };
       };
     };
@@ -195,13 +208,8 @@ in {
         args = ["mcp-server-fetch"];
       };
       "owui-rag" = {
-        command = "${ragBridgePython}/bin/python3";
-        args = ["/var/lib/mcpo/owui-rag-mcp.py"];
-        env = {
-          EMBEDDING_BASE_URL = "http://localhost:8013";
-          CHROMA_HOST = "localhost";
-          CHROMA_PORT = "8014";
-        };
+        command = "/var/lib/mcpo/owui-rag-wrapper";
+        args = [];
       };
       # filesystem = {
       #   command = "${pkgs.nodejs}/bin/npx";
