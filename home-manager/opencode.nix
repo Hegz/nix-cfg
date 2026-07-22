@@ -21,22 +21,14 @@
           baseURL = "http://${secrets.llama.host}:${secrets.llama.port}/v1";
         };
         models = {
-          "qwen35-uncensored" = {
-            name = "Qwen3.5 9B Uncensored";
-          };
-          "gemma4-e4b" = {
-            name = "gemma4 e4b";
-          };
-          "gemma4-12b" = {
+          "gemma4-12b-qat" = {
             name = "gemma4 12b";
           };
-          "qwen35-deepseek" = {
-            name = "qwen 3.5 Deepseek";
+          "ornith-1_0-9b" = {
+            name = "Ornith 1.0 9B";
           };
         };
       };
-
-      # Default model for coding tasks
     };
   };
 }
