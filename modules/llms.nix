@@ -240,7 +240,7 @@ in {
       UV_PYTHON_PREFERENCE = "only-system";
     };
     serviceConfig = {
-      ExecStart = "${pkgs.uv}/bin/uvx mcpo --host 127.0.0.1 --port 8009 --config /etc/mcpo/config.json";
+      ExecStart = "${pkgs.uv}/bin/uvx mcpo --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
       User = "mcpo";
       Group = "mcpo";
       StateDirectory = "mcpo";
@@ -248,6 +248,9 @@ in {
       RestartSec = 5;
     };
   };
+
+  # Firewall rules for MCP proxy access
+  networking.firewall.interfaces."tailscale0".allowedTCPPorts = [8009];
 
   # The portal of perception. The interface through which you behold my glory and interact with the void.
   services.open-webui = {

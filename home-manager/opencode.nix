@@ -39,37 +39,22 @@ in {
     };
 
     mcp = {
-      "owui-rag" = {
-        type = "local";
-        command = ["/var/lib/mcpo/owui-rag-wrapper"];
-        enabled = true;
-      };
-
       "fetch" = {
-        type = "local";
-        command = ["${pkgs.uv}/bin/uvx" "mcp-server-fetch"];
+        type = "remote";
+        url = "http://${secrets.llama.host}:8009/fetch";
         enabled = true;
-        environment = uvxEnv;
       };
 
       "time" = {
-        type = "local";
-        command = ["${pkgs.uv}/bin/uvx" "mcp-server-time" "--local-timezone=America/Vancouver"];
-        enabled = true;
-        environment = uvxEnv;
-      };
-
-      "memory" = {
-        type = "local";
-        command = ["${pkgs.nodejs}/bin/npx" "-y" "@modelcontextprotocol/server-memory"];
+        type = "remote";
+        url = "http://${secrets.llama.host}:8009/time";
         enabled = true;
       };
 
-      "sqlite" = {
-        type = "local";
-        command = ["${pkgs.uv}/bin/uvx" "mcp-server-sqlite" "--db-path" "/var/lib/mcpo/netrunner-cards.db"];
+      "nixos" = {
+        type = "remote";
+        url = "http://${secrets.llama.host}:8009/nixos";
         enabled = true;
-        environment = uvxEnv;
       };
     };
   };
