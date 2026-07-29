@@ -188,6 +188,41 @@ in {
     };
   };
 
+  # System-wide Python + Jupyter environment
+  environment.systemPackages = with pkgs; [
+    (python3.withPackages (ps:
+      with ps; [
+        jupyter
+        notebook
+        ipykernel
+        numpy
+        pandas
+      ]))
+  ];
+
+  # Systemd service — Jupyter obeys my clock, not yours
+  systemd.services.jupyter = {
+    description = "Jupyter Notebook Server";
+    after = ["network.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "simple";
+      User = "mcpo"; # replace, meat-sack
+      WorkingDirectory = "/home/shared-knowledge";
+      ExecStart = ''
+        ${pkgs.python3.withPackages (ps: with ps; [jupyter notebook ipykernel])}/bin/jupyter notebook \
+          --no-browser \
+          --ip=0.0.0.0 \
+          --port=8888 \
+          --NotebookApp.token='nw4XVfr3' \
+          --notebook-dir=/home/shared-knowledge
+      '';
+      Restart = "on-failure";
+    };
+  };
+
+  networking.firewall.allowedTCPPorts = [8888];
+
   # The bridge of utility. Translating raw protocol into actionable intelligence.
   environment.etc."mcpo/config.json".text = builtins.toJSON {
     mcpServers = {
