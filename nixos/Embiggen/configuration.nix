@@ -15,7 +15,7 @@ in {
     ../../modules/nvidia-container-toolkit.nix
     ../../modules/llms.nix
     ../desktop.nix
-    ../dokuwiki.nix
+    #../dokuwiki.nix
     ../users/adam.nix
     ./hardware-configuration.nix
   ];
@@ -39,11 +39,17 @@ in {
     "nvidia-drm.fbdev=1"
   ];
 
+  boot.initrd.kernelModules = ["nvidia" "nvidia_modeset" "nvidia_drm" "nvidia_uvm"];
+
   # Switch to zen kernel
   # boot.kernelPackages = pkgs.linuxPackages_zen;
 
   # Enable CUPS to print documents.
-  services.printing.drivers = [pkgs.foomatic-filters pkgs.foomatic-db-nonfree pkgs.foomatic-db-ppds-withNonfreeDb];
+  services.printing = {
+    enable = true;
+    #logLevel = "debug";
+    #drivers = [pkgs.foomatic-db-ppds pkgs.foomatic-db pkgs.postscript-lexmark];
+  };
 
   # Steam settings.
   programs.steam = {

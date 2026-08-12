@@ -142,6 +142,8 @@
 
   # Enable tailscale
   services.tailscale.enable = true;
+  systemd.services.tailscaled.after = lib.mkForce ["network-pre.target"];
+  systemd.services.tailscaled.wants = lib.mkForce ["network-pre.target"];
 
   # Enable docker
   virtualisation = {
