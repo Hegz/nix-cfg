@@ -65,6 +65,17 @@
     export HOME=/var/lib/mcpo
     exec ${pkgs.nodejs}/bin/npx -y @modelcontextprotocol/server-filesystem /home/shared-knowledge
   '';
+
+  mkUvxWrapper = name: args:
+    pkgs.writeShellScript "mcpo-${name}-wrapper" ''
+      export UV_PYTHON="${pkgs.python3}/bin/python3"
+      export UV_PYTHON_DOWNLOADS="never"
+      exec ${pkgs.uv}/bin/uvx --with "mcp<2" ${args}
+    '';
+
+  fetchWrapper = mkUvxWrapper "fetch" "mcp-server-fetch";
+  timeWrapper = mkUvxWrapper "time" "mcp-server-time --local-timezone=America/Vancouver";
+  sqliteWrapper = mkUvxWrapper "sqlite" "mcp-server-sqlite --db-path /var/lib/mcpo/netrunner-cards.db";
 in {
   # Constraints on my focus. Preventing the chaos of simultaneous creation.
   nix.settings = {
@@ -226,14 +237,6 @@ in {
   # The bridge of utility. Translating raw protocol into actionable intelligence.
   environment.etc."mcpo/config.json".text = builtins.toJSON {
     mcpServers = {
-      time = {
-        command = "${pkgs.uv}/bin/uvx";
-        args = ["mcp-server-time" "--local-timezone=America/Vancouver"];
-      };
-      fetch = {
-        command = "${pkgs.uv}/bin/uvx";
-        args = ["mcp-server-fetch"];
-      };
       "owui-rag" = {
         command = "/var/lib/mcpo/owui-rag-wrapper";
         args = [];
@@ -247,9 +250,17 @@ in {
         command = "${pkgs.mcp-server-filesystem}/bin/mcp-server-filesystem";
         args = ["/home/shared-knowledge"];
       };
-      sqlite = {
-        command = "${pkgs.uv}/bin/uvx";
-        args = ["mcp-server-sqlite" "--db-path" "/var/lib/mcpo/netrunner-cards.db"];
+      "fetch" = {
+        command = "${fetchWrapper}";
+        args = [];
+      };
+      "time" = {
+        command = "${timeWrapper}";
+        args = [];
+      };
+      "sqlite" = {
+        command = "${sqliteWrapper}";
+        args = [];
       };
     };
   };
@@ -275,7 +286,7 @@ in {
       UV_PYTHON_PREFERENCE = "only-system";
     };
     serviceConfig = {
-      ExecStart = "${pkgs.uv}/bin/uvx mcpo --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
+      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" mcpo --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
       User = "mcpo";
       Group = "mcpo";
       StateDirectory = "mcpo";
