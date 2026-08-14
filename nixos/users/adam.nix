@@ -44,7 +44,7 @@
       pkgs.cura
       pkgs.unstable.opencode
       #playonlinux
-      #prismlauncher
+      prismlauncher
       #steam
       tenacity
       transmission_4-qt
