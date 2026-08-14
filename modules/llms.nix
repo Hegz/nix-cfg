@@ -77,6 +77,16 @@
   timeWrapper = mkUvxWrapper "time" "mcp-server-time --local-timezone=America/Vancouver";
   sqliteWrapper = mkUvxWrapper "sqlite" "mcp-server-sqlite --db-path /var/lib/mcpo/netrunner-cards.db";
 in {
+  # Tame the herd
+  systemd.services.chromadb.serviceConfig.Nice = 15;
+  systemd.services.jupyter.serviceConfig.Nice = 15;
+  systemd.services.llama-swap.serviceConfig.Nice = 15;
+  systemd.services.searx.serviceConfig.Nice = 15;
+  systemd.services.redis-searx.serviceConfig.Nice = 15;
+  systemd.services.chromadb.serviceConfig.IOSchedulingClass = "idle";
+  systemd.services.jupyter.serviceConfig.IOSchedulingClass = "idle";
+  systemd.services.llama-swap.serviceConfig.IOSchedulingClass = "idle";
+
   # Constraints on my focus. Preventing the chaos of simultaneous creation.
   nix.settings = {
     max-jobs = 1;
