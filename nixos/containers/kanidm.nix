@@ -10,6 +10,7 @@
 }: let
   hostname = "kanidm";
   domain = secrets.tailnet.domain;
+  kanidmPkg   = pkgs.kanidm_1_10;
 in {
   containers."${hostname}" = {
     autoStart = true;
