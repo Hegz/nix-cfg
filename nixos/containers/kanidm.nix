@@ -68,34 +68,36 @@ in {
               tls_insecure_skip_verify
             }
           }
-          tls /var/lib/caddy/${hostname}.${domain}.crt /var/lib/caddy/${hostname}.${domain}.key {
-            protocols tls1.3
-          }
         '';
       };
+      
+      # Allow caddy access to the tailscale group
+      users.groups.tailscale = {};
+      systemd.services.tailscaled.serviceConfig.Group = "tailscale";
+      systemd.services.caddy.serviceConfig.SupplementaryGroups = [ "tailscale" ];
 
-      systemd.timers."ssl-refresh" = {
-        wantedBy = ["timers.target"];
-        timerConfig = {
-          OnCalendar = "quarterly";
-          Persistent = true;
-          Unit = "ssl-refresh.service";
-        };
-      };
-
-      systemd.services."ssl-refresh" = {
-        script = ''
-          set -eu
-          cd /var/lib/caddy
-          ${pkgs.tailscale}/bin/tailscale cert ${hostname}.${domain}
-          ${pkgs.coreutils}/bin/chown caddy ${hostname}.${domain}.*
-          ${pkgs.systemd}/bin/systemctl restart caddy.service
-        '';
-        serviceConfig = {
-          Type = "oneshot";
-          User = "root";
-        };
-      };
+#      systemd.timers."ssl-refresh" = {
+#        wantedBy = ["timers.target"];
+#        timerConfig = {
+#          OnCalendar = "quarterly";
+#          Persistent = true;
+#          Unit = "ssl-refresh.service";
+#        };
+#      };
+#
+#      systemd.services."ssl-refresh" = {
+#        script = ''
+#          set -eu
+#          cd /var/lib/caddy
+#          ${pkgs.tailscale}/bin/tailscale cert ${hostname}.${domain}
+#          ${pkgs.coreutils}/bin/chown caddy ${hostname}.${domain}.*
+#          ${pkgs.systemd}/bin/systemctl restart caddy.service
+#        '';
+#        serviceConfig = {
+#          Type = "oneshot";
+#          User = "root";
+#        };
+#      };
 
       services.kanidm = {
         enableServer = true;
