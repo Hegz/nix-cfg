@@ -155,6 +155,23 @@
     };
   };
 
+  #
+  # Netdata
+  #
+  networking.firewall.allowedTCPPorts = [19999];
+
+  services.netdata = {
+    enable = true;
+    config = {
+      global = {
+        "memory mode" = "ram";
+        "debug log" = "none";
+        "access log" = "none";
+        "error log" = "syslog";
+      };
+    };
+  };
+
   # Export X11 host to docker
   environment.shellInit = ''
     [ -n "$DISPLAY" ] && xhost +si:localuser:$USER || true
