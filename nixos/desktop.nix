@@ -166,6 +166,9 @@
     arduino-ide
     distrobox
     docker
+    #pkgs.wineasio # Rocksmith
+    #pkgs.pkgsi686Linux.wineasio #Rocksmith
+    crosspipe
     git-crypt
     kdePackages.bluedevil
     keybase
