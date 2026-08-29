@@ -12,8 +12,10 @@
   hostName = "Embiggen";
 in {
   imports = [
+    #inputs.linux-rocksmith.nixosModules.default
     ../../modules/nvidia-container-toolkit.nix
     ../../modules/llms.nix
+    ../../modules/rocksmith-usb-xlr.nix
     ../desktop.nix
     #../dokuwiki.nix
     ../users/adam.nix
@@ -54,9 +56,11 @@ in {
   # Steam settings.
   programs.steam = {
     enable = true;
+    protontricks.enable = true;
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
     gamescopeSession.enable = true;
+    rocksmithPatch.enable = true;
   };
 
   #nixpkgs.config.allowUnfreePredicate = pkg:
