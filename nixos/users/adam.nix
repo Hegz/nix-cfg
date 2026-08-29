@@ -23,6 +23,8 @@
       "plugdev"
       "video"
       "wheel"
+      "audio" #Rocksmith
+      "rtkit" #Rocksmith
     ];
     packages = with pkgs; [
       chromium
@@ -54,5 +56,13 @@
       x2goclient
       xclip
     ];
+  };
+
+  # Revert firefox to using xwayland.  Something going on with text display.
+  environment.sessionVariables.MOZ_ENABLE_WAYLAND = "0";
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = [pkgs.xdg-desktop-portal-gtk]; # or xdg-desktop-portal-kde
   };
 }
