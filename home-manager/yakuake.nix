@@ -13,7 +13,7 @@
     ./konsole.nix
   ];
 
-  xdg.configFile."yakuake".text = ''
+  xdg.configFile."yakuakerc".text = ''
     [Desktop Entry]
     DefaultProfile=yakuake.profile
 
