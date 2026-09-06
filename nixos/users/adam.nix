@@ -58,6 +58,12 @@
     ];
   };
 
+home-manager.users.adam = {
+  imports = [ ../../home-manager/adam.nix ];
+  home.stateVersion = "23.05";
+};
+home-manager.extraSpecialArgs = { inherit inputs outputs secrets; };
+
   # Revert firefox to using xwayland.  Something going on with text display.
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "0";
 
