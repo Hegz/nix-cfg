@@ -17,6 +17,7 @@
       outputs.overlays.additions
       outputs.overlays.modifications
       outputs.overlays.unstable-packages
+      inputs.nur.overlays.default
 
       # You can also add overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
@@ -159,6 +160,11 @@
   environment.shellInit = ''
     [ -n "$DISPLAY" ] && xhost +si:localuser:$USER || true
   '';
+
+  # For rocksmith flake:
+  nixpkgs.config.microsoftVisualStudioLicenseAccepted = true;
+home-manager.useGlobalPkgs = true;
+home-manager.useUserPackages = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget

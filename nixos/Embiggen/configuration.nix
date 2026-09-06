@@ -60,7 +60,14 @@ in {
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
     gamescopeSession.enable = true;
-    rocksmithPatch.enable = true;
+    rocksmithPatch = {
+      enable = true;
+      pipeasio = {
+        inputDevice = "alsa_input.usb-C-Media_Electronics_Inc._USB_Audio_Device-00.mono-fallback";
+        outputDevice = "alsa_output.pci-0000_28_00.3.analog-surround-41";
+      };
+    };
+    config.apps."221680".env.WINEDLLPATH = lib.mkForce "${pkgs.pipeasio}/lib/wine";
   };
 
   #nixpkgs.config.allowUnfreePredicate = pkg:
