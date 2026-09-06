@@ -16,6 +16,7 @@
     ./home.nix
     ./opencode.nix
     ./firefox.nix
+    ./yakuake.nix
   ];
 
   home = {
