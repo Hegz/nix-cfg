@@ -14,7 +14,7 @@ in {
   imports = [
     #inputs.linux-rocksmith.nixosModules.default
     ../../modules/nvidia-container-toolkit.nix
-    ../../modules/llms.nix
+    #../../modules/llms.nix
     ../../modules/rocksmith-usb-xlr.nix
     ../desktop.nix
     #../dokuwiki.nix
