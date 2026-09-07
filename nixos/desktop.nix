@@ -67,6 +67,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Weekly trim.
+  services.fstrim.enable = true;
+
   # copy.fail and dirty Frag mitigation, until we're on a kernel that has it patched
   boot.extraModprobeConfig = ''
     install algif_aead ${pkgs.coreutils}/bin/false
@@ -163,8 +166,8 @@
 
   # For rocksmith flake:
   nixpkgs.config.microsoftVisualStudioLicenseAccepted = true;
-home-manager.useGlobalPkgs = true;
-home-manager.useUserPackages = true;
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
