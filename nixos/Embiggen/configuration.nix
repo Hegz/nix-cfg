@@ -60,14 +60,14 @@ in {
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
     gamescopeSession.enable = true;
-    rocksmithPatch = {
-      enable = true;
-      pipeasio = {
-        inputDevice = "alsa_input.usb-C-Media_Electronics_Inc._USB_Audio_Device-00.mono-fallback";
-        outputDevice = "alsa_output.pci-0000_28_00.3.analog-surround-41";
-      };
-    };
-    config.apps."221680".env.WINEDLLPATH = lib.mkForce "${pkgs.pipeasio}/lib/wine";
+    #rocksmithPatch = {
+    #  enable = true;
+    #  pipeasio = {
+    #    inputDevice = "alsa_input.usb-C-Media_Electronics_Inc._USB_Audio_Device-00.mono-fallback";
+    #    outputDevice = "alsa_output.pci-0000_28_00.3.analog-surround-41";
+    #  };
+    #};
+    #config.apps."221680".env.WINEDLLPATH = lib.mkForce "${pkgs.pipeasio}/lib/wine";
   };
 
   #nixpkgs.config.allowUnfreePredicate = pkg:
@@ -97,7 +97,7 @@ in {
   hardware.bluetooth.enable = true;
 
   fileSystems."/home/steam" = {
-    device = "/dev/disk/by-uuid/70ea5c33-d6ec-4003-846a-fe5f9708b41c";
+    device = "/dev/disk/by-uuid/f7670fb0-3f16-4083-a527-82fa5e0b04c0";
     fsType = "ext4";
   };
 
