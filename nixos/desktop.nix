@@ -183,7 +183,7 @@
     usbutils
     vim
     xorg.xhost
-    zoom-us
+    #zoom-us
     virt-viewer
     pkgs.android-studio
   ];
