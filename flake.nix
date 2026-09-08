@@ -22,6 +22,15 @@
       url = "github:SoarinFerret/valheim-server-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # optional for automatic launch options
+    steam-config-nix = {
+      url = "github:different-name/steam-config-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Flake to make Rocksmith work
+    nixos-rocksmith.url = "github:re1n0/nixos-rocksmith/release";
   };
 
   outputs = {
@@ -29,6 +38,8 @@
     nixpkgs,
     home-manager,
     valheim-server,
+    nixos-rocksmith,
+    steam-config-nix,
     nur,
     ...
   } @ inputs: let
@@ -74,6 +85,9 @@
           # > Our main nixos configuration file <
           ./nixos/Embiggen/configuration.nix
           valheim-server.nixosModules.default
+          inputs.nixos-rocksmith.nixosModules.default
+          inputs.steam-config-nix.nixosModules.default
+          inputs.home-manager.nixosModules.home-manager
         ];
       };
       cromulent = nixpkgs.lib.nixosSystem {

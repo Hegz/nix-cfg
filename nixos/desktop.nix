@@ -17,6 +17,7 @@
       outputs.overlays.additions
       outputs.overlays.modifications
       outputs.overlays.unstable-packages
+      inputs.nur.overlays.default
 
       # You can also add overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
@@ -65,6 +66,9 @@
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  # Weekly trim.
+  services.fstrim.enable = true;
 
   # copy.fail and dirty Frag mitigation, until we're on a kernel that has it patched
   boot.extraModprobeConfig = ''
@@ -142,6 +146,8 @@
 
   # Enable tailscale
   services.tailscale.enable = true;
+  systemd.services.tailscaled.after = lib.mkForce ["network-pre.target"];
+  systemd.services.tailscaled.wants = lib.mkForce ["network-pre.target"];
 
   # Enable docker
   virtualisation = {
@@ -158,12 +164,20 @@
     [ -n "$DISPLAY" ] && xhost +si:localuser:$USER || true
   '';
 
+  # For rocksmith flake:
+  nixpkgs.config.microsoftVisualStudioLicenseAccepted = true;
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     arduino-ide
     distrobox
     docker
+    #pkgs.wineasio # Rocksmith
+    #pkgs.pkgsi686Linux.wineasio #Rocksmith
+    crosspipe
     git-crypt
     kdePackages.bluedevil
     keybase

@@ -23,6 +23,8 @@
       "plugdev"
       "video"
       "wheel"
+      "audio" #Rocksmith
+      "rtkit" #Rocksmith
     ];
     packages = with pkgs; [
       chromium
@@ -44,7 +46,7 @@
       pkgs.cura
       pkgs.unstable.opencode
       #playonlinux
-      #prismlauncher
+      prismlauncher
       #steam
       tenacity
       transmission_4-qt
@@ -54,5 +56,19 @@
       x2goclient
       xclip
     ];
+  };
+
+home-manager.users.adam = {
+  imports = [ ../../home-manager/adam.nix ];
+  home.stateVersion = "23.05";
+};
+home-manager.extraSpecialArgs = { inherit inputs outputs secrets; };
+
+  # Revert firefox to using xwayland.  Something going on with text display.
+  environment.sessionVariables.MOZ_ENABLE_WAYLAND = "0";
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = [pkgs.xdg-desktop-portal-gtk]; # or xdg-desktop-portal-kde
   };
 }

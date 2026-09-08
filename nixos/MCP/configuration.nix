@@ -78,8 +78,16 @@ in {
     "net.core.rmem_max" = 4194304;
     "net.core.wmem_max" = 1048576;
   };
-
-  services.nfs.server.enable = true;
+ 
+  services.nfs = {
+    settings = {
+     nfsd.vers4 = true; 
+     nfsd.vers4_0 = true; 
+     nfsd.vers4_1 = false; 
+     nfsd.vers4_2 = false;
+    }; 
+    server.enable = true;
+  };
 
   services.zfs = {
     autoScrub.enable = true;
@@ -114,6 +122,9 @@ in {
     firewall = {
       enable = true;
       allowedTCPPorts = [
+        2049 # nfs v4
+      ];
+      allowedUDPPorts = [ 
         2049 # nfs v4
       ];
     };

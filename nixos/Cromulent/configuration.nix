@@ -32,6 +32,12 @@ in {
     #./dokuwiki.nix
   ];
 
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
   networking = {
     hostName = "${hostName}";
   };
