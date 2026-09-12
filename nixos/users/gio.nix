@@ -22,6 +22,8 @@
       chromium
       firefox
       gimp-with-plugins
+      gnome-software
+      krita
       inkscape-with-extensions
       kdePackages.kate
       kdePackages.ark
