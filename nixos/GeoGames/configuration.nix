@@ -39,6 +39,9 @@ in {
     ./isw-module.nix
   ];
 
+  # Enable Flatpack
+  services.flatpak.enable = true;
+
   networking.hostName = "${hostName}"; # Define your hostname.
 
   environment.systemPackages = with pkgs; [
@@ -47,11 +50,12 @@ in {
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
     prismlauncher
     (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
-    (unstable.playonlinux.override {
-      python3 = pkgs.python3.withPackages (ps: [
-        ps.standard-pipes
-      ]);
-    })
+#    (unstable.playonlinux.override {
+#      python3 = pkgs.python3.withPackages (ps: [
+#        ps.standard-pipes
+#      ]);
+#    })
+    playonlinux
     (GPUOffloadApp playonlinux "playonlinux")
     freecad
     (GPUOffloadApp freecad "org.freecad.FreeCAD")
