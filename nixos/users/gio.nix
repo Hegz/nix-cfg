@@ -19,6 +19,7 @@
       "video"
     ];
     packages = with pkgs; [
+      vinegar
       chromium
       firefox
       gimp-with-plugins
