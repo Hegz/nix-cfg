@@ -48,4 +48,11 @@
       vlc
     ];
   };
+  home-manager = {
+    users.afairbrother = {
+      imports = [../../home-manager/afairbrother.nix];
+      home.stateVersion = "23.05";
+    };
+    extraSpecialArgs = {inherit inputs outputs secrets;};
+  };
 }
