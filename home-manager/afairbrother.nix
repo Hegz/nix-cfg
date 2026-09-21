@@ -18,6 +18,7 @@
     #      ./firefox.nix
     ./opencode.nix
     #inputs.nur.hmModules.nur
+    ./yakuake.nix
   ];
 
   home = {
