@@ -6,12 +6,8 @@
   pkgs,
   ...
 }:
-# Vim configuration options
+# Firefox configuration options
 {
-  nixpkgs.overlays = [
-    inputs.nur.overlays.default
-  ];
-
   programs.firefox = {
     enable = true;
     configPath = "${config.xdg.configHome}/mozilla/firefox";

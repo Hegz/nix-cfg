@@ -39,6 +39,9 @@ in {
     ./isw-module.nix
   ];
 
+  # Enable Flatpack
+  services.flatpak.enable = true;
+
   networking.hostName = "${hostName}"; # Define your hostname.
 
   environment.systemPackages = with pkgs; [
@@ -47,11 +50,12 @@ in {
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
     prismlauncher
     (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
-    (unstable.playonlinux.override {
-      python3 = pkgs.python3.withPackages (ps: [
-        ps.standard-pipes
-      ]);
-    })
+#    (unstable.playonlinux.override {
+#      python3 = pkgs.python3.withPackages (ps: [
+#        ps.standard-pipes
+#      ]);
+#    })
+    playonlinux
     (GPUOffloadApp playonlinux "playonlinux")
     freecad
     (GPUOffloadApp freecad "org.freecad.FreeCAD")
@@ -133,7 +137,7 @@ in {
   # Extra Kernal Parameters
   boot = {
     kernelParams = [
-      "nvidia-drm.moeset=1"
+      "nvidia-drm.modeset=1"
       "nvidia-drm.fbdev=1"
       "transparent_hugepage=madvise"
     ];
@@ -256,7 +260,7 @@ in {
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["modesetting" "nvidia"];
+  services.xserver.videoDrivers = [ "nvidia"];
 
   # Enable game mode support
   programs.gamemode.enable = true;
@@ -277,7 +281,7 @@ in {
     # Enable power management (do not disable this unless you have a reason to).
     # Likely to cause problems on laptops and with screen tearing if disabled.
     powerManagement.enable = true;
-    powerManagement.finegrained = true;
+    powerManagement.finegrained = false;
 
     # Use the open source version of the kernel module ("nouveau")
     # Note that this offers much lower performance and does not
@@ -290,8 +294,6 @@ in {
     # accessible via `nvidia-settings`.
     nvidiaSettings = true;
 
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable; # stable runs latest version 545
-    # package = config.boot.kernelPackages.nvidiaPackages.production;  # Production lags a bit 535
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_580; # Last version for this card
   };
 }
