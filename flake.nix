@@ -95,6 +95,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Cromulent/configuration.nix
+          inputs.home-manager.nixosModules.home-manager
         ];
       };
       HePhaestus = nixpkgs.lib.nixosSystem {
@@ -102,6 +103,7 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/HePhaestus/configuration.nix
+          inputs.home-manager.nixosModules.home-manager
         ];
       };
       SecUnit = nixpkgs.lib.nixosSystem {

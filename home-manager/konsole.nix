@@ -14,7 +14,7 @@
     WordMode=false
 
     [General]
-    Command=/etc/profiles/per-user/adam/bin/tmux
+    Command=/etc/profiles/per-user/${config.home.username}/bin/tmux
     Name=Yakuake Fullscreen
     Parent=FALLBACK/
     TerminalCenter=true
@@ -129,5 +129,5 @@
     Wallpaper=
     WallpaperFlipType=NoFlip
     WallpaperOpacity=1
-    '';
-  }
+  '';
+}
