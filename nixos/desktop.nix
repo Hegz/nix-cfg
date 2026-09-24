@@ -67,6 +67,15 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Enable Memtest86+ as a boot option
+  boot.loader.systemd-boot.extraFiles."efi/memtest86/memtest.efi" =
+    pkgs.memtest86plus.efi;
+
+  boot.loader.systemd-boot.extraEntries."memtest86.conf" = ''
+    title MemTest86+
+    efi /efi/memtest86/memtest.efi
+  '';
+
   # Weekly trim.
   services.fstrim.enable = true;
 

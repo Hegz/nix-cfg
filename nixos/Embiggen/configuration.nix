@@ -10,6 +10,7 @@
   ...
 }: let
   hostName = "Embiggen";
+  unstableKernel = pkgs.unstable.linuxPackages_latest;
 in {
   imports = [
     #inputs.linux-rocksmith.nixosModules.default
@@ -45,6 +46,7 @@ in {
 
   # Switch to zen kernel
   # boot.kernelPackages = pkgs.linuxPackages_zen;
+  boot.kernelPackages = unstableKernel;
 
   # Enable CUPS to print documents.
   services.printing = {
@@ -102,7 +104,7 @@ in {
   };
 
   fileSystems."/home/important" = {
-    device = "mcp:/home/important";
+    device = "mcp.fair:/home/important";
     fsType = "nfs";
     options = ["x-systemd.automount" "noauto" "x-systemd.idle-timeout=600"];
   };
@@ -125,20 +127,10 @@ in {
   programs.gamemode.enable = true;
 
   hardware.nvidia = {
-    # Modesetting is needed most of the time
     modesetting.enable = true;
-
-    # Enable power management (do not disable this unless you have a reason to).
-    # Likely to cause problems on laptops and with screen tearing if disabled.
     powerManagement.enable = false;
-
-    # Use the open source version of the kernel module ("nouveau")
-    open = false;
-
-    # Enable the Nvidia settings menu,
-    # accessible via `nvidia-settings`.
+    open = true;
     nvidiaSettings = true;
-
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    package = unstableKernel.nvidiaPackages.stable;
   };
 }
