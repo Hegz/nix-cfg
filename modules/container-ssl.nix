@@ -26,13 +26,21 @@
 # Create /home/container/<name>/oidc.env on the HOST with:
 #   OAUTH2_PROXY_CLIENT_SECRET=<kanidm system oauth2 show-basic-secret <clientID>>
 #   OAUTH2_PROXY_COOKIE_SECRET=<openssl rand -base64 32 | tr -d '\n' | head -c 32>
-
-{ port, secrets, oauth ? null }:
-{ inputs, outputs, config, pkgs, lib, specialArgs, ... }:
-
-let
-  hostName   = config.networking.hostName;
-  domain     = secrets.tailnet.domain;
+{
+  port,
+  secrets,
+  oauth ? null,
+}: {
+  inputs,
+  outputs,
+  config,
+  pkgs,
+  lib,
+  specialArgs,
+  ...
+}: let
+  hostName = config.networking.hostName;
+  domain = secrets.tailnet.domain;
   oauth2Port = 4180;
 
   caddyUpstream =
@@ -63,18 +71,16 @@ let
     extract OAUTH2_PROXY_CLIENT_SECRET  client-secret
     extract OAUTH2_PROXY_COOKIE_SECRET  cookie-secret
   '';
-
-in
-{
+in {
   # ---------------------------------------------------------------------------
   # Tailscale certificate refresh (quarterly)
   # ---------------------------------------------------------------------------
   systemd.timers."ssl-refresh" = {
-    wantedBy = [ "timers.target" ];
+    wantedBy = ["timers.target"];
     timerConfig = {
       OnCalendar = "quarterly";
       Persistent = true;
-      Unit       = "ssl-refresh.service";
+      Unit = "ssl-refresh.service";
     };
   };
 
@@ -99,49 +105,51 @@ in
     enable = true;
     virtualHosts."${hostName}.${domain}".extraConfig = ''
       reverse_proxy ${caddyUpstream}
-      tls /var/lib/caddy/${lib.toLower hostName}.${domain}.crt /var/lib/caddy/${lib.toLower hostName}.${domain}.key {
-        protocols tls1.3
-      }
     '';
+    #tls /var/lib/caddy/${lib.toLower hostName}.${domain}.crt /var/lib/caddy/${lib.toLower hostName}.${domain}.key {
+    #  protocols tls1.3
+    #}
   };
 
   # ---------------------------------------------------------------------------
   # oauth2-proxy — only configured when oauth != null
   # ---------------------------------------------------------------------------
   services.oauth2-proxy = lib.mkIf (oauth != null) {
-    enable   = true;
+    enable = true;
     provider = "oidc";
 
-    clientID     = oauth.clientID;
+    clientID = oauth.clientID;
     #clientSecret = "placeholder";   # overridden by --client-secret-file below
     #cookie.secret = "placeholder";  # overridden by --cookie-secret-file below
     keyFile = "/var/lib/${lib.toLower hostName}/oidc.env";
     cookie.secure = true;
     cookie.domain = "${lib.toLower hostName}.${domain}";
-    httpAddress   = "127.0.0.1:${toString oauth2Port}";
+    httpAddress = "127.0.0.1:${toString oauth2Port}";
 
     oidcIssuerUrl = "https://kanidm.${domain}/oauth2/openid/${oauth.clientID}";
 
     setXauthrequest = true;
-    email.domains   = [ "*" ];
+    email.domains = ["*"];
 
-    extraConfig = {
-      upstream             = "http://127.0.0.1:${port}";
-      silence-ping-logging = true;
-      pass-user-headers    = true;
-      reverse-proxy = true;
-      # These file-based flags take precedence over the placeholder flags above.
-      client-secret-file   = "/run/oauth2-proxy-secrets-${lib.toLower hostName}/client-secret";
-      cookie-secret-file   = "/run/oauth2-proxy-secrets-${lib.toLower hostName}/cookie-secret";
-    } // lib.optionalAttrs
-        (oauth ? skipPaths && oauth.skipPaths != [])
-        { skip-auth-route = oauth.skipPaths; };
+    extraConfig =
+      {
+        upstream = "http://127.0.0.1:${port}";
+        silence-ping-logging = true;
+        pass-user-headers = true;
+        reverse-proxy = true;
+        # These file-based flags take precedence over the placeholder flags above.
+        client-secret-file = "/run/oauth2-proxy-secrets-${lib.toLower hostName}/client-secret";
+        cookie-secret-file = "/run/oauth2-proxy-secrets-${lib.toLower hostName}/cookie-secret";
+      }
+      // lib.optionalAttrs
+      (oauth ? skipPaths && oauth.skipPaths != [])
+      {skip-auth-route = oauth.skipPaths;};
   };
 
   systemd.services.oauth2-proxy = lib.mkIf (oauth != null) {
     serviceConfig = {
       # Run the secret extraction script as root before dropping to oauth2-proxy user.
-      ExecStartPre = [ ("+" + toString secretExtractScript) ];
+      ExecStartPre = [("+" + toString secretExtractScript)];
     };
   };
 }
