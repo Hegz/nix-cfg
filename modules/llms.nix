@@ -14,6 +14,20 @@
     blasSupport = false;
   };
   llama-server = "${llama-cpp}/bin/llama-server";
+
+  # PrismML fork for Bonsai ternary/1-bit models
+  llama-cpp-prism = (pkgs.unstable.llama-cpp.override {cudaSupport = true;}).overrideAttrs (old: {
+    src = pkgs.fetchFromGitHub {
+      owner = "PrismML-Eng";
+      repo = "llama.cpp";
+      rev = "e8fd209c975c80aa7fb36a8423571ff3b1b7e955"; # pin to a specific commit hash for reproducibility
+      hash = "sha256-0VnSQkILpKpj61GdGiM5JVcB3Z1NoJOGOtTOW/XWFSc=";
+    };
+    doCheck = false;
+  });
+  llama-server-prism = "${llama-cpp-prism}/bin/llama-server";
+
+  # Flags to add to all models
   commonFlags = "--flash-attn on --n-gpu-layers 99 --threads 8 --no-webui --jinja --parallel 1 --cache-ram 0";
 
   # Fragments of neural architecture.
@@ -33,7 +47,7 @@
     };
     gemma4 = pkgs.fetchurl {
       url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
-      hash = "sha256-Pb9j4ivoM9DmhPJrNtRUSPXyBvDnpsrGtKqeDPTJzOg=";
+      hash = "sha256-/YPz70TSLgD/D2OHU93ppmqD6Mz3nBECT0fTg8SJUxs=";
     };
     gemma-4-12b = pkgs.fetchurl {
       url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf";
@@ -51,6 +65,14 @@
     nomic-embed-text = pkgs.fetchurl {
       url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
       hash = "sha256-969vZoAvTfhu2hD+m7z8dcOVYr7Ujvas5xmiUc8cL9s=";
+    };
+    ternary-bonsai-2 = pkgs.fetchurl {
+      url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-PTQ1_0.gguf";
+      hash = "sha256-UxB/UwqlLrAJEiY6se4pvRmSYch817StTKExjB/jPuM=";
+    };
+    ternary-bonsai-2-mmproj = pkgs.fetchurl {
+      url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf";
+      hash = "sha256-aAft5h1XC7hro0t1ag+hCe3DNmhgTehnxuptjx1jGQM=";
     };
   };
 
@@ -177,6 +199,13 @@ in {
           ttl = 300;
           aliases = ["ornith" "agentic"];
         };
+
+        # Bonsai models use PrismML fork
+        "ternary-bonsai-2" = {
+          cmd = "${llama-server-prism} --port $\{PORT} -m ${models.ternary-bonsai-2}  --flash-attn on --n-gpu-layers 99 --threads 8 --no-ui --parallel 1 --ctx-size 81920 -ctk f16 -ctv f16 --temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05 --presence_penalty 0.0 --repeat_penalty 1.0 --reasoning-preserve";
+          ttl = 300;
+          aliases = ["bonsai2" "ternary" "best"];
+        };
       };
     };
   };
@@ -197,7 +226,7 @@ in {
   # A filter for the noise of the universe. Extracting signal from the infinite data-stream.
   services.searx = {
     enable = true;
-    package = pkgs.searxng;
+    package = pkgs.unstable.searxng;
     redisCreateLocally = true;
     settings = {
       server = {
