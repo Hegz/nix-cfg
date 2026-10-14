@@ -15,7 +15,7 @@ in {
   imports = [
     #inputs.linux-rocksmith.nixosModules.default
     ../../modules/nvidia-container-toolkit.nix
-    #../../modules/llms.nix
+    ../../modules/llms.nix
     ../../modules/rocksmith-usb-xlr.nix
     ../desktop.nix
     #../dokuwiki.nix
@@ -41,6 +41,21 @@ in {
     "nvidia-drm.modeset=1"
     "nvidia-drm.fbdev=1"
   ];
+
+  services.udev.extraRules = ''
+    # Allow users in the plugdev group to access the USB devices
+    #SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE="0664", GROUP="plugdev"
+
+    # Added to allow access to ATTiny85 USB devices
+    SUBSYSTEMS=="usb", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666"
+    KERNEL=="ttyACM*", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+    # Added to enable wake on Lan.
+    ACTION=="add", SUBSYSTEM=="net", ATTR{address}=="30:9c:23:0d:25:7c", run+="${pkgs.ethtool}/bin/ethtool -s $name wol g"
+
+    # Testing Keyboard fix
+    SUBSYSTEM=="usb", ATTR{idVendor}=="258a", ATTR{idProduct}=="0090", ATTR{power/autosuspend_delay_ms}="-1", ATTR{power/control}="on"
+  '';
 
   boot.initrd.kernelModules = ["nvidia" "nvidia_modeset" "nvidia_drm" "nvidia_uvm"];
 
