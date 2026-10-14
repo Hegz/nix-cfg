@@ -31,7 +31,7 @@ in {
 
   networking = {
     hostName = "${hostName}"; # Define your hostname.
-    interfaces.enp25s0.wakeOnLan.enable = true;
+    interfaces.enp35s0.wakeOnLan.enable = true;
     firewall.allowedUDPPorts = [9];
     firewall.allowedTCPPorts = [8012];
   };
@@ -51,7 +51,7 @@ in {
     KERNEL=="ttyACM*", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0753", MODE:="0666", ENV{ID_MM_DEVICE_IGNORE}="1"
 
     # Added to enable wake on Lan.
-    ACTION=="add", SUBSYSTEM=="net", ATTR{address}=="30:9c:23:0d:25:7c", run+="${pkgs.ethtool}/bin/ethtool -s $name wol g"
+    #ACTION=="add", SUBSYSTEM=="net", ATTR{address}=="30:9c:23:0d:25:7c", run+="${pkgs.ethtool}/bin/ethtool -s $name wol g"
 
     # Testing Keyboard fix
     SUBSYSTEM=="usb", ATTR{idVendor}=="258a", ATTR{idProduct}=="0090", ATTR{power/autosuspend_delay_ms}="-1", ATTR{power/control}="on"
