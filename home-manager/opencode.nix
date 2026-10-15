@@ -18,7 +18,7 @@ in {
   xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
     "$schema" = "https://opencode.ai/config.json";
 
-    model = "llama-swap/ornith-1_0-9b";
+    model = "llama-swap/ternary-bonsai-2";
 
     provider = {
       "llama-swap" = {
@@ -28,11 +28,8 @@ in {
           baseURL = "http://${secrets.llama.host}:${secrets.llama.port}/v1";
         };
         models = {
-          "gemma4-12b-qat" = {
-            name = "gemma4 12b";
-          };
-          "ornith-1_0-9b" = {
-            name = "Ornith 1.0 9B";
+          "ternary-bonsai-2" = {
+            name = "bonsai-2";
           };
         };
       };
