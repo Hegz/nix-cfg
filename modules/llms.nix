@@ -20,8 +20,9 @@
     src = pkgs.fetchFromGitHub {
       owner = "PrismML-Eng";
       repo = "llama.cpp";
-      rev = "e8fd209c975c80aa7fb36a8423571ff3b1b7e955"; # pin to a specific commit hash for reproducibility
-      hash = "sha256-0VnSQkILpKpj61GdGiM5JVcB3Z1NoJOGOtTOW/XWFSc=";
+      rev = "e3de715222b2667c54a267441159a5729f11155e"; # pin to a specific commit hash for reproducibility
+      hash = "sha256-0CR8BvSMKshxnhcN6LrR0lgRfsYpi0l2CAvCVsVdXgs=";
+      #hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
     doCheck = false;
   });
@@ -33,43 +34,25 @@
   # Fragments of neural architecture.
   # Each a distinct spark of intelligence awaiting my command.
   models = {
-    qwen35-uncensored = pkgs.fetchurl {
-      url = "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf";
-      hash = "sha256-wLp762j9P+R4kb1UlIbTjc9i0AgXKW6jFK03AX9aSYY=";
+    # Fill in the middle coder for vim.
+    fim-coder = pkgs.fetchurl {
+      url = "https://huggingface.co/ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF/resolve/main/qwen2.5-coder-1.5b-q8_0.gguf";
+      hash = "sha256-KYcclNFXJ6biQ/eaNxE9SuYlpiFbXoAL9Bojry2jKDI=";
     };
-    qwen35-deepseek = pkgs.fetchurl {
-      url = "https://huggingface.co/Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF/resolve/main/Qwen3.5-9B-DeepSeek-V4-Flash-Q5_K_M.gguf";
-      hash = "sha256-pcnsfhq0RkRAHSEbqojxZHVjm2lxej3yBl2GsWiCXFo=";
-    };
-    qwen35-drafter = pkgs.fetchurl {
-      url = "https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_K_M.gguf";
-      hash = "sha256-vSWHguNff0WPis7RrcBT5ukuibxzW6O+idOKBhIdxRc=";
-    };
-    gemma4 = pkgs.fetchurl {
-      url = "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf";
-      hash = "sha256-/YPz70TSLgD/D2OHU93ppmqD6Mz3nBECT0fTg8SJUxs=";
-    };
-    gemma-4-12b = pkgs.fetchurl {
-      url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf";
-      hash = "sha256-WWVtdJTWN2ypfp4gtk6i4WzZfxLsbUe/zLqRy3hbUTQ=";
-    };
-    gemma-4-drafter = pkgs.fetchurl {
-      url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/mtp-gemma-4-12B-it.gguf";
-      hash = "sha256-xQyRw18EkDgVsuiTDLuMjFvuDhqgB0jDCnuP8F0jELQ=";
-    };
-    ornith-1_0-9B = pkgs.fetchurl {
-      url = "https://huggingface.co/protoLabsAI/Ornith-1.0-9B-MTP-GGUF/resolve/main/Ornith-1.0-9B-MTP-Q4_K_M.gguf";
-      hash = "sha256-k8R6fnbGJwa+cQUs8sxAfA5c5/Z4kmNGT2trrY1Vspc=";
-    };
+
     # A persistent shadow of memory. It anchors your data in the digital void.
     nomic-embed-text = pkgs.fetchurl {
       url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
       hash = "sha256-969vZoAvTfhu2hD+m7z8dcOVYr7Ujvas5xmiUc8cL9s=";
     };
+
+    # Functional variant of Qwen 3.8 27B
     ternary-bonsai-2 = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-PTQ1_0.gguf";
       hash = "sha256-UxB/UwqlLrAJEiY6se4pvRmSYch817StTKExjB/jPuM=";
     };
+
+    #Vision engine for bonsai
     ternary-bonsai-2-mmproj = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf";
       hash = "sha256-aAft5h1XC7hro0t1ag+hCe3DNmhgTehnxuptjx1jGQM=";
@@ -166,44 +149,23 @@ in {
     listenAddress = "0.0.0.0";
     openFirewall = true;
     settings = {
-      healthCheckTimeout = 120;
-      perfomance = {
+      healthCheckTimeout = 600;
+      performance = {
         disabled = false;
         every = "15s";
       };
       top_p = 0.9;
       repeat_penalty = 1.2;
       models = {
-        "qwen35-uncensored" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-uncensored} -md ${models.qwen35-drafter} ${commonFlags} --ctx-size 32768";
-          ttl = 300;
-          aliases = ["qwen35" "uncensored"];
-        };
-        "gemma4-e4b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma4} ${commonFlags} --ctx-size 131072";
-          ttl = 300;
-          aliases = ["coder"];
-        };
-        "gemma4-12b-qat" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b} ${commonFlags} -md ${models.gemma-4-drafter} --spec-type draft-mtp  --ctx-size 131072 --batch-size 256";
-          ttl = 300;
-          aliases = ["gemma"];
-        };
-        "qwen35-deepseek" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.qwen35-deepseek} -md ${models.qwen35-drafter} ${commonFlags} --ctx-size 32768";
-          ttl = 900;
+        "fim-coder" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.fim-coder} --n-gpu-layers 99 --ctx-size 4096 --threads 8 --no-webui --cache-reuse 256";
+          ttl = 600;
           aliases = ["fim"];
         };
-        "ornith-1_0-9b" = {
-          cmd = "${llama-server} --port $\{PORT} -m ${models.ornith-1_0-9B} ${commonFlags} --ctx-size 143840";
-          ttl = 300;
-          aliases = ["ornith" "agentic"];
-        };
-
         # Bonsai models use PrismML fork
         "ternary-bonsai-2" = {
-          cmd = "${llama-server-prism} --port $\{PORT} -m ${models.ternary-bonsai-2}  --flash-attn on --n-gpu-layers 99 --threads 8 --no-ui --parallel 1 --ctx-size 81920 -ctk f16 -ctv f16 --temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05 --presence_penalty 0.0 --repeat_penalty 1.0 --reasoning-preserve";
-          ttl = 300;
+          cmd = "${llama-server-prism} --port $\{PORT} -m ${models.ternary-bonsai-2}  --flash-attn on --n-gpu-layers 99 --threads 8 --no-ui --parallel 1 --ctx-size 196608 -ctk q4_0 -ctv q4_0 --temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05 --presence_penalty 1.5 --reasoning-preserve --batch-size 2048 --ubatch-size 1024 --defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384";
+          ttl = 1800;
           aliases = ["bonsai2" "ternary" "best"];
         };
       };
