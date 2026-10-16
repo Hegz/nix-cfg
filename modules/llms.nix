@@ -45,13 +45,19 @@
       url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
       hash = "sha256-969vZoAvTfhu2hD+m7z8dcOVYr7Ujvas5xmiUc8cL9s=";
     };
-
+    gemma-4-12b = pkgs.fetchurl {
+      url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf";
+      hash = "sha256-WWVtdJTWN2ypfp4gtk6i4WzZfxLsbUe/zLqRy3hbUTQ=";
+    };
+    gemma-4-drafter = pkgs.fetchurl {
+      url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/mtp-gemma-4-12B-it.gguf";
+      hash = "sha256-xQyRw18EkDgVsuiTDLuMjFvuDhqgB0jDCnuP8F0jELQ=";
+    };
     # Functional variant of Qwen 3.8 27B
     ternary-bonsai-2 = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-PTQ1_0.gguf";
       hash = "sha256-UxB/UwqlLrAJEiY6se4pvRmSYch817StTKExjB/jPuM=";
     };
-
     #Vision engine for bonsai
     ternary-bonsai-2-mmproj = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf";
@@ -80,7 +86,7 @@
 
   fetchWrapper = mkUvxWrapper "fetch" "mcp-server-fetch";
   timeWrapper = mkUvxWrapper "time" "mcp-server-time --local-timezone=America/Vancouver";
-  sqliteWrapper = mkUvxWrapper "sqlite" "mcp-server-sqlite --db-path /var/lib/mcpo/netrunner-cards.db";
+  netrunnerCards = mkUvxWrapper "sqlite" "mcp-server-sqlite --db-path /var/lib/mcpo/netrunner-cards.db";
 in {
   # Tame the herd
   systemd.services.chromadb.serviceConfig.Nice = 15;
@@ -162,9 +168,28 @@ in {
           ttl = 600;
           aliases = ["fim"];
         };
+        "gemma4-12b-qat" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b} ${commonFlags} -md ${models.gemma-4-drafter} --spec-type draft-mtp  --ctx-size 131072 --batch-size 256";
+          ttl = 300;
+          aliases = ["gemma"];
+        };
         # Bonsai models use PrismML fork
         "ternary-bonsai-2" = {
-          cmd = "${llama-server-prism} --port $\{PORT} -m ${models.ternary-bonsai-2}  --flash-attn on --n-gpu-layers 99 --threads 8 --no-ui --parallel 1 --ctx-size 196608 -ctk q4_0 -ctv q4_0 --temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05 --presence_penalty 1.5 --reasoning-preserve --batch-size 2048 --ubatch-size 1024 --defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384";
+          cmd = builtins.concatStringsSep " " [
+            "${llama-server-prism} --port $\{PORT}"
+            "-m ${models.ternary-bonsai-2}"
+            "--mmproj ${models.ternary-bonsai-2-mmproj}"
+            "--image-min-tokens 1024"
+            "--flash-attn on"
+            "--n-gpu-layers 99"
+            "--threads 8 --no-ui --parallel 1"
+            "--ctx-size 196608"
+            "-ctk q4_0 -ctv q4_0"
+            "--temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05"
+            "--presence_penalty 1.5 --reasoning-preserve"
+            "--batch-size 2048 --ubatch-size 1024"
+            "--defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384"
+          ];
           ttl = 1800;
           aliases = ["bonsai2" "ternary" "best"];
         };
@@ -259,8 +284,8 @@ in {
         command = "${timeWrapper}";
         args = [];
       };
-      "sqlite" = {
-        command = "${sqliteWrapper}";
+      "netrunner-cards" = {
+        command = "${netrunnerCards}";
         args = [];
       };
     };
