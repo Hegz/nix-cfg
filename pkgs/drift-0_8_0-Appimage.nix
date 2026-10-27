@@ -5,6 +5,9 @@
 }: let
   pname = "drift";
   version = "0.8.0";
+  desktop = "org.cutwire.Drift.desktop";
+  icon = "org.cutwire.Drift.png";
+  exec = "Exec=drift";
   src = fetchurl {
     url = "https://github.com/CutWire-Studios/Drift/releases/download/v0.8.0/Drift-0.8.0-x86_64.AppImage";
     hash = lib.fakeHash;
@@ -19,7 +22,9 @@ in
 
     # Install a desktop file and icon
     extraInstallCommands = ''
-      install -m 444 -D ${appimageContents}/org.cutwire.Drift.desktop $out/share/applications/org.cutwire.Drift.desktop
-      install -m 444 -D ${appimageContents}/org.cutwire.Drift.png $out/share/icons/hicolor/256x256/apps/org.cutwire.Drift.png
+      install -m 444 -D ${appimageContents}/${desktop} $out/share/applications/${desktop}
+      install -m 444 -D ${appimageContents}/${icon} $out/share/icons/hicolor/256x256/apps/${icon}
+      substituteInPlace $out/share/applications/${desktop} \
+      --replace-fail '${exec}' 'Exec=${pname}'
     '';
   }
