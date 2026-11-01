@@ -20,8 +20,8 @@
     src = pkgs.fetchFromGitHub {
       owner = "PrismML-Eng";
       repo = "llama.cpp";
-      rev = "e3de715222b2667c54a267441159a5729f11155e"; # pin to a specific commit hash for reproducibility
-      hash = "sha256-0CR8BvSMKshxnhcN6LrR0lgRfsYpi0l2CAvCVsVdXgs=";
+      rev = "c9c34bc9c4042c13a31598ebf43461cd0ad8f00d"; # pin to a specific commit hash for reproducibility
+      hash = "sha256-njQAbnOekc4wa+ayThYvSDM642/qSSbbbbKJhuLsV24=";
       #hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
     doCheck = false;
@@ -57,6 +57,10 @@
     ternary-bonsai-2 = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-PTQ1_0.gguf";
       hash = "sha256-UxB/UwqlLrAJEiY6se4pvRmSYch817StTKExjB/jPuM=";
+    };
+    swift-bonsai-2 = pkgs.fetchurl {
+      url = "https://huggingface.co/ukisai/Swift-Bonsai-2-GGUF/resolve/main/Swift-Bonsai-2-PTQ1_0.gguf";
+      hash = "sha256-3jNiC2Dq9j6WRJtHjrh6vpU4UH4+2TnalEwa4V/h/8Y=";
     };
     #Vision engine for bonsai
     ternary-bonsai-2-mmproj = pkgs.fetchurl {
@@ -192,6 +196,24 @@ in {
           ];
           ttl = 1800;
           aliases = ["bonsai2" "ternary" "best"];
+        };
+        "swift-bonsai-2" = {
+          cmd = builtins.concatStringsSep " " [
+            "${llama-server-prism} --port $\{PORT}"
+            "-m ${models.swift-bonsai-2}"
+            "--mmproj ${models.ternary-bonsai-2-mmproj}"
+            "--image-min-tokens 1024"
+            "--flash-attn on"
+            "--n-gpu-layers 99"
+            "--threads 8 --no-ui --parallel 1"
+            "--ctx-size 196608"
+            "-ctk q4_0 -ctv q4_0"
+            "--temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05"
+            "--presence_penalty 1.5 --reasoning-preserve"
+            "--batch-size 2048 --ubatch-size 1024"
+            "--defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384"
+          ];
+          ttl = 1800;
         };
       };
     };
