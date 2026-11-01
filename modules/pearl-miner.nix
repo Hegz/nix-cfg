@@ -10,6 +10,39 @@ let
     [ "pearl-miner.service" ] ++ lib.optional cpu.enable "xmrig-idle.service"
   );
 
+  # SRBMiner-MULTI is not in nixpkgs: package the upstream Linux binary.
+  # Hash verified against the MD5 published on the GitHub release page.
+  srbminer = pkgs.stdenv.mkDerivation rec {
+    pname = "srbminer-multi";
+    version = "3.7.3";
+
+    src = pkgs.fetchurl {
+      url = "https://github.com/doktor83/SRBMiner-Multi/releases/download/${version}/SRBMiner-Multi-${lib.replaceStrings [ "." ] [ "-" ] version}-Linux.tar.gz";
+      hash = "sha256-xyUNOf4jVJqI712NIEHXXmAWb11quMja9ydKt7Co2iA=";
+    };
+
+    # The binary must stay byte-for-byte pristine. It has no .interp section
+    # (patchelf cannot patch it), `strip` corrupts its program interpreter
+    # (exec format error), and it refuses to start when launched through
+    # ld.so directly. It runs via nix-ld instead, so skip all fixup steps.
+    dontFixup = true;
+
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 SRBMiner-MULTI $out/bin/SRBMiner-MULTI
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "SRBMiner-MULTI GPU/CPU miner (upstream binary)";
+      homepage = "https://github.com/doktor83/SRBMiner-Multi";
+      license = lib.licenses.unfree;
+      sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+      platforms = [ "x86_64-linux" ];
+      mainProgram = "SRBMiner-MULTI";
+    };
+  };
+
   nvsmi = "${config.hardware.nvidia.package.bin}/bin/nvidia-smi";
   systemctl = "${config.systemd.package}/bin/systemctl";
 
@@ -19,6 +52,7 @@ let
   controller = pkgs.writeShellScript "pearl-miner-idle-control" ''
     set -u
     idle=0
+    strikes=0
     while true; do
       if ! out=$(${nvsmi} pmon -c 1 -s u 2>/dev/null); then
         sleep ${toString ic.pollSeconds}
@@ -45,12 +79,16 @@ let
          || { [ ${toString ic.vramThresholdMiB} -gt 0 ] \
               && [ "$vram" -ge ${toString ic.vramThresholdMiB} ]; }; then
         idle=0
-        for u in ${units}; do
-          if ${systemctl} is-active --quiet "$u"; then
-            ${systemctl} stop "$u"
-          fi
-        done
+        strikes=$((strikes + 1))
+        if [ "$strikes" -ge ${toString ic.busyPolls} ]; then
+          for u in ${units}; do
+            if ${systemctl} is-active --quiet "$u"; then
+              ${systemctl} stop "$u"
+            fi
+          done
+        fi
       else
+        strikes=0
         idle=$((idle + ${toString ic.pollSeconds}))
         if [ "$idle" -ge ${toString ic.idleSeconds} ]; then
           for u in ${units}; do
@@ -170,6 +208,16 @@ in
         '';
       };
 
+      busyPolls = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 3;
+        description = ''
+          Consecutive busy samples required before the miner is stopped
+          (sustained time is busyPolls x pollSeconds, 15 s by default).
+          Filters brief spikes such as switching windows.
+        '';
+      };
+
       vramThresholdMiB = lib.mkOption {
         type = lib.types.ints.unsigned;
         default = 1024;
@@ -198,15 +246,20 @@ in
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      # SRBMiner dlopens the NVIDIA userspace libraries at runtime.
-      environment.LD_LIBRARY_PATH = lib.makeLibraryPath [
-        "/run/opengl-driver"
-        pkgs.stdenv.cc.cc.lib
-      ];
+      # The binary is unpatched: nix-ld (enabled below) supplies its loader.
+      # NIX_LD_LIBRARY_PATH is passed to the miner as LD_LIBRARY_PATH, which
+      # also lets it dlopen the NVIDIA userspace libraries.
+      environment = {
+        NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
+        NIX_LD_LIBRARY_PATH = lib.concatStringsSep ":" [
+          "/run/opengl-driver/lib"
+          "${lib.getLib pkgs.stdenv.cc.cc}/lib"
+        ];
+      };
 
       serviceConfig = {
         ExecStart = lib.escapeShellArgs ([
-          "${pkgs.srbminer}/bin/SRBMiner-MULTI"
+          "${srbminer}/bin/SRBMiner-MULTI"
           "--disable-cpu"
           "--algorithm" "pearlhash"
           "--pool" cfg.pool
@@ -273,8 +326,11 @@ in
     boot.kernel.sysctl."vm.nr_hugepages" =
       lib.mkIf (cpu.enable && cpu.hugepages > 0) cpu.hugepages;
 
+    # Provides /lib64/ld-linux-x86-64.so.2 so the unpatched miner can start.
+    programs.nix-ld.enable = lib.mkDefault true;
+
     # SRBMiner is unfree.
     nixpkgs.config.allowUnfreePredicate = pkg:
-      builtins.elem (lib.getName pkg) [ "srbminer" ];
+      builtins.elem (lib.getName pkg) [ "srbminer-multi" ];
   };
 }
