@@ -7,6 +7,7 @@
   lib,
   config,
   pkgs,
+  secrets,
   ...
 }: let
   hostName = "Embiggen";
@@ -16,6 +17,7 @@ in {
     #inputs.linux-rocksmith.nixosModules.default
     ../../modules/nvidia-container-toolkit.nix
     ../../modules/llms.nix
+    ../../modules/pearl-miner.nix
     ../../modules/rocksmith-usb-xlr.nix
     ../desktop.nix
     #../dokuwiki.nix
@@ -27,6 +29,12 @@ in {
     permittedInsecurePackages = [
       "python3.12-ecdsa-0.19.1"
     ];
+  };
+
+  services.pearl-miner = {
+    enable = true;
+    account = "${secrets.embiggen.miner-username}";
+    worker = "rig3060";
   };
 
   networking = {
