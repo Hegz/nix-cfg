@@ -46,6 +46,35 @@ let
   nvsmi = "${config.hardware.nvidia.package.bin}/bin/nvidia-smi";
   systemctl = "${config.systemd.package}/bin/systemctl";
 
+  tuning = cfg.powerLimitW != null || cfg.memoryClockMHz != null;
+
+  # Applied as root just before the miner starts and undone when it stops, so
+  # games get the card's stock limits back the moment the idle controller
+  # stops mining. Failures only warn: mining still starts.
+  gpuTune = pkgs.writeShellScript "pearl-miner-gpu-tune" ''
+    ${lib.optionalString (cfg.powerLimitW != null) ''
+      ${nvsmi} -pl ${toString cfg.powerLimitW} \
+        || echo "pearl-miner: could not set power limit" >&2
+    ''}
+    ${lib.optionalString (cfg.memoryClockMHz != null) ''
+      ${nvsmi} -lmc ${toString cfg.memoryClockMHz},${toString cfg.memoryClockMHz} \
+        || echo "pearl-miner: could not lock memory clock" >&2
+    ''}
+    exit 0
+  '';
+
+  gpuRestore = pkgs.writeShellScript "pearl-miner-gpu-restore" ''
+    ${lib.optionalString (cfg.memoryClockMHz != null) ''
+      ${nvsmi} -rmc || true
+    ''}
+    ${lib.optionalString (cfg.powerLimitW != null) ''
+      def=$(${nvsmi} --query-gpu=power.default_limit --format=csv,noheader,nounits \
+        | head -n1 | cut -d. -f1)
+      [ -n "$def" ] && ${nvsmi} -pl "$def" || true
+    ''}
+    exit 0
+  '';
+
   # Polls per-process GPU utilisation. Any non-ignored process at or above the
   # threshold counts as "busy": the miner is stopped at once. After the GPU has
   # stayed quiet for idleSeconds, the miner is started again.
@@ -130,6 +159,28 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ ];
       description = "Extra SRBMiner-MULTI arguments.";
+    };
+
+    powerLimitW = lib.mkOption {
+      type = lib.types.nullOr lib.types.ints.positive;
+      default = null;
+      example = 100;
+      description = ''
+        GPU power limit in watts, applied (as root) only while the miner runs
+        and restored to the card's default when it stops. Check the allowed
+        range with `nvidia-smi -q -d POWER`. null leaves the limit alone.
+      '';
+    };
+
+    memoryClockMHz = lib.mkOption {
+      type = lib.types.nullOr lib.types.ints.positive;
+      default = null;
+      example = 810;
+      description = ''
+        Lock the GPU memory clock (MHz) while mining and release the lock
+        afterwards. SRBMiner 3.7 recommends 810 for its default Ampere
+        pearlhash kernel. null leaves the clock alone.
+      '';
     };
 
     cpuMining = {
@@ -270,6 +321,11 @@ in
         Restart = "always";
         RestartSec = 10;
         Nice = 10;
+
+        # The "+" prefix runs these as root outside the sandbox, which
+        # nvidia-smi needs to change limits and clocks.
+        ExecStartPre = lib.optional tuning "+${gpuTune}";
+        ExecStopPost = lib.optional tuning "+${gpuRestore}";
 
         # Hardening (GPU device nodes stay reachable; PrivateDevices is NOT set)
         NoNewPrivileges = true;
