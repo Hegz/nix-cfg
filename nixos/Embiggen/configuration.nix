@@ -37,6 +37,13 @@ in {
     worker = "rig3060";
     powerLimitW = 100;
     memoryClockMHz = 810;
+    idleControl = {
+      ignore = ["chromium"];
+    };
+    cpuMining = {
+      enable = true;
+      worker = "cpu5700x"
+    };
   };
 
   networking = {
