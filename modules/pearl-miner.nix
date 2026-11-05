@@ -46,6 +46,13 @@ let
   nvsmi = "${config.hardware.nvidia.package.bin}/bin/nvidia-smi";
   systemctl = "${config.systemd.package}/bin/systemctl";
 
+  # The ignore list joined into one alternation for awk. An empty list becomes
+  # "^$" (matches nothing real): an empty regex would match every process.
+  # escapeShellArg quotes it safely for the generated script.
+  ignoreRe = lib.escapeShellArg (
+    if ic.ignore == [ ] then "^$" else lib.concatStringsSep "|" ic.ignore
+  );
+
   tuning = cfg.powerLimitW != null || cfg.memoryClockMHz != null;
 
   # Applied as root just before the miner starts and undone when it stops, so
@@ -53,7 +60,14 @@ let
   # stops mining. Failures only warn: mining still starts.
   gpuTune = pkgs.writeShellScript "pearl-miner-gpu-tune" ''
     ${lib.optionalString (cfg.powerLimitW != null) ''
-      ${nvsmi} -pl ${toString cfg.powerLimitW} \
+      min=$(${nvsmi} --query-gpu=power.min_limit --format=csv,noheader,nounits \
+        | head -n1 | cut -d. -f1)
+      want=${toString cfg.powerLimitW}
+      if [ -n "$min" ] && [ "$want" -lt "$min" ]; then
+        echo "pearl-miner: ${toString cfg.powerLimitW} W is below the card minimum ($min W); using $min W" >&2
+        want=$min
+      fi
+      ${nvsmi} -pl "$want" \
         || echo "pearl-miner: could not set power limit" >&2
     ''}
     ${lib.optionalString (cfg.memoryClockMHz != null) ''
@@ -75,43 +89,78 @@ let
     exit 0
   '';
 
-  # Polls per-process GPU utilisation. Any non-ignored process at or above the
-  # threshold counts as "busy": the miner is stopped at once. After the GPU has
-  # stayed quiet for idleSeconds, the miner is started again.
+  # Polls per-process GPU utilisation. Any process other than the miner itself
+  # (excluded by PID) at or above the threshold counts as "busy": the miner is
+  # stopped once that load is sustained. After the GPU has stayed quiet for
+  # idleSeconds, the miner is started again. Every change of state, and every
+  # start and stop, is written to the journal with the reason.
   controller = pkgs.writeShellScript "pearl-miner-idle-control" ''
     set -u
     idle=0
     strikes=0
+    last=""
+    note() { echo "idle-control: $*"; }
+
     while true; do
-      if ! out=$(${nvsmi} pmon -c 1 -s u 2>/dev/null); then
+      if ! out=$(${nvsmi} pmon -c 1 -s u 2>&1); then
+        if [ "$last" != "pmon-failed" ]; then
+          note "nvidia-smi pmon failed: $out"
+          last="pmon-failed"
+        fi
         sleep ${toString ic.pollSeconds}
         continue
       fi
 
+      # The miner's own load must never count against it. Match it by PID, not
+      # by name: its process name is not reliable when run through nix-ld.
+      mpid=$(${systemctl} show -p MainPID --value pearl-miner.service)
+      [ -n "$mpid" ] || mpid=0
+
+      # First other process at or above the threshold, as "name sm%".
       busy=$(printf '%s\n' "$out" | ${pkgs.gawk}/bin/awk \
-        -v t=${toString ic.busyThreshold} -v ig='${ic.ignore}' '
+        -v t=${toString ic.busyThreshold} -v ig=${ignoreRe} -v mp="$mpid" '
         /^#/ { next }
         $2 ~ /^[0-9]+$/ {
           sm = ($4 == "-") ? 0 : $4
-          if ($NF !~ ig && sm + 0 >= t) { print 1; exit }
+          if ($2 != mp && $NF !~ ig && sm + 0 >= t) { print $NF " " sm "%"; exit }
         }')
 
       # VRAM held by other CUDA/compute processes (LLM servers and the like),
       # even while they sit at 0% utilisation.
       vram=$(${nvsmi} --query-compute-apps=pid,process_name,used_gpu_memory \
         --format=csv,noheader,nounits 2>/dev/null | ${pkgs.gawk}/bin/awk \
-        -F', ' -v ig='${ic.ignore}' '
-        $0 !~ ig { m = $NF; if (m ~ /^[0-9]+$/) s += m }
+        -F', ' -v ig=${ignoreRe} -v mp="$mpid" '
+        $1 != mp && $0 !~ ig { m = $NF; if (m ~ /^[0-9]+$/) s += m }
         END { print s + 0 }')
 
-      if [ -n "$busy" ] \
-         || { [ ${toString ic.vramThresholdMiB} -gt 0 ] \
-              && [ "$vram" -ge ${toString ic.vramThresholdMiB} ]; }; then
+      if [ -n "$busy" ]; then
+        key="busy $(printf '%s' "$busy" | cut -d' ' -f1)"
+        reason="GPU busy: $busy"
+      elif [ ${toString ic.vramThresholdMiB} -gt 0 ] \
+           && [ "$vram" -ge ${toString ic.vramThresholdMiB} ]; then
+        key="vram"
+        reason="VRAM held by other apps: $vram MiB (limit ${toString ic.vramThresholdMiB})"
+      else
+        key="idle"
+        reason=""
+      fi
+
+      if [ "$key" != "$last" ]; then
+        if [ "$key" = "idle" ]; then
+          note "GPU quiet; mining starts after ${toString ic.idleSeconds}s of idleness"
+        else
+          note "holding miner off: $reason"
+        fi
+        last="$key"
+      fi
+
+      if [ "$key" != "idle" ]; then
         idle=0
         strikes=$((strikes + 1))
         if [ "$strikes" -ge ${toString ic.busyPolls} ]; then
           for u in ${units}; do
             if ${systemctl} is-active --quiet "$u"; then
+              note "stopping $u ($reason)"
               ${systemctl} stop "$u"
             fi
           done
@@ -122,7 +171,8 @@ let
         if [ "$idle" -ge ${toString ic.idleSeconds} ]; then
           for u in ${units}; do
             if ! ${systemctl} is-active --quiet "$u"; then
-              ${systemctl} start "$u"
+              note "starting $u after ''${idle}s idle"
+              ${systemctl} start "$u" || note "failed to start $u"
             fi
           done
         fi
@@ -279,23 +329,50 @@ in
       };
 
       ignore = lib.mkOption {
-        type = lib.types.str;
-        default = "SRBMiner|Xorg|Xwayland|gnome-shell|kwin|plasmashell|Hyprland|sway";
+        type = lib.types.listOf lib.types.str;
+        # Empty on purpose: the built-in entries are contributed from this
+        # module's `config` section below. Because they are an ordinary
+        # definition (not the option default), anything you add in your own
+        # configuration is merged onto them (lists concatenate) instead of
+        # replacing them.
+        default = [ ];
+        example = [ "chrome" "firefox" ];
         description = ''
-          Extended regex of process names to disregard (the miner itself and
-          your compositor). Add anything that idles at a few percent.
+          Process names the idle controller disregards, matched as regular
+          expression fragments against nvidia-smi's process name. The module
+          already ignores the miner and common compositors (see its `config`
+          section); entries you add here are appended to those. To replace the
+          built-in entries instead, use `lib.mkForce [ ... ]`.
         '';
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
+    # Built-in ignore entries. `mkBefore` puts them ahead of any entries you
+    # define, and the list type concatenates all definitions.
+    services.pearl-miner.idleControl.ignore = lib.mkBefore [
+      "SRBMiner"
+      "Xorg"
+      "Xwayland"
+      "gnome-shell"
+      "kwin"
+      "plasmashell"
+      "Hyprland"
+      "sway"
+    ];
+
     systemd.services.pearl-miner = {
       description = "Pearl (PRL) miner (SRBMiner-MULTI)";
       # With idle control on, the controller decides when this runs.
       wantedBy = lib.optional (!ic.enable) "multi-user.target";
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
+      # Stopping or restarting the controller (including at shutdown) stops
+      # the miner as part of the same systemd transaction. This replaces a
+      # `systemctl stop` call inside the controller's ExecStopPost, which
+      # deadlocked at shutdown (see the controller unit below).
+      partOf = lib.optional ic.enable "pearl-miner-idle-control.service";
 
       # The binary is unpatched: nix-ld (enabled below) supplies its loader.
       # NIX_LD_LIBRARY_PATH is passed to the miner as LD_LIBRARY_PATH, which
@@ -321,6 +398,8 @@ in
         Restart = "always";
         RestartSec = 10;
         Nice = 10;
+        # Never let a stuck miner or nvidia-smi hold up shutdown for 90 s.
+        TimeoutStopSec = 20;
 
         # The "+" prefix runs these as root outside the sandbox, which
         # nvidia-smi needs to change limits and clocks.
@@ -341,10 +420,15 @@ in
       after = [ "pearl-miner.service" ];
       serviceConfig = {
         ExecStart = controller;
-        # Stopping the controller also stops the miner.
-        ExecStopPost = "-${systemctl} stop ${units}";
+        # Deliberately no ExecStopPost that runs `systemctl stop` on the
+        # miners. This unit is ordered After= the miner, so at shutdown it
+        # stops first; a `systemctl stop pearl-miner` from here waits for the
+        # miner's stop job, which cannot start until this unit has finished
+        # stopping. That deadlock hung shutdown until the stop timeout. The
+        # miners' PartOf= handles it inside the one systemd transaction.
         Restart = "always";
         RestartSec = 5;
+        TimeoutStopSec = 10;
       };
     };
 
@@ -353,6 +437,7 @@ in
       wantedBy = lib.optional (!ic.enable) "multi-user.target";
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
+      partOf = lib.optional ic.enable "pearl-miner-idle-control.service";
 
       serviceConfig = {
         ExecStart = lib.escapeShellArgs ([
