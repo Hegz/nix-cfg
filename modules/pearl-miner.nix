@@ -5,10 +5,10 @@ let
   ic = cfg.idleControl;
   cpu = cfg.cpuMining;
 
-  # Units the idle controller starts and stops together.
-  units = lib.concatStringsSep " " (
-    [ "pearl-miner.service" ] ++ lib.optional cpu.enable "xmrig-idle.service"
-  );
+  # CPU-load check: needs the CPU miner and a threshold (null disables it).
+  cpuCheck = cpu.enable && ic.cpuBusyPercent != null;
+  cpuFlag = if cpuCheck then "1" else "0";
+  cpuThreshold = if ic.cpuBusyPercent == null then 100 else ic.cpuBusyPercent;
 
   # SRBMiner-MULTI is not in nixpkgs: package the upstream Linux binary.
   # Hash verified against the MD5 published on the GitHub release page.
@@ -89,17 +89,54 @@ let
     exit 0
   '';
 
-  # Polls per-process GPU utilisation. Any process other than the miner itself
-  # (excluded by PID) at or above the threshold counts as "busy": the miner is
-  # stopped once that load is sustained. After the GPU has stayed quiet for
-  # idleSeconds, the miner is started again. Every change of state, and every
-  # start and stop, is written to the journal with the reason.
+  # Polls per-process GPU utilisation, and optionally machine-wide CPU load.
+  #
+  # GPU: any process other than the miner itself (excluded by PID) at or above
+  # the threshold counts as "busy". Sustained GPU load stops BOTH miners; once
+  # the GPU has been quiet for idleSeconds they may start again.
+  #
+  # CPU: load from everything except the miners' own cgroups. Sustained CPU
+  # load stops only the CPU miner (the GPU miner barely needs the CPU), and it
+  # restarts after the CPU has also been quiet for idleSeconds.
+  #
+  # Every change of state, start and stop is written to the journal.
   controller = pkgs.writeShellScript "pearl-miner-idle-control" ''
     set -u
-    idle=0
-    strikes=0
-    last=""
+    g_idle=0; g_strikes=0; c_idle=0; c_strikes=0
+    last=""; clast=""
+    cpu_pct=0
     note() { echo "idle-control: $*"; }
+
+    stop_unit() {
+      if ${systemctl} is-active --quiet "$1"; then
+        note "stopping $1 ($2)"
+        ${systemctl} stop "$1"
+      fi
+    }
+    start_unit() {
+      if ! ${systemctl} is-active --quiet "$1"; then
+        note "starting $1 ($2)"
+        ${systemctl} start "$1" || note "failed to start $1"
+      fi
+    }
+
+    # CPU accounting. "Other" load = machine-wide busy time minus what the
+    # miners' own cgroups used, so the miners never count against themselves.
+    # /proc/stat is in USER_HZ ticks (100 per second on Linux = 10000 us each).
+    cpu_ticks() {
+      read -r _ user nice system idl iowait irq softirq steal _ < /proc/stat
+      echo "$((user + nice + system + irq + softirq + steal)) $((user + nice + system + idl + iowait + irq + softirq + steal))"
+    }
+    cg_usec() {
+      f=/sys/fs/cgroup/system.slice/$1/cpu.stat
+      if [ -r "$f" ]; then
+        ${pkgs.gawk}/bin/awk '$1 == "usage_usec" { print $2 }' "$f"
+      else
+        echo 0
+      fi
+    }
+    read -r p_busy p_total <<< "$(cpu_ticks)"
+    p_mine=$(( $(cg_usec pearl-miner.service) + $(cg_usec xmrig-idle.service) ))
 
     while true; do
       if ! out=$(${nvsmi} pmon -c 1 -s u 2>&1); then
@@ -154,29 +191,60 @@ let
         last="$key"
       fi
 
-      if [ "$key" != "idle" ]; then
-        idle=0
-        strikes=$((strikes + 1))
-        if [ "$strikes" -ge ${toString ic.busyPolls} ]; then
-          for u in ${units}; do
-            if ${systemctl} is-active --quiet "$u"; then
-              note "stopping $u ($reason)"
-              ${systemctl} stop "$u"
-            fi
-          done
-        fi
-      else
-        strikes=0
-        idle=$((idle + ${toString ic.pollSeconds}))
-        if [ "$idle" -ge ${toString ic.idleSeconds} ]; then
-          for u in ${units}; do
-            if ! ${systemctl} is-active --quiet "$u"; then
-              note "starting $u after ''${idle}s idle"
-              ${systemctl} start "$u" || note "failed to start $u"
-            fi
-          done
+      ckey="idle"
+      if [ ${cpuFlag} -eq 1 ]; then
+        read -r busy_t total_t <<< "$(cpu_ticks)"
+        mine=$(( $(cg_usec pearl-miner.service) + $(cg_usec xmrig-idle.service) ))
+        d_busy=$(( (busy_t - p_busy) * 10000 ))
+        d_total=$(( (total_t - p_total) * 10000 ))
+        d_mine=$(( mine - p_mine ))
+        [ "$d_mine" -ge 0 ] || d_mine=0
+        other=$(( d_busy - d_mine ))
+        [ "$other" -ge 0 ] || other=0
+        if [ "$d_total" -gt 0 ]; then cpu_pct=$(( other * 100 / d_total )); else cpu_pct=0; fi
+        p_busy=$busy_t; p_total=$total_t; p_mine=$mine
+        if [ "$cpu_pct" -ge ${toString cpuThreshold} ]; then ckey="busy"; fi
+
+        if [ "$ckey" != "$clast" ]; then
+          if [ "$ckey" = "idle" ]; then
+            note "CPU quiet ($cpu_pct% from other processes)"
+          else
+            note "CPU busy ($cpu_pct% from other processes, limit ${toString cpuThreshold}%)"
+          fi
+          clast="$ckey"
         fi
       fi
+
+      if [ "$key" != "idle" ]; then
+        g_idle=0; g_strikes=$((g_strikes + 1))
+      else
+        g_strikes=0; g_idle=$((g_idle + ${toString ic.pollSeconds}))
+      fi
+      if [ "$ckey" != "idle" ]; then
+        c_idle=0; c_strikes=$((c_strikes + 1))
+      else
+        c_strikes=0; c_idle=$((c_idle + ${toString ic.pollSeconds}))
+      fi
+
+      # GPU miner: governed by GPU activity only.
+      if [ "$g_strikes" -ge ${toString ic.busyPolls} ]; then
+        stop_unit pearl-miner.service "$reason"
+      fi
+      if [ "$g_idle" -ge ${toString ic.idleSeconds} ]; then
+        start_unit pearl-miner.service "GPU idle for $g_idle s"
+      fi
+${lib.optionalString cpu.enable ''
+      # CPU miner: stopped by GPU load or CPU load; started when both are quiet.
+      if [ "$g_strikes" -ge ${toString ic.busyPolls} ]; then
+        stop_unit xmrig-idle.service "$reason"
+      elif [ "$c_strikes" -ge ${toString ic.busyPolls} ]; then
+        stop_unit xmrig-idle.service "CPU busy: $cpu_pct% from other processes"
+      fi
+      if [ "$g_idle" -ge ${toString ic.idleSeconds} ] \
+         && [ "$c_idle" -ge ${toString ic.idleSeconds} ]; then
+        start_unit xmrig-idle.service "GPU and CPU quiet for $g_idle s"
+      fi
+''}
       sleep ${toString ic.pollSeconds}
     done
   '';
@@ -266,11 +334,41 @@ in
 
       hugepages = lib.mkOption {
         type = lib.types.ints.unsigned;
-        default = 1280;
+        default = if cpu.oneGibPages > 0 then 256 else 1280;
+        defaultText = lib.literalExpression "if oneGibPages > 0 then 256 else 1280";
         description = ''
-          2 MiB huge pages reserved at boot for RandomX (1280 is about 2.5 GiB
-          of RAM, held even while the miner is stopped). Without them the
-          hashrate drops sharply. 0 disables the reservation.
+          2 MiB huge pages reserved at boot for RandomX, held even while the
+          miner is stopped. Without 1 GiB pages (oneGibPages = 0) the whole
+          2 GiB dataset lives here, so 1280 (about 2.5 GiB) is needed. With
+          1 GiB pages only the cache and scratchpads remain (about 150 pages),
+          so the default drops to 256 (512 MiB). 0 disables the reservation.
+        '';
+      };
+
+      oneGibPages = lib.mkOption {
+        type = lib.types.ints.unsigned;
+        default = 0;
+        example = 3;
+        description = ''
+          Number of 1 GiB huge pages reserved at boot, for XMRig's RandomX
+          dataset (it needs 3). Typically a few percent faster than 2 MiB
+          pages. Costs that much RAM permanently, even while the miner is
+          stopped, and needs a reboot to take effect (the kernel can only
+          reserve 1 GiB pages reliably at boot). 0 disables it.
+        '';
+      };
+
+      msrMod = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Let XMRig apply its model-specific-register (MSR) tweak for Ryzen
+          CPUs, which is what removes its "HASHRATE WILL BE LOW" warning.
+          Loads the `msr` kernel module and gives the XMRig service two extra
+          capabilities (CAP_SYS_RAWIO, CAP_DAC_OVERRIDE) so it can write
+          /dev/cpu/*/msr. XMRig restores the original values when it stops.
+          Off by default because it grants a network-facing service low-level
+          hardware access, and writing MSRs taints the kernel.
         '';
       };
 
@@ -316,6 +414,18 @@ in
           Consecutive busy samples required before the miner is stopped
           (sustained time is busyPolls x pollSeconds, 15 s by default).
           Filters brief spikes such as switching windows.
+        '';
+      };
+
+      cpuBusyPercent = lib.mkOption {
+        type = lib.types.nullOr (lib.types.ints.between 1 100);
+        default = 25;
+        description = ''
+          Stop the CPU miner while other processes use at least this percent of
+          the whole CPU (all threads; 25 is about four of sixteen threads busy),
+          sustained for busyPolls polls, and restart it after the CPU has been
+          quiet for idleSeconds. The miners' own usage is subtracted. Only the
+          CPU miner is affected. null disables the check. Needs cpuMining.enable.
         '';
       };
 
@@ -447,7 +557,9 @@ in
           "--url" cpu.pool
           "--user" "${cpu.account}/${cpu.worker}"
           "--pass" "x"
-        ] ++ lib.optional cpu.tls "--tls" ++ cpu.extraArgs);
+        ] ++ lib.optional cpu.tls "--tls"
+          ++ lib.optional (cpu.oneGibPages > 0) "--randomx-1gb-pages"
+          ++ cpu.extraArgs);
 
         DynamicUser = true;
         Restart = "always";
@@ -461,8 +573,23 @@ in
         ProtectSystem = "strict";
         ProtectHome = true;
         PrivateTmp = true;
+      } // lib.optionalAttrs cpu.msrMod {
+        # Only what the MSR tweak needs: the msr driver demands CAP_SYS_RAWIO
+        # to open and write the device, and the nodes are root-only (0600).
+        AmbientCapabilities = [ "CAP_SYS_RAWIO" "CAP_DAC_OVERRIDE" ];
+        CapabilityBoundingSet = [ "CAP_SYS_RAWIO" "CAP_DAC_OVERRIDE" ];
       };
     };
+
+    boot.kernelModules = lib.optional (cpu.enable && cpu.msrMod) "msr";
+
+    # `hugepages=N` applies to the `hugepagesz=` before it, so this reserves
+    # 1 GiB pages only; the default page size stays 2 MiB, which the
+    # vm.nr_hugepages sysctl below continues to control.
+    boot.kernelParams = lib.optionals (cpu.enable && cpu.oneGibPages > 0) [
+      "hugepagesz=1G"
+      "hugepages=${toString cpu.oneGibPages}"
+    ];
 
     boot.kernel.sysctl."vm.nr_hugepages" =
       lib.mkIf (cpu.enable && cpu.hugepages > 0) cpu.hugepages;

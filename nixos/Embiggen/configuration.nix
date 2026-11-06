@@ -38,11 +38,15 @@ in {
     powerLimitW = 100;
     memoryClockMHz = 810;
     idleControl = {
-      ignore = ["chromium"];
+      ignore = ["chromium" "coolercontrol"];
     };
     cpuMining = {
       enable = true;
-      worker = "cpu5700x"
+      worker = "cpu5700x";
+      msrMod = true;
+      #extraArgs = ["-t" "12"];
+      oneGibPages = 5;
+      pool = "xmr.kryptex.network:7029";
     };
   };
 
