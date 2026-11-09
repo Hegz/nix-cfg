@@ -49,7 +49,8 @@ in {
         networkmanager.enable = true;
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {
-          allowedTCPPorts = [443 3636];
+          #allowedTCPPorts = [443 3636];
+          allowedTCPPorts = [443];
           enable = true;
         };
         useHostResolvConf = lib.mkForce false;
@@ -76,41 +77,20 @@ in {
       systemd.services.tailscaled.serviceConfig.Group = "tailscale";
       systemd.services.caddy.serviceConfig.SupplementaryGroups = [ "tailscale" ];
 
-#      systemd.timers."ssl-refresh" = {
-#        wantedBy = ["timers.target"];
-#        timerConfig = {
-#          OnCalendar = "quarterly";
-#          Persistent = true;
-#          Unit = "ssl-refresh.service";
-#        };
-#      };
-#
-#      systemd.services."ssl-refresh" = {
-#        script = ''
-#          set -eu
-#          cd /var/lib/caddy
-#          ${pkgs.tailscale}/bin/tailscale cert ${hostname}.${domain}
-#          ${pkgs.coreutils}/bin/chown caddy ${hostname}.${domain}.*
-#          ${pkgs.systemd}/bin/systemctl restart caddy.service
-#        '';
-#        serviceConfig = {
-#          Type = "oneshot";
-#          User = "root";
-#        };
-#      };
-
       services.kanidm = {
-        enableServer = true;
-        package = kanidmPkg;
-        serverSettings = {
-          bindaddress = "127.0.0.1:8443";
-          ldapbindaddress = "0.0.0.0:3636";
-          origin = "https://${hostname}.${domain}";
-          domain = "${hostname}.${domain}";
-          tls_chain = "/var/lib/kanidm/kanidm.pem";
-          tls_key = "/var/lib/kanidm/kanidm.key";
-          log_level = "info";
+        server = {
+          enable = true;
+          settings = {
+            bindaddress = "127.0.0.1:8443";
+            #ldapbindaddress = "0.0.0.0:3636";
+            origin = "https://${hostname}.${domain}";
+            domain = "${hostname}.${domain}";
+            tls_chain = "/var/lib/kanidm/kanidm.pem";
+            tls_key = "/var/lib/kanidm/kanidm.key";
+            log_level = "info";
+          };
         };
+        package = kanidmPkg;
       };
 
       # -----------------------------------------------------------------------
@@ -119,26 +99,16 @@ in {
       # After first `nixos-rebuild switch`, run these once as the Kanidm admin:
       #
       #   kanidm login -D idm_admin -H https://kanidm.${domain}
+      # 
+      #   for each of the hosts, run the following
       #
-      #   # Mealie
-      #   kanidm system oauth2 create mealie "Mealie" https://mealie.${domain}/oauth2/callback
-      #   kanidm system oauth2 update-scope-map mealie idm_all_accounts openid email profile
-      #   kanidm system oauth2 show-basic-secret mealie
+      #   kanidm system oauth2 create $host "hostSys" https://kanidm.${domain}/oauth2/callback
+      #   kanidm system oauth2 update-scope-map $host idm_all_accounts openid email profile
+      #   kanidm system oauth2 show-basic-secret $host
       #
-      #   # Audiobookshelf
-      #   kanidm system oauth2 create audiobookshelf "Audiobookshelf" https://audiobookshelf.${domain}/oauth2/callback
-      #   kanidm system oauth2 update-scope-map audiobookshelf idm_all_accounts openid email profile
-      #   kanidm system oauth2 show-basic-secret audiobookshelf
+      #   Something whet wrong with authentication?
       #
-      #   # FreshRSS
-      #   kanidm system oauth2 create freshrss "FreshRSS" https://freshrss.${domain}/oauth2/callback
-      #   kanidm system oauth2 update-scope-map freshrss idm_all_accounts openid email profile
-      #   kanidm system oauth2 show-basic-secret freshrss
-      #
-      #   # Frigate
-      #   kanidm system oauth2 create frigate "Frigate NVR" https://secunit.${domain}/oauth2/callback
-      #   kanidm system oauth2 update-scope-map frigate idm_all_accounts openid email profile
-      #   kanidm system oauth2 show-basic-secret frigate
+      #   kanidm system oauth2 rotate-cryptographic-keys $host now -H https://kanidm.${domain}
       # -----------------------------------------------------------------------
     };
   };
