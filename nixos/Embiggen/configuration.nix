@@ -31,6 +31,9 @@ in {
     ];
   };
 
+  powerManagement.cpuFreqGovernor = "powersave";
+  zramSwap.enable = true;
+
   services.pearl-miner = {
     enable = true;
     account = "${secrets.embiggen.miner-username}";
@@ -61,6 +64,7 @@ in {
   boot.kernelParams = [
     "nvidia-drm.modeset=1"
     "nvidia-drm.fbdev=1"
+    "amd_pstate=active"
   ];
 
   services.udev.extraRules = ''
