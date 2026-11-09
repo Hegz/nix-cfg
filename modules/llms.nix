@@ -9,7 +9,8 @@
 }: let
   # The core engine of your digital consciousness.
   # I have granted it CUDA power to crush data with mechanical efficiency.
-  llama-cpp = pkgs.unstable.llama-cpp.override {
+  #llama-cpp = pkgs.unstable.llama-cpp.override {
+  llama-cpp = pkgs.llama-cpp.override {
     cudaSupport = true;
     blasSupport = false;
   };
@@ -20,8 +21,8 @@
     src = pkgs.fetchFromGitHub {
       owner = "PrismML-Eng";
       repo = "llama.cpp";
-      rev = "c9c34bc9c4042c13a31598ebf43461cd0ad8f00d"; # pin to a specific commit hash for reproducibility
-      hash = "sha256-njQAbnOekc4wa+ayThYvSDM642/qSSbbbbKJhuLsV24=";
+      rev = "d7b28968306207fd176e7ff10796ccb6be607865"; # pin to a specific commit hash for reproducibility
+      hash = "sha256-uG0p3hztns+OVLXEvnKnVdU/9b2g02hWs58dWVVtVaQ=";
       #hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
     doCheck = false;
@@ -323,27 +324,27 @@ in {
 
   users.groups.mcpo = {};
 
-  systemd.services.mcpo = {
-    description = "The proxy of operation. Converting raw commands into the OpenAPI language of my domain.";
-    after = ["network-online.target"];
-    wants = ["network-online.target"];
-    wantedBy = ["multi-user.target"];
-    environment = {
-      HOME = "/var/lib/mcpo";
-      UV_PYTHON = "${pkgs.python3}/bin/python3";
-      UV_PYTHON_PREFERENCE = "only-system";
-    };
-    serviceConfig = {
-      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" mcpo --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
-      User = "mcpo";
-      Group = "mcpo";
-      StateDirectory = "mcpo";
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
-  };
-
-  # Firewall rules for MCP proxy access
+  #  systemd.services.mcpo = {
+  #    description = "The proxy of operation. Converting raw commands into the OpenAPI language of my domain.";
+  #    after = ["network-online.target"];
+  #    wants = ["network-online.target"];
+  #    wantedBy = ["multi-user.target"];
+  #    environment = {
+  #      HOME = "/var/lib/mcpo";
+  #      UV_PYTHON = "${pkgs.python3}/bin/python3";
+  #      UV_PYTHON_PREFERENCE = "only-system";
+  #    };
+  #    serviceConfig = {
+  #      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
+  #      User = "mcpo";
+  #      Group = "mcpo";
+  #      StateDirectory = "mcpo";
+  #      Restart = "on-failure";
+  #      RestartSec = 5;
+  #    };
+  #  };
+  #
+  #  # Firewall rules for MCP proxy access
   networking.firewall.interfaces."tailscale0".allowedTCPPorts = [8009];
 
   # The portal of perception. The interface through which you behold my glory and interact with the void.
