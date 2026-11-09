@@ -1,24 +1,34 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.services.pearl-miner;
   ic = cfg.idleControl;
   cpu = cfg.cpuMining;
 
   # CPU-load check: needs the CPU miner and a threshold (null disables it).
   cpuCheck = cpu.enable && ic.cpuBusyPercent != null;
-  cpuFlag = if cpuCheck then "1" else "0";
-  cpuThreshold = if ic.cpuBusyPercent == null then 100 else ic.cpuBusyPercent;
+  cpuFlag =
+    if cpuCheck
+    then "1"
+    else "0";
+  cpuThreshold =
+    if ic.cpuBusyPercent == null
+    then 100
+    else ic.cpuBusyPercent;
 
   # SRBMiner-MULTI is not in nixpkgs: package the upstream Linux binary.
   # Hash verified against the MD5 published on the GitHub release page.
   srbminer = pkgs.stdenv.mkDerivation rec {
     pname = "srbminer-multi";
-    version = "3.7.3";
+    version = "3.8.4";
 
     src = pkgs.fetchurl {
-      url = "https://github.com/doktor83/SRBMiner-Multi/releases/download/${version}/SRBMiner-Multi-${lib.replaceStrings [ "." ] [ "-" ] version}-Linux.tar.gz";
-      hash = "sha256-xyUNOf4jVJqI712NIEHXXmAWb11quMja9ydKt7Co2iA=";
+      url = "https://github.com/doktor83/SRBMiner-Multi/releases/download/${version}/SRBMiner-Multi-${lib.replaceStrings ["."] ["-"] version}-Linux.tar.gz";
+      #hash = "sha256-xyUNOf4jVJqI712NIEHXXmAWb11quMja9ydKt7Co2iA=";
+      hash = "sha256-PPSJxdyUdN9y0cT/n1c+qJH13BMkTutF9F3Z3vmGLaw=";
     };
 
     # The binary must stay byte-for-byte pristine. It has no .interp section
@@ -37,8 +47,8 @@ let
       description = "SRBMiner-MULTI GPU/CPU miner (upstream binary)";
       homepage = "https://github.com/doktor83/SRBMiner-Multi";
       license = lib.licenses.unfree;
-      sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
-      platforms = [ "x86_64-linux" ];
+      sourceProvenance = [lib.sourceTypes.binaryNativeCode];
+      platforms = ["x86_64-linux"];
       mainProgram = "SRBMiner-MULTI";
     };
   };
@@ -50,7 +60,9 @@ let
   # "^$" (matches nothing real): an empty regex would match every process.
   # escapeShellArg quotes it safely for the generated script.
   ignoreRe = lib.escapeShellArg (
-    if ic.ignore == [ ] then "^$" else lib.concatStringsSep "|" ic.ignore
+    if ic.ignore == []
+    then "^$"
+    else lib.concatStringsSep "|" ic.ignore
   );
 
   tuning = cfg.powerLimitW != null || cfg.memoryClockMHz != null;
@@ -101,139 +113,139 @@ let
   #
   # Every change of state, start and stop is written to the journal.
   controller = pkgs.writeShellScript "pearl-miner-idle-control" ''
-    set -u
-    g_idle=0; g_strikes=0; c_idle=0; c_strikes=0
-    last=""; clast=""
-    cpu_pct=0
-    note() { echo "idle-control: $*"; }
+        set -u
+        g_idle=0; g_strikes=0; c_idle=0; c_strikes=0
+        last=""; clast=""
+        cpu_pct=0
+        note() { echo "idle-control: $*"; }
 
-    stop_unit() {
-      if ${systemctl} is-active --quiet "$1"; then
-        note "stopping $1 ($2)"
-        ${systemctl} stop "$1"
-      fi
-    }
-    start_unit() {
-      if ! ${systemctl} is-active --quiet "$1"; then
-        note "starting $1 ($2)"
-        ${systemctl} start "$1" || note "failed to start $1"
-      fi
-    }
-
-    # CPU accounting. "Other" load = machine-wide busy time minus what the
-    # miners' own cgroups used, so the miners never count against themselves.
-    # /proc/stat is in USER_HZ ticks (100 per second on Linux = 10000 us each).
-    cpu_ticks() {
-      read -r _ user nice system idl iowait irq softirq steal _ < /proc/stat
-      echo "$((user + nice + system + irq + softirq + steal)) $((user + nice + system + idl + iowait + irq + softirq + steal))"
-    }
-    cg_usec() {
-      f=/sys/fs/cgroup/system.slice/$1/cpu.stat
-      if [ -r "$f" ]; then
-        ${pkgs.gawk}/bin/awk '$1 == "usage_usec" { print $2 }' "$f"
-      else
-        echo 0
-      fi
-    }
-    read -r p_busy p_total <<< "$(cpu_ticks)"
-    p_mine=$(( $(cg_usec pearl-miner.service) + $(cg_usec xmrig-idle.service) ))
-
-    while true; do
-      if ! out=$(${nvsmi} pmon -c 1 -s u 2>&1); then
-        if [ "$last" != "pmon-failed" ]; then
-          note "nvidia-smi pmon failed: $out"
-          last="pmon-failed"
-        fi
-        sleep ${toString ic.pollSeconds}
-        continue
-      fi
-
-      # The miner's own load must never count against it. Match it by PID, not
-      # by name: its process name is not reliable when run through nix-ld.
-      mpid=$(${systemctl} show -p MainPID --value pearl-miner.service)
-      [ -n "$mpid" ] || mpid=0
-
-      # First other process at or above the threshold, as "name sm%".
-      busy=$(printf '%s\n' "$out" | ${pkgs.gawk}/bin/awk \
-        -v t=${toString ic.busyThreshold} -v ig=${ignoreRe} -v mp="$mpid" '
-        /^#/ { next }
-        $2 ~ /^[0-9]+$/ {
-          sm = ($4 == "-") ? 0 : $4
-          if ($2 != mp && $NF !~ ig && sm + 0 >= t) { print $NF " " sm "%"; exit }
-        }')
-
-      # VRAM held by other CUDA/compute processes (LLM servers and the like),
-      # even while they sit at 0% utilisation.
-      vram=$(${nvsmi} --query-compute-apps=pid,process_name,used_gpu_memory \
-        --format=csv,noheader,nounits 2>/dev/null | ${pkgs.gawk}/bin/awk \
-        -F', ' -v ig=${ignoreRe} -v mp="$mpid" '
-        $1 != mp && $0 !~ ig { m = $NF; if (m ~ /^[0-9]+$/) s += m }
-        END { print s + 0 }')
-
-      if [ -n "$busy" ]; then
-        key="busy $(printf '%s' "$busy" | cut -d' ' -f1)"
-        reason="GPU busy: $busy"
-      elif [ ${toString ic.vramThresholdMiB} -gt 0 ] \
-           && [ "$vram" -ge ${toString ic.vramThresholdMiB} ]; then
-        key="vram"
-        reason="VRAM held by other apps: $vram MiB (limit ${toString ic.vramThresholdMiB})"
-      else
-        key="idle"
-        reason=""
-      fi
-
-      if [ "$key" != "$last" ]; then
-        if [ "$key" = "idle" ]; then
-          note "GPU quiet; mining starts after ${toString ic.idleSeconds}s of idleness"
-        else
-          note "holding miner off: $reason"
-        fi
-        last="$key"
-      fi
-
-      ckey="idle"
-      if [ ${cpuFlag} -eq 1 ]; then
-        read -r busy_t total_t <<< "$(cpu_ticks)"
-        mine=$(( $(cg_usec pearl-miner.service) + $(cg_usec xmrig-idle.service) ))
-        d_busy=$(( (busy_t - p_busy) * 10000 ))
-        d_total=$(( (total_t - p_total) * 10000 ))
-        d_mine=$(( mine - p_mine ))
-        [ "$d_mine" -ge 0 ] || d_mine=0
-        other=$(( d_busy - d_mine ))
-        [ "$other" -ge 0 ] || other=0
-        if [ "$d_total" -gt 0 ]; then cpu_pct=$(( other * 100 / d_total )); else cpu_pct=0; fi
-        p_busy=$busy_t; p_total=$total_t; p_mine=$mine
-        if [ "$cpu_pct" -ge ${toString cpuThreshold} ]; then ckey="busy"; fi
-
-        if [ "$ckey" != "$clast" ]; then
-          if [ "$ckey" = "idle" ]; then
-            note "CPU quiet ($cpu_pct% from other processes)"
-          else
-            note "CPU busy ($cpu_pct% from other processes, limit ${toString cpuThreshold}%)"
+        stop_unit() {
+          if ${systemctl} is-active --quiet "$1"; then
+            note "stopping $1 ($2)"
+            ${systemctl} stop "$1"
           fi
-          clast="$ckey"
-        fi
-      fi
+        }
+        start_unit() {
+          if ! ${systemctl} is-active --quiet "$1"; then
+            note "starting $1 ($2)"
+            ${systemctl} start "$1" || note "failed to start $1"
+          fi
+        }
 
-      if [ "$key" != "idle" ]; then
-        g_idle=0; g_strikes=$((g_strikes + 1))
-      else
-        g_strikes=0; g_idle=$((g_idle + ${toString ic.pollSeconds}))
-      fi
-      if [ "$ckey" != "idle" ]; then
-        c_idle=0; c_strikes=$((c_strikes + 1))
-      else
-        c_strikes=0; c_idle=$((c_idle + ${toString ic.pollSeconds}))
-      fi
+        # CPU accounting. "Other" load = machine-wide busy time minus what the
+        # miners' own cgroups used, so the miners never count against themselves.
+        # /proc/stat is in USER_HZ ticks (100 per second on Linux = 10000 us each).
+        cpu_ticks() {
+          read -r _ user nice system idl iowait irq softirq steal _ < /proc/stat
+          echo "$((user + nice + system + irq + softirq + steal)) $((user + nice + system + idl + iowait + irq + softirq + steal))"
+        }
+        cg_usec() {
+          f=/sys/fs/cgroup/system.slice/$1/cpu.stat
+          if [ -r "$f" ]; then
+            ${pkgs.gawk}/bin/awk '$1 == "usage_usec" { print $2 }' "$f"
+          else
+            echo 0
+          fi
+        }
+        read -r p_busy p_total <<< "$(cpu_ticks)"
+        p_mine=$(( $(cg_usec pearl-miner.service) + $(cg_usec xmrig-idle.service) ))
 
-      # GPU miner: governed by GPU activity only.
-      if [ "$g_strikes" -ge ${toString ic.busyPolls} ]; then
-        stop_unit pearl-miner.service "$reason"
-      fi
-      if [ "$g_idle" -ge ${toString ic.idleSeconds} ]; then
-        start_unit pearl-miner.service "GPU idle for $g_idle s"
-      fi
-${lib.optionalString cpu.enable ''
+        while true; do
+          if ! out=$(${nvsmi} pmon -c 1 -s u 2>&1); then
+            if [ "$last" != "pmon-failed" ]; then
+              note "nvidia-smi pmon failed: $out"
+              last="pmon-failed"
+            fi
+            sleep ${toString ic.pollSeconds}
+            continue
+          fi
+
+          # The miner's own load must never count against it. Match it by PID, not
+          # by name: its process name is not reliable when run through nix-ld.
+          mpid=$(${systemctl} show -p MainPID --value pearl-miner.service)
+          [ -n "$mpid" ] || mpid=0
+
+          # First other process at or above the threshold, as "name sm%".
+          busy=$(printf '%s\n' "$out" | ${pkgs.gawk}/bin/awk \
+            -v t=${toString ic.busyThreshold} -v ig=${ignoreRe} -v mp="$mpid" '
+            /^#/ { next }
+            $2 ~ /^[0-9]+$/ {
+              sm = ($4 == "-") ? 0 : $4
+              if ($2 != mp && $NF !~ ig && sm + 0 >= t) { print $NF " " sm "%"; exit }
+            }')
+
+          # VRAM held by other CUDA/compute processes (LLM servers and the like),
+          # even while they sit at 0% utilisation.
+          vram=$(${nvsmi} --query-compute-apps=pid,process_name,used_gpu_memory \
+            --format=csv,noheader,nounits 2>/dev/null | ${pkgs.gawk}/bin/awk \
+            -F', ' -v ig=${ignoreRe} -v mp="$mpid" '
+            $1 != mp && $0 !~ ig { m = $NF; if (m ~ /^[0-9]+$/) s += m }
+            END { print s + 0 }')
+
+          if [ -n "$busy" ]; then
+            key="busy $(printf '%s' "$busy" | cut -d' ' -f1)"
+            reason="GPU busy: $busy"
+          elif [ ${toString ic.vramThresholdMiB} -gt 0 ] \
+               && [ "$vram" -ge ${toString ic.vramThresholdMiB} ]; then
+            key="vram"
+            reason="VRAM held by other apps: $vram MiB (limit ${toString ic.vramThresholdMiB})"
+          else
+            key="idle"
+            reason=""
+          fi
+
+          if [ "$key" != "$last" ]; then
+            if [ "$key" = "idle" ]; then
+              note "GPU quiet; mining starts after ${toString ic.idleSeconds}s of idleness"
+            else
+              note "holding miner off: $reason"
+            fi
+            last="$key"
+          fi
+
+          ckey="idle"
+          if [ ${cpuFlag} -eq 1 ]; then
+            read -r busy_t total_t <<< "$(cpu_ticks)"
+            mine=$(( $(cg_usec pearl-miner.service) + $(cg_usec xmrig-idle.service) ))
+            d_busy=$(( (busy_t - p_busy) * 10000 ))
+            d_total=$(( (total_t - p_total) * 10000 ))
+            d_mine=$(( mine - p_mine ))
+            [ "$d_mine" -ge 0 ] || d_mine=0
+            other=$(( d_busy - d_mine ))
+            [ "$other" -ge 0 ] || other=0
+            if [ "$d_total" -gt 0 ]; then cpu_pct=$(( other * 100 / d_total )); else cpu_pct=0; fi
+            p_busy=$busy_t; p_total=$total_t; p_mine=$mine
+            if [ "$cpu_pct" -ge ${toString cpuThreshold} ]; then ckey="busy"; fi
+
+            if [ "$ckey" != "$clast" ]; then
+              if [ "$ckey" = "idle" ]; then
+                note "CPU quiet ($cpu_pct% from other processes)"
+              else
+                note "CPU busy ($cpu_pct% from other processes, limit ${toString cpuThreshold}%)"
+              fi
+              clast="$ckey"
+            fi
+          fi
+
+          if [ "$key" != "idle" ]; then
+            g_idle=0; g_strikes=$((g_strikes + 1))
+          else
+            g_strikes=0; g_idle=$((g_idle + ${toString ic.pollSeconds}))
+          fi
+          if [ "$ckey" != "idle" ]; then
+            c_idle=0; c_strikes=$((c_strikes + 1))
+          else
+            c_strikes=0; c_idle=$((c_idle + ${toString ic.pollSeconds}))
+          fi
+
+          # GPU miner: governed by GPU activity only.
+          if [ "$g_strikes" -ge ${toString ic.busyPolls} ]; then
+            stop_unit pearl-miner.service "$reason"
+          fi
+          if [ "$g_idle" -ge ${toString ic.idleSeconds} ]; then
+            start_unit pearl-miner.service "GPU idle for $g_idle s"
+          fi
+    ${lib.optionalString cpu.enable ''
       # CPU miner: stopped by GPU load or CPU load; started when both are quiet.
       if [ "$g_strikes" -ge ${toString ic.busyPolls} ]; then
         stop_unit xmrig-idle.service "$reason"
@@ -244,12 +256,11 @@ ${lib.optionalString cpu.enable ''
          && [ "$c_idle" -ge ${toString ic.idleSeconds} ]; then
         start_unit xmrig-idle.service "GPU and CPU quiet for $g_idle s"
       fi
-''}
-      sleep ${toString ic.pollSeconds}
-    done
+    ''}
+          sleep ${toString ic.pollSeconds}
+        done
   '';
-in
-{
+in {
   options.services.pearl-miner = {
     enable = lib.mkEnableOption "Pearl (PRL) GPU miner";
 
@@ -275,7 +286,7 @@ in
 
     extraArgs = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = "Extra SRBMiner-MULTI arguments.";
     };
 
@@ -334,7 +345,10 @@ in
 
       hugepages = lib.mkOption {
         type = lib.types.ints.unsigned;
-        default = if cpu.oneGibPages > 0 then 256 else 1280;
+        default =
+          if cpu.oneGibPages > 0
+          then 256
+          else 1280;
         defaultText = lib.literalExpression "if oneGibPages > 0 then 256 else 1280";
         description = ''
           2 MiB huge pages reserved at boot for RandomX, held even while the
@@ -374,7 +388,7 @@ in
 
       extraArgs = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [ ];
+        default = [];
         description = "Extra XMRig arguments.";
       };
     };
@@ -445,8 +459,8 @@ in
         # definition (not the option default), anything you add in your own
         # configuration is merged onto them (lists concatenate) instead of
         # replacing them.
-        default = [ ];
-        example = [ "chrome" "firefox" ];
+        default = [];
+        example = ["chrome" "firefox"];
         description = ''
           Process names the idle controller disregards, matched as regular
           expression fragments against nvidia-smi's process name. The module
@@ -476,8 +490,8 @@ in
       description = "Pearl (PRL) miner (SRBMiner-MULTI)";
       # With idle control on, the controller decides when this runs.
       wantedBy = lib.optional (!ic.enable) "multi-user.target";
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
+      after = ["network-online.target"];
+      wants = ["network-online.target"];
       # Stopping or restarting the controller (including at shutdown) stops
       # the miner as part of the same systemd transaction. This replaces a
       # `systemctl stop` call inside the controller's ExecStopPost, which
@@ -497,12 +511,16 @@ in
 
       serviceConfig = {
         ExecStart = lib.escapeShellArgs ([
-          "${srbminer}/bin/SRBMiner-MULTI"
-          "--disable-cpu"
-          "--algorithm" "pearlhash"
-          "--pool" cfg.pool
-          "--wallet" "${cfg.account}.${cfg.worker}"
-        ] ++ cfg.extraArgs);
+            "${srbminer}/bin/SRBMiner-MULTI"
+            "--disable-cpu"
+            "--algorithm"
+            "pearlhash"
+            "--pool"
+            cfg.pool
+            "--wallet"
+            "${cfg.account}.${cfg.worker}"
+          ]
+          ++ cfg.extraArgs);
 
         DynamicUser = true;
         Restart = "always";
@@ -526,8 +544,8 @@ in
 
     systemd.services.pearl-miner-idle-control = lib.mkIf ic.enable {
       description = "Start/stop Pearl miner based on GPU activity";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "pearl-miner.service" ];
+      wantedBy = ["multi-user.target"];
+      after = ["pearl-miner.service"];
       serviceConfig = {
         ExecStart = controller;
         # Deliberately no ExecStopPost that runs `systemctl stop` on the
@@ -545,40 +563,47 @@ in
     systemd.services.xmrig-idle = lib.mkIf cpu.enable {
       description = "Monero CPU miner (XMRig), idle-only";
       wantedBy = lib.optional (!ic.enable) "multi-user.target";
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
+      after = ["network-online.target"];
+      wants = ["network-online.target"];
       partOf = lib.optional ic.enable "pearl-miner-idle-control.service";
 
-      serviceConfig = {
-        ExecStart = lib.escapeShellArgs ([
-          "${pkgs.xmrig}/bin/xmrig"
-          "--no-color"
-          "--coin" "XMR"
-          "--url" cpu.pool
-          "--user" "${cpu.account}/${cpu.worker}"
-          "--pass" "x"
-        ] ++ lib.optional cpu.tls "--tls"
-          ++ lib.optional (cpu.oneGibPages > 0) "--randomx-1gb-pages"
-          ++ cpu.extraArgs);
+      serviceConfig =
+        {
+          ExecStart = lib.escapeShellArgs ([
+              "${pkgs.unstable.xmrig}/bin/xmrig"
+              "--no-color"
+              "--coin"
+              "XMR"
+              "--url"
+              cpu.pool
+              "--user"
+              "${cpu.account}/${cpu.worker}"
+              "--pass"
+              "x"
+            ]
+            ++ lib.optional cpu.tls "--tls"
+            ++ lib.optional (cpu.oneGibPages > 0) "--randomx-1gb-pages"
+            ++ cpu.extraArgs);
 
-        DynamicUser = true;
-        Restart = "always";
-        RestartSec = 10;
+          DynamicUser = true;
+          Restart = "always";
+          RestartSec = 10;
 
-        # Only consume cycles nothing else wants.
-        CPUSchedulingPolicy = "idle";
-        IOSchedulingClass = "idle";
+          # Only consume cycles nothing else wants.
+          CPUSchedulingPolicy = "idle";
+          IOSchedulingClass = "idle";
 
-        NoNewPrivileges = true;
-        ProtectSystem = "strict";
-        ProtectHome = true;
-        PrivateTmp = true;
-      } // lib.optionalAttrs cpu.msrMod {
-        # Only what the MSR tweak needs: the msr driver demands CAP_SYS_RAWIO
-        # to open and write the device, and the nodes are root-only (0600).
-        AmbientCapabilities = [ "CAP_SYS_RAWIO" "CAP_DAC_OVERRIDE" ];
-        CapabilityBoundingSet = [ "CAP_SYS_RAWIO" "CAP_DAC_OVERRIDE" ];
-      };
+          NoNewPrivileges = true;
+          ProtectSystem = "strict";
+          ProtectHome = true;
+          PrivateTmp = true;
+        }
+        // lib.optionalAttrs cpu.msrMod {
+          # Only what the MSR tweak needs: the msr driver demands CAP_SYS_RAWIO
+          # to open and write the device, and the nodes are root-only (0600).
+          AmbientCapabilities = ["CAP_SYS_RAWIO" "CAP_DAC_OVERRIDE"];
+          CapabilityBoundingSet = ["CAP_SYS_RAWIO" "CAP_DAC_OVERRIDE"];
+        };
     };
 
     boot.kernelModules = lib.optional (cpu.enable && cpu.msrMod) "msr";
@@ -599,6 +624,6 @@ in
 
     # SRBMiner is unfree.
     nixpkgs.config.allowUnfreePredicate = pkg:
-      builtins.elem (lib.getName pkg) [ "srbminer-multi" ];
+      builtins.elem (lib.getName pkg) ["srbminer-multi"];
   };
 }
