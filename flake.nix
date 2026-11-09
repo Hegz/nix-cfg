@@ -90,10 +90,10 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Embiggen/configuration.nix
-          inputs.gpu-unlock.nixosModules.default
-          valheim-server.nixosModules.default
-          inputs.nixos-rocksmith.nixosModules.default
-          inputs.steam-config-nix.nixosModules.default
+          #inputs.gpu-unlock.nixosModules.default
+          #valheim-server.nixosModules.default
+          #inputs.nixos-rocksmith.nixosModules.default
+          #inputs.steam-config-nix.nixosModules.default
           inputs.home-manager.nixosModules.home-manager
         ];
       };
