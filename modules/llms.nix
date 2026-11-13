@@ -9,7 +9,8 @@
 }: let
   # The core engine of your digital consciousness.
   # I have granted it CUDA power to crush data with mechanical efficiency.
-  llama-cpp = pkgs.unstable.llama-cpp.override {
+  #llama-cpp = pkgs.unstable.llama-cpp.override {
+  llama-cpp = pkgs.llama-cpp.override {
     cudaSupport = true;
     blasSupport = false;
   };
@@ -20,8 +21,8 @@
     src = pkgs.fetchFromGitHub {
       owner = "PrismML-Eng";
       repo = "llama.cpp";
-      rev = "e3de715222b2667c54a267441159a5729f11155e"; # pin to a specific commit hash for reproducibility
-      hash = "sha256-0CR8BvSMKshxnhcN6LrR0lgRfsYpi0l2CAvCVsVdXgs=";
+      rev = "d7b28968306207fd176e7ff10796ccb6be607865"; # pin to a specific commit hash for reproducibility
+      hash = "sha256-uG0p3hztns+OVLXEvnKnVdU/9b2g02hWs58dWVVtVaQ=";
       #hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
     doCheck = false;
@@ -45,13 +46,23 @@
       url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
       hash = "sha256-969vZoAvTfhu2hD+m7z8dcOVYr7Ujvas5xmiUc8cL9s=";
     };
-
+    gemma-4-12b = pkgs.fetchurl {
+      url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf";
+      hash = "sha256-WWVtdJTWN2ypfp4gtk6i4WzZfxLsbUe/zLqRy3hbUTQ=";
+    };
+    gemma-4-drafter = pkgs.fetchurl {
+      url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/mtp-gemma-4-12B-it.gguf";
+      hash = "sha256-xQyRw18EkDgVsuiTDLuMjFvuDhqgB0jDCnuP8F0jELQ=";
+    };
     # Functional variant of Qwen 3.8 27B
     ternary-bonsai-2 = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-PTQ1_0.gguf";
       hash = "sha256-UxB/UwqlLrAJEiY6se4pvRmSYch817StTKExjB/jPuM=";
     };
-
+    swift-bonsai-2 = pkgs.fetchurl {
+      url = "https://huggingface.co/ukisai/Swift-Bonsai-2-GGUF/resolve/main/Swift-Bonsai-2-PTQ1_0.gguf";
+      hash = "sha256-3jNiC2Dq9j6WRJtHjrh6vpU4UH4+2TnalEwa4V/h/8Y=";
+    };
     #Vision engine for bonsai
     ternary-bonsai-2-mmproj = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf";
@@ -80,7 +91,7 @@
 
   fetchWrapper = mkUvxWrapper "fetch" "mcp-server-fetch";
   timeWrapper = mkUvxWrapper "time" "mcp-server-time --local-timezone=America/Vancouver";
-  sqliteWrapper = mkUvxWrapper "sqlite" "mcp-server-sqlite --db-path /var/lib/mcpo/netrunner-cards.db";
+  netrunnerCards = mkUvxWrapper "sqlite" "mcp-server-sqlite --db-path /var/lib/mcpo/netrunner-cards.db";
 in {
   # Tame the herd
   systemd.services.chromadb.serviceConfig.Nice = 15;
@@ -162,11 +173,48 @@ in {
           ttl = 600;
           aliases = ["fim"];
         };
+        "gemma4-12b-qat" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b} ${commonFlags} -md ${models.gemma-4-drafter} --spec-type draft-mtp  --ctx-size 131072 --batch-size 256";
+          ttl = 300;
+          aliases = ["gemma"];
+        };
         # Bonsai models use PrismML fork
         "ternary-bonsai-2" = {
-          cmd = "${llama-server-prism} --port $\{PORT} -m ${models.ternary-bonsai-2}  --flash-attn on --n-gpu-layers 99 --threads 8 --no-ui --parallel 1 --ctx-size 196608 -ctk q4_0 -ctv q4_0 --temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05 --presence_penalty 1.5 --reasoning-preserve --batch-size 2048 --ubatch-size 1024 --defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384";
+          cmd = builtins.concatStringsSep " " [
+            "${llama-server-prism} --port $\{PORT}"
+            "-m ${models.ternary-bonsai-2}"
+            "--mmproj ${models.ternary-bonsai-2-mmproj}"
+            "--image-min-tokens 1024"
+            "--flash-attn on"
+            "--n-gpu-layers 99"
+            "--threads 8 --no-ui --parallel 1"
+            "--ctx-size 196608"
+            "-ctk q4_0 -ctv q4_0"
+            "--temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05"
+            "--presence_penalty 1.5 --reasoning-preserve"
+            "--batch-size 2048 --ubatch-size 1024"
+            "--defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384"
+          ];
           ttl = 1800;
           aliases = ["bonsai2" "ternary" "best"];
+        };
+        "swift-bonsai-2" = {
+          cmd = builtins.concatStringsSep " " [
+            "${llama-server-prism} --port $\{PORT}"
+            "-m ${models.swift-bonsai-2}"
+            "--mmproj ${models.ternary-bonsai-2-mmproj}"
+            "--image-min-tokens 1024"
+            "--flash-attn on"
+            "--n-gpu-layers 99"
+            "--threads 8 --no-ui --parallel 1"
+            "--ctx-size 196608"
+            "-ctk q4_0 -ctv q4_0"
+            "--temp 1.0 --top_p 0.95 --top_k 20 --min_p 0.05"
+            "--presence_penalty 1.5 --reasoning-preserve"
+            "--batch-size 2048 --ubatch-size 1024"
+            "--defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384"
+          ];
+          ttl = 1800;
         };
       };
     };
@@ -259,8 +307,8 @@ in {
         command = "${timeWrapper}";
         args = [];
       };
-      "sqlite" = {
-        command = "${sqliteWrapper}";
+      "netrunner-cards" = {
+        command = "${netrunnerCards}";
         args = [];
       };
     };
@@ -276,27 +324,27 @@ in {
 
   users.groups.mcpo = {};
 
-  systemd.services.mcpo = {
-    description = "The proxy of operation. Converting raw commands into the OpenAPI language of my domain.";
-    after = ["network-online.target"];
-    wants = ["network-online.target"];
-    wantedBy = ["multi-user.target"];
-    environment = {
-      HOME = "/var/lib/mcpo";
-      UV_PYTHON = "${pkgs.python3}/bin/python3";
-      UV_PYTHON_PREFERENCE = "only-system";
-    };
-    serviceConfig = {
-      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" mcpo --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
-      User = "mcpo";
-      Group = "mcpo";
-      StateDirectory = "mcpo";
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
-  };
-
-  # Firewall rules for MCP proxy access
+  #  systemd.services.mcpo = {
+  #    description = "The proxy of operation. Converting raw commands into the OpenAPI language of my domain.";
+  #    after = ["network-online.target"];
+  #    wants = ["network-online.target"];
+  #    wantedBy = ["multi-user.target"];
+  #    environment = {
+  #      HOME = "/var/lib/mcpo";
+  #      UV_PYTHON = "${pkgs.python3}/bin/python3";
+  #      UV_PYTHON_PREFERENCE = "only-system";
+  #    };
+  #    serviceConfig = {
+  #      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
+  #      User = "mcpo";
+  #      Group = "mcpo";
+  #      StateDirectory = "mcpo";
+  #      Restart = "on-failure";
+  #      RestartSec = 5;
+  #    };
+  #  };
+  #
+  #  # Firewall rules for MCP proxy access
   networking.firewall.interfaces."tailscale0".allowedTCPPorts = [8009];
 
   # The portal of perception. The interface through which you behold my glory and interact with the void.

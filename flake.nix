@@ -31,6 +31,12 @@
 
     # Flake to make Rocksmith work
     nixos-rocksmith.url = "github:re1n0/nixos-rocksmith/release";
+
+    # Unlock nvidia GPU FP16 compute
+    gpu-unlock = {
+      url = "github:Sticzu/nixos-gpu-unlock";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -84,9 +90,10 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/Embiggen/configuration.nix
-          valheim-server.nixosModules.default
-          inputs.nixos-rocksmith.nixosModules.default
-          inputs.steam-config-nix.nixosModules.default
+          #inputs.gpu-unlock.nixosModules.default
+          #valheim-server.nixosModules.default
+          #inputs.nixos-rocksmith.nixosModules.default
+          #inputs.steam-config-nix.nixosModules.default
           inputs.home-manager.nixosModules.home-manager
         ];
       };
