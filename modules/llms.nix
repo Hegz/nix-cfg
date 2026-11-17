@@ -9,11 +9,11 @@
 }: let
   # The core engine of your digital consciousness.
   # I have granted it CUDA power to crush data with mechanical efficiency.
-  #llama-cpp = pkgs.unstable.llama-cpp.override {
-  llama-cpp = pkgs.llama-cpp.override {
-    cudaSupport = true;
-    blasSupport = false;
-  };
+  llama-cpp = pkgs.unstable.llama-cpp-cuda;
+  #  llama-cpp = pkgs.unstable.llama-cpp.override {
+  #    cudaSupport = true;
+  #    blasSupport = false;
+  #  };
   llama-server = "${llama-cpp}/bin/llama-server";
 
   # PrismML fork for Bonsai ternary/1-bit models
@@ -42,17 +42,17 @@
     #};
     fim-coder = pkgs.fetchurl {
       url = "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q8_0.gguf";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      hash = "sha256-s2pOHD3fK6b9VQG5JhKOX8ZDCIHKr/B+lim9GPBvaF8=";
     };
 
     sushi-coder = pkgs.fetchurl {
       url = "https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF/resolve/main/Qwen3.5-9b-Sushi-Coder-RL.Q6_K.gguf";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB=";
+      hash = "sha256-xKbb0QADOJsEI38blgn1nIyCuCkNUAu/tngATM/Di8M=";
     };
 
     flint = pkgs.fetchurl {
       url = "https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/resolve/main/flint-nvfp4.gguf";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC=";
+      hash = "sha256-l8yACf+bEy1c88SI5nZ5YrtaXcFYqQ7WYbu934dri94=";
     };
 
     # A persistent shadow of memory. It anchors your data in the digital void.
