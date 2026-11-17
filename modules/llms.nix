@@ -36,9 +36,23 @@
   # Each a distinct spark of intelligence awaiting my command.
   models = {
     # Fill in the middle coder for vim.
+    #fim-coder = pkgs.fetchurl {
+    #  url = "https://huggingface.co/ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF/resolve/main/qwen2.5-coder-1.5b-q8_0.gguf";
+    #  hash = "sha256-KYcclNFXJ6biQ/eaNxE9SuYlpiFbXoAL9Bojry2jKDI=";
+    #};
     fim-coder = pkgs.fetchurl {
-      url = "https://huggingface.co/ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF/resolve/main/qwen2.5-coder-1.5b-q8_0.gguf";
-      hash = "sha256-KYcclNFXJ6biQ/eaNxE9SuYlpiFbXoAL9Bojry2jKDI=";
+      url = "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q8_0.gguf";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    };
+
+    sushi-coder = pkgs.fetchurl {
+      url = "https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF/resolve/main/Qwen3.5-9b-Sushi-Coder-RL.Q6_K.gguf";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB=";
+    };
+
+    flint = pkgs.fetchurl {
+      url = "https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/resolve/main/flint-nvfp4.gguf";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC=";
     };
 
     # A persistent shadow of memory. It anchors your data in the digital void.
@@ -173,11 +187,31 @@ in {
           ttl = 600;
           aliases = ["fim"];
         };
+        "sushi-coder" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.sushi-coder} --n-gpu-layers 99 --ctx-size 4096 --threads 8 --no-webui --cache-reuse 256";
+          ttl = 600;
+          aliases = ["sushi"];
+        };
+
         "gemma4-12b-qat" = {
           cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b} ${commonFlags} -md ${models.gemma-4-drafter} --spec-type draft-mtp  --ctx-size 131072 --batch-size 256";
           ttl = 300;
           aliases = ["gemma"];
         };
+        # Bonsai models use PrismML fork
+        "flint-nvfp4" = {
+          cmd = builtins.concatStringsSep " " [
+            "${llama-server} --port $\{PORT}"
+            "-m ${models.flint}"
+            "-ngl all --jinja"
+            "-cmoe --moe-cache-mib 6000"
+            "-c 32768 -fa on"
+            "--temp 1 --top-p 0.95 --top-k 20 --min-p 0"
+          ];
+          ttl = 1800;
+          aliases = ["flint"];
+        };
+
         # Bonsai models use PrismML fork
         "ternary-bonsai-2" = {
           cmd = builtins.concatStringsSep " " [
