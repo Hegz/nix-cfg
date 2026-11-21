@@ -91,7 +91,7 @@ in {
       ];
     in {
       imports = [inputs.nix-minecraft.nixosModules.minecraft-servers];
-      nixpkgs.overlays = [inputs.nix-minecraft.overlay];
+      nixpkgs.overlays = [inputs.nix-minecraft.overlays.default];
 
       system.stateVersion = "24.05";
 
