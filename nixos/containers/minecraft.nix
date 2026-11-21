@@ -128,8 +128,6 @@ in {
           enable = true;
           # Fabric is required for mods; must match the mods' Minecraft version.
           package = pkgs.fabricServers.fabric-26_3;
-          # 26.x needs Java 25.
-          jvmPackage = pkgs.jdk25_headless;
 
           serverProperties = {
             server-port = 43000;
