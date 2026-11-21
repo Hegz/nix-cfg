@@ -8,6 +8,17 @@
   ...
 }: let
   hostname = "minecraft";
+
+  # Fetch a mod jar. Run once with lib.fakeHash, copy the real hash from the error.
+  mkMod = {
+    name,
+    url,
+    hash ? lib.fakeHash,
+  }:
+    pkgs.fetchurl {
+      inherit url hash;
+      name = "${name}.jar";
+    };
 in {
   containers."${hostname}" = {
     autoStart = true;
@@ -27,7 +38,19 @@ in {
       pkgs,
       lib,
       ...
-    }: {
+    }: let
+      # Add mods here.
+      mods = [
+        # (mkMod {
+        #   name = "lithium";
+        #   url = "https://cdn.modrinth.com/data/<project-id>/versions/<version-id>/<file>.jar";
+        #   hash = "sha256-...";
+        # })
+      ];
+    in {
+      imports = [inputs.nix-minecraft.nixosModules.minecraft-servers];
+      nixpkgs.overlays = [inputs.nix-minecraft.overlay];
+
       system.stateVersion = "24.05";
 
       # allow unfree minecraft
@@ -51,26 +74,39 @@ in {
       ];
 
       # Add service definitions here.
-      services.minecraft-server = {
+      services.minecraft-servers = {
         enable = true;
         eula = true;
         openFirewall = true;
-        serverProperties = {
-          server-port = 43000;
-          difficulty = "normal";
-          gamemode = "survival";
-          max-players = 5;
-          motd = "Home Minecraft server!\n Play nice";
-          white-list = false;
-          allow-cheats = true;
-          level-name = "fairly_good";
-          level-seed = "good seed";
-          pvp = false;
-          enable-rcon = true;
-          rcon.password = "hunter2";
-          rcon.port = 25575;
+        dataDir = "/var/lib/minecraft";
+
+        servers.main = {
+          enable = true;
+          # Fabric is required for mods; match the version to your mods.
+          package = pkgs.fabricServers.fabric-1_21_1;
+
+          serverProperties = {
+            server-port = 43000;
+            difficulty = "normal";
+            gamemode = "survival";
+            max-players = 5;
+            motd = "Home Minecraft server!\n Play nice";
+            white-list = false;
+            allow-cheats = true;
+            level-name = "fairly_good";
+            level-seed = "good seed";
+            pvp = false;
+            enable-rcon = true;
+            "rcon.password" = "hunter2";
+            "rcon.port" = 25575;
+          };
+          jvmOpts = "-Xms4092M -Xmx4092M -Djava.net.preferIPv4Stack=true";
+
+          # Mods are symlinked from the store into <dataDir>/main/mods.
+          symlinks = lib.mkIf (mods != []) {
+            mods = pkgs.linkFarmFromDrvs "mods" mods;
+          };
         };
-        jvmOpts = "-Xms4092M -Xmx4092M -Djava.net.preferIPv4Stack=true";
       };
     };
   };
