@@ -9,15 +9,25 @@
 }: let
   hostname = "minecraft";
 
-  # Fetch a mod jar. Run once with lib.fakeHash, copy the real hash from the error.
+  # Fetch a mod jar. Either give a CurseForge fileId + filename (CDN URL is built
+  # for you) or a full url. Run once with lib.fakeHash, copy the real hash from the error.
   mkMod = {
     name,
-    url,
+    fileId ? null,
+    filename ? null,
+    url ? null,
     hash ? lib.fakeHash,
-  }:
+  }: let
+    id = toString fileId;
+    cfUrl = "https://mediafilez.forgecdn.net/files/${builtins.substring 0 4 id}/${builtins.substring 4 (-1) id}/${lib.escapeURL filename}";
+  in
     pkgs.fetchurl {
-      inherit url hash;
       name = "${name}.jar";
+      url =
+        if url != null
+        then url
+        else cfUrl;
+      inherit hash;
     };
 in {
   containers."${hostname}" = {
@@ -39,13 +49,45 @@ in {
       lib,
       ...
     }: let
-      # Add mods here.
+      # All files below are the Fabric builds for Minecraft 26.3.
+      # Mine+ only exists for Fabric 26.3, which is what pins everything else.
       mods = [
-        # (mkMod {
-        #   name = "lithium";
-        #   url = "https://cdn.modrinth.com/data/<project-id>/versions/<version-id>/<file>.jar";
-        #   hash = "sha256-...";
-        # })
+        # Required by Mob Lootbags and Mine+ (Mine+ wants 0.162.0+26.3).
+        # TODO: grab the real URL from the Fabric API page on Modrinth.
+        (mkMod {
+          name = "fabric-api";
+          url = "https://cdn.modrinth.com/data/P7dR8mSH/versions/<version-id>/fabric-api-0.162.0+26.3.jar";
+        })
+
+        (mkMod {
+          name = "mob-loot-bags";
+          fileId = 9680883;
+          filename = "mob_loot_bags-fabric-26.3-2.0.3.jar";
+        })
+
+        (mkMod {
+          name = "carry-on";
+          fileId = 9524333;
+          filename = "carryon-fabric-26.3-2.12.2.jar"; # filename unconfirmed
+        })
+
+        (mkMod {
+          name = "simple-voice-chat";
+          fileId = 9350669;
+          filename = "voicechat-fabric-26.3-2.6.27.jar"; # filename unconfirmed
+        })
+
+        (mkMod {
+          name = "structures-plus";
+          fileId = 9394717;
+          filename = "Structures+ v3.1.jar";
+        })
+
+        (mkMod {
+          name = "mine-plus";
+          fileId = 9156814;
+          filename = "mineplus-1.1.0.jar";
+        })
       ];
     in {
       imports = [inputs.nix-minecraft.nixosModules.minecraft-servers];
@@ -62,6 +104,8 @@ in {
         networkmanager.ethernet.macAddress = "${secrets.${serverName}.containers.${hostname}.mac}";
         firewall = {
           enable = true;
+          # Simple Voice Chat
+          allowedUDPPorts = [24454];
         };
         # Use systemd-resolved inside the container
         # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
@@ -82,8 +126,10 @@ in {
 
         servers.main = {
           enable = true;
-          # Fabric is required for mods; match the version to your mods.
-          package = pkgs.fabricServers.fabric-1_21_1;
+          # Fabric is required for mods; must match the mods' Minecraft version.
+          package = pkgs.fabricServers.fabric-26_3;
+          # 26.x needs Java 25.
+          jvmPackage = pkgs.jdk25_headless;
 
           serverProperties = {
             server-port = 43000;
