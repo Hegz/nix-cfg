@@ -17,6 +17,9 @@
     # Nix User Repository
     nur.url = "github:nix-community/NUR";
 
+    nix-minecraft.url = "github:Infinidoge/nix-minecraft";
+    nix-minecraft.inputs.nixpkgs.follows = "nixpkgs";
+
     valheim-server = {
       #url = "github:hamburger1984/valheim-server-flake";
       url = "github:SoarinFerret/valheim-server-flake";
