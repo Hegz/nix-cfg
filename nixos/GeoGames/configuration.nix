@@ -226,7 +226,7 @@ in {
     subpixel.rgba = "rgb"; # for typical LCD panels
   };
 
-  powerManagement.powertop.enable = true;
+  #powerManagement.powertop.enable = true;
 
   programs = {
     steam = {

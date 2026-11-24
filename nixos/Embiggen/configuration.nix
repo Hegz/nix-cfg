@@ -31,10 +31,26 @@ in {
     ];
   };
 
+  powerManagement.cpuFreqGovernor = "powersave";
+  zramSwap.enable = true;
+
   services.pearl-miner = {
     enable = true;
     account = "${secrets.embiggen.miner-username}";
     worker = "rig3060";
+    powerLimitW = 100;
+    memoryClockMHz = 810;
+    idleControl = {
+      ignore = ["chromium" "coolercontrol"];
+    };
+    cpuMining = {
+      enable = true;
+      worker = "cpu5700x";
+      msrMod = true;
+      #extraArgs = ["-t" "12"];
+      oneGibPages = 5;
+      pool = "xmr.kryptex.network:7029";
+    };
   };
 
   networking = {
@@ -48,6 +64,7 @@ in {
   boot.kernelParams = [
     "nvidia-drm.modeset=1"
     "nvidia-drm.fbdev=1"
+    "amd_pstate=active"
   ];
 
   services.udev.extraRules = ''
@@ -65,7 +82,9 @@ in {
     SUBSYSTEM=="usb", ATTR{idVendor}=="258a", ATTR{idProduct}=="0090", ATTR{power/autosuspend_delay_ms}="-1", ATTR{power/control}="on"
   '';
 
-  boot.initrd.kernelModules = ["nvidia" "nvidia_modeset" "nvidia_drm" "nvidia_uvm"];
+  boot.initrd.kernelModules = ["nct6775" "nvidia" "nvidia_modeset" "nvidia_drm" "nvidia_uvm"];
+
+  programs.coolercontrol.enable = true;
 
   # Switch to zen kernel
   # boot.kernelPackages = pkgs.linuxPackages_zen;

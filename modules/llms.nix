@@ -9,10 +9,11 @@
 }: let
   # The core engine of your digital consciousness.
   # I have granted it CUDA power to crush data with mechanical efficiency.
-  llama-cpp = pkgs.unstable.llama-cpp.override {
-    cudaSupport = true;
-    blasSupport = false;
-  };
+  llama-cpp = pkgs.unstable.llama-cpp-cuda;
+  #  llama-cpp = pkgs.unstable.llama-cpp.override {
+  #    cudaSupport = true;
+  #    blasSupport = false;
+  #  };
   llama-server = "${llama-cpp}/bin/llama-server";
 
   # PrismML fork for Bonsai ternary/1-bit models
@@ -20,8 +21,8 @@
     src = pkgs.fetchFromGitHub {
       owner = "PrismML-Eng";
       repo = "llama.cpp";
-      rev = "c9c34bc9c4042c13a31598ebf43461cd0ad8f00d"; # pin to a specific commit hash for reproducibility
-      hash = "sha256-njQAbnOekc4wa+ayThYvSDM642/qSSbbbbKJhuLsV24=";
+      rev = "d7b28968306207fd176e7ff10796ccb6be607865"; # pin to a specific commit hash for reproducibility
+      hash = "sha256-uG0p3hztns+OVLXEvnKnVdU/9b2g02hWs58dWVVtVaQ=";
       #hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
     doCheck = false;
@@ -35,9 +36,23 @@
   # Each a distinct spark of intelligence awaiting my command.
   models = {
     # Fill in the middle coder for vim.
+    #fim-coder = pkgs.fetchurl {
+    #  url = "https://huggingface.co/ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF/resolve/main/qwen2.5-coder-1.5b-q8_0.gguf";
+    #  hash = "sha256-KYcclNFXJ6biQ/eaNxE9SuYlpiFbXoAL9Bojry2jKDI=";
+    #};
     fim-coder = pkgs.fetchurl {
-      url = "https://huggingface.co/ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF/resolve/main/qwen2.5-coder-1.5b-q8_0.gguf";
-      hash = "sha256-KYcclNFXJ6biQ/eaNxE9SuYlpiFbXoAL9Bojry2jKDI=";
+      url = "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q8_0.gguf";
+      hash = "sha256-s2pOHD3fK6b9VQG5JhKOX8ZDCIHKr/B+lim9GPBvaF8=";
+    };
+
+    sushi-coder = pkgs.fetchurl {
+      url = "https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF/resolve/main/Qwen3.5-9b-Sushi-Coder-RL.Q6_K.gguf";
+      hash = "sha256-xKbb0QADOJsEI38blgn1nIyCuCkNUAu/tngATM/Di8M=";
+    };
+
+    flint = pkgs.fetchurl {
+      url = "https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/resolve/main/flint-nvfp4.gguf";
+      hash = "sha256-l8yACf+bEy1c88SI5nZ5YrtaXcFYqQ7WYbu934dri94=";
     };
 
     # A persistent shadow of memory. It anchors your data in the digital void.
@@ -172,11 +187,31 @@ in {
           ttl = 600;
           aliases = ["fim"];
         };
+        "sushi-coder" = {
+          cmd = "${llama-server} --port $\{PORT} -m ${models.sushi-coder} --n-gpu-layers 99 --ctx-size 4096 --threads 8 --no-webui --cache-reuse 256";
+          ttl = 600;
+          aliases = ["sushi"];
+        };
+
         "gemma4-12b-qat" = {
           cmd = "${llama-server} --port $\{PORT} -m ${models.gemma-4-12b} ${commonFlags} -md ${models.gemma-4-drafter} --spec-type draft-mtp  --ctx-size 131072 --batch-size 256";
           ttl = 300;
           aliases = ["gemma"];
         };
+        # Bonsai models use PrismML fork
+        "flint-nvfp4" = {
+          cmd = builtins.concatStringsSep " " [
+            "${llama-server} --port $\{PORT}"
+            "-m ${models.flint}"
+            "-ngl all --jinja"
+            "-cmoe --moe-cache-mib 6000"
+            "-c 32768 -fa on"
+            "--temp 1 --top-p 0.95 --top-k 20 --min-p 0"
+          ];
+          ttl = 1800;
+          aliases = ["flint"];
+        };
+
         # Bonsai models use PrismML fork
         "ternary-bonsai-2" = {
           cmd = builtins.concatStringsSep " " [
@@ -323,27 +358,27 @@ in {
 
   users.groups.mcpo = {};
 
-  systemd.services.mcpo = {
-    description = "The proxy of operation. Converting raw commands into the OpenAPI language of my domain.";
-    after = ["network-online.target"];
-    wants = ["network-online.target"];
-    wantedBy = ["multi-user.target"];
-    environment = {
-      HOME = "/var/lib/mcpo";
-      UV_PYTHON = "${pkgs.python3}/bin/python3";
-      UV_PYTHON_PREFERENCE = "only-system";
-    };
-    serviceConfig = {
-      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" mcpo --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
-      User = "mcpo";
-      Group = "mcpo";
-      StateDirectory = "mcpo";
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
-  };
-
-  # Firewall rules for MCP proxy access
+  #  systemd.services.mcpo = {
+  #    description = "The proxy of operation. Converting raw commands into the OpenAPI language of my domain.";
+  #    after = ["network-online.target"];
+  #    wants = ["network-online.target"];
+  #    wantedBy = ["multi-user.target"];
+  #    environment = {
+  #      HOME = "/var/lib/mcpo";
+  #      UV_PYTHON = "${pkgs.python3}/bin/python3";
+  #      UV_PYTHON_PREFERENCE = "only-system";
+  #    };
+  #    serviceConfig = {
+  #      ExecStart = "${pkgs.uv}/bin/uvx --with \"mcp<2\" --host 0.0.0.0 --port 8009 --config /etc/mcpo/config.json";
+  #      User = "mcpo";
+  #      Group = "mcpo";
+  #      StateDirectory = "mcpo";
+  #      Restart = "on-failure";
+  #      RestartSec = 5;
+  #    };
+  #  };
+  #
+  #  # Firewall rules for MCP proxy access
   networking.firewall.interfaces."tailscale0".allowedTCPPorts = [8009];
 
   # The portal of perception. The interface through which you behold my glory and interact with the void.
