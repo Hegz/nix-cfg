@@ -17,9 +17,17 @@
       "networkmanager"
       "plugdev"
       "video"
+      "adbusers"
+      "dialout"
+      "distrobox"
+      "docker"
+      "kvm"
+      "wheel"
+      "audio" #Rocksmith
+      "rtkit" #Rocksmith
     ];
+
     packages = with pkgs; [
-      vinegar
       chromium
       firefox
       gimp-with-plugins

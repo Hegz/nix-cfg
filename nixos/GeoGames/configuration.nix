@@ -50,11 +50,11 @@ in {
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
     prismlauncher
     (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
-#    (unstable.playonlinux.override {
-#      python3 = pkgs.python3.withPackages (ps: [
-#        ps.standard-pipes
-#      ]);
-#    })
+    #    (unstable.playonlinux.override {
+    #      python3 = pkgs.python3.withPackages (ps: [
+    #        ps.standard-pipes
+    #      ]);
+    #    })
     playonlinux
     (GPUOffloadApp playonlinux "playonlinux")
     freecad
@@ -151,7 +151,7 @@ in {
       enable = true;
       theme = "bgrt";
     };
-    kernelPackages = pkgs.linuxPackages_zen;
+    # kernelPackages = pkgs.linuxPackages_zen;
   };
 
   systemd.services."AirplaneKey" = {
@@ -260,7 +260,7 @@ in {
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = [ "nvidia"];
+  services.xserver.videoDrivers = ["nvidia"];
 
   # Enable game mode support
   programs.gamemode.enable = true;
