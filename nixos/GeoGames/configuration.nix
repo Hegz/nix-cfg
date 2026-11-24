@@ -50,11 +50,11 @@ in {
     (GPUOffloadApp heroic "com.heroicgameslauncher.hgl")
     prismlauncher
     (GPUOffloadApp prismlauncher "org.prismlauncher.PrismLauncher")
-#    (unstable.playonlinux.override {
-#      python3 = pkgs.python3.withPackages (ps: [
-#        ps.standard-pipes
-#      ]);
-#    })
+    #    (unstable.playonlinux.override {
+    #      python3 = pkgs.python3.withPackages (ps: [
+    #        ps.standard-pipes
+    #      ]);
+    #    })
     playonlinux
     (GPUOffloadApp playonlinux "playonlinux")
     freecad
@@ -226,7 +226,7 @@ in {
     subpixel.rgba = "rgb"; # for typical LCD panels
   };
 
-  powerManagement.powertop.enable = true;
+  #powerManagement.powertop.enable = true;
 
   programs = {
     steam = {
@@ -260,7 +260,7 @@ in {
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = [ "nvidia"];
+  services.xserver.videoDrivers = ["nvidia"];
 
   # Enable game mode support
   programs.gamemode.enable = true;
