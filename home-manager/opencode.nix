@@ -31,6 +31,15 @@ in {
           "ternary-bonsai-2" = {
             name = "bonsai-2";
           };
+          "sushi-coder" = {
+            name = "sushi-coder";
+          };
+          "swift-bonsai-2" = {
+            name = "swift-bonsai-2";
+          };
+          "flint-nvfp4" = {
+            name = "flint-nvfp4";
+          };
         };
       };
     };
