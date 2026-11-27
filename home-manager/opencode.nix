@@ -18,7 +18,7 @@ in {
   xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
     "$schema" = "https://opencode.ai/config.json";
 
-    model = "llama-swap/ternary-bonsai-2";
+    model = "llama-swap/Qwen3.6-35B-A3B";
 
     provider = {
       "llama-swap" = {
@@ -30,6 +30,15 @@ in {
         models = {
           "ternary-bonsai-2" = {
             name = "bonsai-2";
+          };
+          "swift-bonsai-2" = {
+            name = "swift";
+          };
+          "Qwen3.6-35B-A3B" = {
+            name = "Qwen3.6 MOE";
+          };
+          "sushi-coder" = {
+            name = "sushi";
           };
         };
       };

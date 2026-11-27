@@ -36,29 +36,18 @@
   # Each a distinct spark of intelligence awaiting my command.
   models = {
     # Fill in the middle coder for vim.
-    #fim-coder = pkgs.fetchurl {
-    #  url = "https://huggingface.co/ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF/resolve/main/qwen2.5-coder-1.5b-q8_0.gguf";
-    #  hash = "sha256-KYcclNFXJ6biQ/eaNxE9SuYlpiFbXoAL9Bojry2jKDI=";
-    #};
     fim-coder = pkgs.fetchurl {
       url = "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q8_0.gguf";
       hash = "sha256-s2pOHD3fK6b9VQG5JhKOX8ZDCIHKr/B+lim9GPBvaF8=";
     };
-
-    sushi-coder = pkgs.fetchurl {
-      url = "https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF/resolve/main/Qwen3.5-9b-Sushi-Coder-RL.Q6_K.gguf";
-      hash = "sha256-xKbb0QADOJsEI38blgn1nIyCuCkNUAu/tngATM/Di8M=";
-    };
-
-    flint = pkgs.fetchurl {
-      url = "https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/resolve/main/flint-nvfp4.gguf";
-      hash = "sha256-l8yACf+bEy1c88SI5nZ5YrtaXcFYqQ7WYbu934dri94=";
-    };
-
     # A persistent shadow of memory. It anchors your data in the digital void.
     nomic-embed-text = pkgs.fetchurl {
       url = "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf";
       hash = "sha256-969vZoAvTfhu2hD+m7z8dcOVYr7Ujvas5xmiUc8cL9s=";
+    };
+    sushi-coder = pkgs.fetchurl {
+      url = "https://huggingface.co/bigatuna/Qwen3.5-9b-Sushi-Coder-RL-GGUF/resolve/main/Qwen3.5-9b-Sushi-Coder-RL.Q6_K.gguf";
+      hash = "sha256-xKbb0QADOJsEI38blgn1nIyCuCkNUAu/tngATM/Di8M=";
     };
     gemma-4-12b = pkgs.fetchurl {
       url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf";
@@ -68,7 +57,6 @@
       url = "https://huggingface.co/HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced/resolve/main/mtp-gemma-4-12B-it.gguf";
       hash = "sha256-xQyRw18EkDgVsuiTDLuMjFvuDhqgB0jDCnuP8F0jELQ=";
     };
-    # Functional variant of Qwen 3.8 27B
     ternary-bonsai-2 = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-PTQ1_0.gguf";
       hash = "sha256-UxB/UwqlLrAJEiY6se4pvRmSYch817StTKExjB/jPuM=";
@@ -81,6 +69,10 @@
     ternary-bonsai-2-mmproj = pkgs.fetchurl {
       url = "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/main/Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf";
       hash = "sha256-aAft5h1XC7hro0t1ag+hCe3DNmhgTehnxuptjx1jGQM=";
+    };
+    Qwen3_6-35B-A3B = pkgs.fetchurl {
+      url = "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-IQ4_XS.gguf";
+      hash = "sha256-ZJ11CFB7hGOHMsT1LCTIsVhDxtyi8/95OuB8FKZ+u7M=";
     };
   };
 
@@ -198,18 +190,27 @@ in {
           ttl = 300;
           aliases = ["gemma"];
         };
-        # Bonsai models use PrismML fork
-        "flint-nvfp4" = {
+        "Qwen3.6-35B-A3B" = {
           cmd = builtins.concatStringsSep " " [
             "${llama-server} --port $\{PORT}"
-            "-m ${models.flint}"
-            "-ngl all --jinja"
-            "-cmoe --moe-cache-mib 6000"
-            "-c 32768 -fa on"
-            "--temp 1 --top-p 0.95 --top-k 20 --min-p 0"
+            "-m ${models.Qwen3_6-35B-A3B}"
+            "-ngl 99" # model layers to offload to GPU VRAM
+            "--n-cpu-moe 26" # number of CPU threads dedicated to loading/expert offloading
+            "-fit off" # Disables the automatic "fit" mode
+            "-c 262144" # Context window size in tokens
+            "-np 1" # Number of server slots
+            "-fa on" # Enables Flash Attention
+            "--load-mode none" # Controls how model weights are loaded. no memory mapping
+            "-ctk q8_0" # Quantization precision for the K (key) part of the KV cache
+            "-ctv q8_0" # Quantization precision for the V (value) part of the KV cache
+            "--jinja" # Enables the Jinja chat template engine
+            "-b 2048" # Logical maximum batch size
+            "-ub 512" # Physical maximum batch size
+            "-t 8" # Number of CPU threads to use during generation/inference
+            "--cache-ram 2048" # Amount of system RAM (in MB) to use as a RAM cache
           ];
           ttl = 1800;
-          aliases = ["flint"];
+          aliases = ["qwen"];
         };
 
         # Bonsai models use PrismML fork
@@ -232,6 +233,7 @@ in {
           ttl = 1800;
           aliases = ["bonsai2" "ternary" "best"];
         };
+        # Bonsai models use PrismML fork
         "swift-bonsai-2" = {
           cmd = builtins.concatStringsSep " " [
             "${llama-server-prism} --port $\{PORT}"
@@ -249,6 +251,7 @@ in {
             "--defrag-thold 0.1 --repeat-last-n 256 --reasoning-budget 16384"
           ];
           ttl = 1800;
+          aliases = ["swift"];
         };
       };
     };
