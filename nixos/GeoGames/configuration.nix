@@ -151,7 +151,7 @@ in {
       enable = true;
       theme = "bgrt";
     };
-    kernelPackages = pkgs.linuxPackages_zen;
+    # kernelPackages = pkgs.linuxPackages_zen;
   };
 
   systemd.services."AirplaneKey" = {
